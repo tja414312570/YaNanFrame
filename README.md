@@ -113,7 +113,7 @@ public class ResultAnnotationsTest{
 	}
 }
 ```
-3)、TokenDefault的使用
+3)、TokenServlet的使用
 ```java
 package com.YaNan.demo;
 
