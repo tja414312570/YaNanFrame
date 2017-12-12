@@ -1,6 +1,6 @@
 # YaNanFrame
 com.yanan.frame
-此框架为M-C（为什么去掉V层？V层都交给前端啊）模式框架，提供持久层和角化层的实现。采用注解方式配置，支持多种交互方式，对象化的数据库层操作，
+此框架为M-C（为什么去掉V层？V层都交给前端啊）模式框架，提供持久层和交互层的实现。采用注解方式配置，支持多种交互方式，对象化的数据库层操作，
 我们的理念为，程序员只关心核心业务逻辑，除此之外，全都交给框架吧。
 来吧  一起为美好的明天奋斗
 
@@ -26,7 +26,7 @@ import com.YaNan.frame.core.servletSupport.DefaultServlet;
  * 各扩展类型说明(下面的扩展类依次继承关系）
  * DefaultServlet 默认Servlet扩展，支持get方式传参，支持获取HttpServlet对象
  * MultiFormServlet 表单Servlet扩展 继承自DefalutServlet 支持post请求 
- * TokenServlet tokenServlet扩展，继承自MultiFormServlet 支持获取Token，以及支持@TokenObject注解 依赖组件  com.YaNan.frame.session.*
+ * TokenServlet tokenServlet扩展，继承自MultiFormServlet 支持获取Token，以及支持@TokenObject注解 依赖组件  com.YaNan.frame.session
  * 
  * @author yanan
  *
