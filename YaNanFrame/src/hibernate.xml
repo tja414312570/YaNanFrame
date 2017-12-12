@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Hibernate>
+	<include></include>
+	<include path="" />
+	<!-- dataBase 数据库配置
+		name 服务器应用默认数据库名称
+		driver 驱动
+		host,port
+		username 数据库用户名
+		password 数据库密码
+		start 服务器启动时就初始化
+	 -->
+	<dataBase name="UFO_SYSTEM">
+		<driver>com.mysql.jdbc.Driver</driver>
+		<host>localhost</host>
+		<port>3306</port>
+		<username>root</username>
+		<password>tja950233140710W</password>
+	</dataBase>
+	<dataBase name="UFO_USER">
+		<driver>com.mysql.jdbc.Driver</driver>
+		<host>localhost</host>
+		<port>3306</port>
+		<username>root</username>
+		<password>tja950233140710W</password>
+	</dataBase>
+	<dataBase name="UFO_BBQ">
+		<driver>com.mysql.jdbc.Driver</driver>
+		<host>localhost</host>
+		<port>3306</port>
+		<username>root</username>
+		<password>tja950233140710W</password>
+	</dataBase>
+	<!-- 应用启动时验证
+	的数据表
+				javabean与数据表的映射关系：
+						java                         datatab
+						class						 tableName
+						field						 column
+				标签说明
+				tab class javabean类 checked 是否启动时检查，enable 是否在应用上下文启用，session，是否启用session缓存
+					该session非servlet中的session，此缓存默认启用，用于提高访问数据表能力，但未启用数据表值缓存，应为暂用
+					内存较高
+	 -->
+	<package package="com.YaNan.frame.core.session.defaultConfigure"></package>	
+	<package package="com.UFO.model"></package>
+</Hibernate>

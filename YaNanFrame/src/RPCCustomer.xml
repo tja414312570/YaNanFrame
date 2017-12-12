@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rpc>
+	<name>BBQ</name>
+	<host>10.0.99.35</host>
+	<port>4280</port>
+	<timeout>3000</timeout>
+	<ReconnectionTimes>30</ReconnectionTimes>
+	<Secret>com.YaNan.frame.RPC.defaultConfigure.defaultRPCSecretKey</Secret>
+	<Listener>com.YaNan.frame.RPC.defaultConfigure.defaultRPCListener</Listener>
+</rpc>

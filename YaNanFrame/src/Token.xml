@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Token>
+	<!-- 
+		token子类用于验证客户端是否有权访问某个命名空间
+		namespace 要求token验证的命名空间
+		role       开放访问的角色
+		chain     无须验证的链接
+		command中redirect 重定向，目前也只支持重定向命令 值是重定向的地址
+	 -->
+	 <Config 
+		TokenMark="TUID"
+		RoleMark="ROLES"
+		HibernateInterface="com.YaNan.frame.core.session.defaultConfigure.DefaultHibernateImpl"
+		Timeout="86400"
+	></Config>
+	<listener namespace="/*" class="com.YaNan.frame.hibernate.configure.defaultServletListener" />
+	<token namespace="/user/" roles="sign" chain="RPCToken.do" class="com.UFO.filter.LoginFilter">
+		<result name="success" command="chain"></result>
+		<result name="failed" command="redirect">login.html</result>
+	</token>
+</Token>

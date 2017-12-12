@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configure>
+	<log class="com.YaNan.frame.service.Log"/>
+</configure>

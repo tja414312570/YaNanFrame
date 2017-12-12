@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<servlet>
+	<include namespace="/">servlet.xml</include>
+	<package name="default-servlet" extends="servlet-default" namespace="install" permission="">
+			<servlet name="sysinfo" class="com.YaNan.frame.support.systemBean.SysInfo"></servlet>
+			<servlet name="javainfo" class="com.YaNan.frame.support.systemBean.SysInfo" method="javainfo"></servlet>
+			<servlet name="errorLog" class="com.YaNan.frame.support.systemBean.SysInfo" method="errorInfo"></servlet>
+			<servlet name="getSql" class="com.YaNan.frame.support.systemBean.install" method="get"></servlet>
+			
+			<servlet name="getAdmin" class="com.YaNan.frame.support.systemBean.install" method="getAdmin"></servlet>
+			<servlet name="testSql" class="com.YaNan.frame.support.systemBean.install" method="connect"></servlet>
+			<servlet name="install" class="com.YaNan.frame.support.systemBean.install" method="reInstall"></servlet>
+			<servlet name="adminSignIn" class="com.YaNan.frame.support.systemBean.install" method="SignIn"></servlet>
+			<servlet name="javacompiler" class="com.YaNan.frame.support.systemBean.JavaBean" method="compiler" outputStream="true"></servlet>
+			<servlet name="javarun" class="com.YaNan.frame.support.systemBean.JavaBean" outputStream="true" method="run"></servlet>
+			<servlet name="filescanner" class="com.YaNan.frame.support.systemBean.FileScanner"></servlet>
+			<servlet name="DesUpload" class="com.YaNan.frame.support.systemBean.DesUpload"></servlet>
+			<servlet name="browerServer" class="com.YaNan.frame.support.systemBean.FileScanner" method="browerServer"></servlet>
+			<!-- 
+				<servlet name="ckeditUpload" class="com.YaNan.frame.support.systemBean.fileUpload" method="up"></servlet>
+			 -->
+	</package> 
+	<package name="default-servlet" extends="servlet-default" namespace="*" >
+			<servlet name="getPicVarCode" class="com.YaNan.frame.tools.PicVarCode" method="getCertPic" outputStream="true"></servlet>
+			<servlet name="varPicCode" class="com.YaNan.frame.tools.PicVarCode" method="valid"></servlet>
+	</package>
+</servlet>

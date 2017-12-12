@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+	<webPath id="webPath">
+	<!-- 文件夹在最后加入"/" 文件名不用加任何修饰 如 index.jsp -->
+	<!-- XML text Can try special characters used in a variable   -->
+	<!-- $id -->
+	<!-- classPath,rootPath,systemLog was defaulted be system, please do not to modify it,of course 
+		,you don't need to join them and your new id cannot be the same with them-->
+		<path name="classPath" id="classPath">WEB-INF/classes/</path>
+		<path name="src" id="src">WEB-INF/classes/</path>
+		<path name="Root" id="Root">/</path>
+		<path name="systemLog" id="systemLog">systemLog/</path>
+	<!-- default end -->
+		<path name="resource" id="resource">resource/</path>
+	</webPath>
+</config>
