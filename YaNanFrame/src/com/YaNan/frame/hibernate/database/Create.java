@@ -22,12 +22,15 @@ public class Create {
 	private List<String> uniques = new ArrayList<String>();
 	private DBTab tab;
 	private Map<String, String> columns = new LinkedHashMap<String, String>();
-
+	/**
+	 * 数据表的创建对象，传入一个DBTab对象 
+	 * @param tab
+	 */
 	public Create(DBTab tab) {
 		this.tab = tab;
 		init();
 	}
-
+	
 	private void init() {
 		Iterator<Field> iterator = this.tab.iterator();
 		while (iterator.hasNext()) {
@@ -40,17 +43,23 @@ public class Create {
 				this.uniques.add(db.getName());
 		}
 	}
-
+	/**
+	 * 数据表的创建对象，传入一个数据表映射类
+	 * @param tab
+	 */
 	public Create(Class<?> cls) {
 		this.tab = new DBTab(cls);
 		init();
 	}
-
+	/**
+	 * 数据表的创建对象，传入一个数据表映射类的对象
+	 * @param tab
+	 */
 	public Create(Object object) {
 		this.tab = new DBTab(object);
 		init();
 	}
-
+	
 	public void setFields(Object obj) {
 		this.setFields(obj.getClass());
 	}
