@@ -112,9 +112,9 @@ public class ResultAnnotationsTest{
 		this.result = result;
 	}
 }
-```java
-3、TokenDefault的使用
 ```
+3、TokenDefault的使用
+```java
 package com.UFO.action.BBQ;
 
 import com.YaNan.frame.core.annotations.Action;
@@ -180,6 +180,7 @@ class Student{
 }
 ```
 持久层：
+
 ```java
 package com.YaNan.demo;
 
