@@ -15,21 +15,21 @@
 		<host>localhost</host>
 		<port>3306</port>
 		<username>root</username>
-		<password>tja950233140710W</password>
+		<password>root</password>
 	</dataBase>
 	<dataBase name="UFO_USER">
 		<driver>com.mysql.jdbc.Driver</driver>
 		<host>localhost</host>
 		<port>3306</port>
 		<username>root</username>
-		<password>tja950233140710W</password>
+		<password>root</password>
 	</dataBase>
 	<dataBase name="UFO_BBQ">
 		<driver>com.mysql.jdbc.Driver</driver>
 		<host>localhost</host>
 		<port>3306</port>
 		<username>root</username>
-		<password>tja950233140710W</password>
+		<password>root</password>
 	</dataBase>
 	<!-- 应用启动时验证
 	的数据表
