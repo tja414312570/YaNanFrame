@@ -113,9 +113,9 @@ public class ResultAnnotationsTest{
 	}
 }
 ```
-3、TokenDefault的使用
+3)、TokenDefault的使用
 ```java
-package com.UFO.action.BBQ;
+package com.YaNan.demo;
 
 import com.YaNan.frame.core.annotations.Action;
 import com.YaNan.frame.core.session.Token;
