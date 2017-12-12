@@ -34,10 +34,7 @@ import com.YaNan.frame.core.servletSupport.DefaultServlet;
 public class ActionAnnotationsTest extends DefaultServlet{
 	@Validate(RegExpression="[\\S]{2,}",Failed="请输入字少两个字符"/*,isNull="请输入中文  两个字符以上"*/)
 	private String name;
-	/**
-	 * 以下两个接口测试  action中method（返回内容的方式）
-	 * @return
-	 */
+	// 以下两个接口测试  action中method（返回内容的方式）
 	@Action(method=RESPONSE_METHOD.FORWARD)
 	public String testForward(){
 		return "index.html";
@@ -46,18 +43,13 @@ public class ActionAnnotationsTest extends DefaultServlet{
 	public String testRedirect(){
 		return "index.html";
 	}
-	/**
+	//以下  命名空间的使用 访问路径 项目路径/test/testNamespace.do
 	 * 以下  命名空间的使用
-	 * 访问路径 项目路径/test/testNamespace.do
-	 */
 	@Action(namespace="test")
 	public String testNamespace(){
 		return "你得到了内容";
 	}
-	/**
-	 * 以下   output属性的使用，某些情况下  我们可能不是返回字符类型数据
-	 * @return
-	 */
+	// 以下   output属性的使用，某些情况下  我们可能不是返回字符类型数据
 	@Action(output=true)
 	public void testOutput(){
 		try {
@@ -68,26 +60,19 @@ public class ActionAnnotationsTest extends DefaultServlet{
 			e.printStackTrace();
 		}
 	}
-	/**
-	 * 解析返回结果  其中 ${}中为该对象拥有的属性的值，没有则返回原内容
-	 */
+	//解析返回结果  其中 ${}中为该对象拥有的属性的值，没有则返回原内容
 	@Action(decode=true)
 	public String testDecode(){
 		this.setName("解码内容");
 		return "解码结果：${name}";
 	}
-	/**
-	 * 跨域支持
-	 * @return
-	 */
+	//跨域支持
 	@Action(CorssOrgin=true)
 	public String testCO(){
 		return "跨域显示内容";
 	}
-	/**
+	// args参数  为一个数组,需要验证的参数，必须配合使用注解@Validate。但@Validate可以独立使用，独立使用时仅在请求中含有该参数时有效
 	 * args参数  为一个数组,需要验证的参数，必须配合使用注解@Validate。但@Validate可以独立使用，独立使用时仅在请求中含有该参数时有效
-	 * @return
-	 */
 	@Action(args={"name"})
 	public String testArgs(){
 		return this.name;
