@@ -17,14 +17,14 @@ import com.YaNan.frame.core.annotations.RESPONSE_METHOD;
 import com.YaNan.frame.core.annotations.Validate;
 import com.YaNan.frame.core.servletSupport.DefaultServlet;
 /**
- * 如果需要获取  HttpServletRequest HttpServletRespone等，请继承自各对应Servlet扩展类
- * 对应对象的命名  HttpServletRequest RequestContext，HttpServletResponse ResponseContext ，oken tokenContext
- * 如果只需要get方式请求  无需继承任何扩展类
- * 各扩展类型说明(下面的扩展类依次继承关系）
- * DefaultServlet 默认Servlet扩展，支持get方式传参，支持获取HttpServlet对象
- * MultiFormServlet 表单Servlet扩展 继承自DefalutServlet 支持post请求 
- * TokenServlet tokenServlet扩展，继承自MultiFormServlet 支持获取Token，以及支持@TokenObject注解 依赖组件  com.YaNan.frame.session
- * @author yanan
+ *如果需要获取  HttpServletRequest HttpServletRespone等，请继承自各对应Servlet扩展类
+ *对应对象的命名  HttpServletRequest RequestContext，HttpServletResponse ResponseContext ，oken tokenContext
+ *如果只需要get方式请求  无需继承任何扩展类
+ *各扩展类型说明(下面的扩展类依次继承关系）
+ *DefaultServlet 默认Servlet扩展，支持get方式传参，支持获取HttpServlet对象
+ *MultiFormServlet 表单Servlet扩展 继承自DefalutServlet 支持post请求 
+ *TokenServlet tokenServlet扩展，继承自MultiFormServlet 支持获取Token，以及支持@TokenObject注解 依赖组件  com.YaNan.frame.session
+ *@author yanan
  */
 public class ActionAnnotationsTest extends DefaultServlet{
 	@Validate(RegExpression="[\\S]{2,}",Failed="请输入字少两个字符"/*,isNull="请输入中文  两个字符以上"*/)
