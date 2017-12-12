@@ -262,5 +262,75 @@ public class DaoTestUser2 extends TestUser2{
 		return delete.delete() >0?"{status:'success',message:'数据修改成功'}":"{status:'failed',reason:'InnerErr',message:'服务器内部错误！'}";
 	}
 }
+2）、使用main方法进行数据库调试
+package com;
 
+import java.io.File;
+
+import com.UFO.model.user.Record;
+import com.YaNan.frame.core.annotations.Action;
+import com.YaNan.frame.hibernate.database.DBFactory;
+import com.YaNan.frame.hibernate.database.Delete;
+import com.YaNan.frame.hibernate.database.Insert;
+import com.YaNan.frame.hibernate.database.Query;
+import com.YaNan.frame.hibernate.database.Update;
+import com.google.gson.Gson;
+
+public class text extends Record {
+	
+	
+	
+	//添加信息
+	@Action
+	public String add(){
+		this.name = "张三";
+		Insert insert = new Insert(this);
+		return insert.insert()?"{status:'success',message:'信息提交成功'}":"{status:'failed',reason:'InnerErr',message:'服务器内部错误！'}";
+			
+	}
+	
+	
+	//查询信息
+	public String select(){
+		
+		Query query = new Query(this);
+		return new Gson().toJson(query.query());
+		
+		
+	}
+	
+	
+	
+	//修改信息
+	public String update(){
+		this.name = "魏六";
+		this.id = 1;
+		Update update = new Update(this,"name");
+		update.addCondition("id",this.id);
+		return update.update()>0?"{status:'success',message:'数据修改成功'}":"{status:'failed',reason:'InnerErr',message:'服务器内部错误！'}";
+	}
+
+	
+	
+	 //删除信息
+	public String delete(){
+		
+		Delete delete = new Delete(this);
+		delete.addCondition("id","2");
+		
+		return delete.delete()>0?"{status:'success',message:'数据删除成功'}":"{status:'failed',reason:'InnerErr',message:'服务器内部错误！'}";
+		
+		
+		
+	}
+	
+	public static void main(String[] args) {
+		File file = new File("src/Hibernate.xml");
+		DBFactory.getDBFactory().init(file);
+		text text = new text();
+		System.out.println(text.delete());
+		 
+	}
+
+}
 
