@@ -8,6 +8,7 @@ com.yanan.frame
 交互层
 
 1）、action注解的使用（@Action)
+```java
 package com.YaNan.demo;
 
 import java.io.IOException;
@@ -80,8 +81,9 @@ public class ActionAnnotationsTest extends DefaultServlet{
 	}
 }
 
-
+```
 2）、result注解的使用（@Result)
+```java
 package com.UFO.action.BBQ;
 
 import com.YaNan.frame.core.annotations.Action;
@@ -174,8 +176,9 @@ class Student{
 	String name;
 	int age;
 }
-
+```
 持久层：
+```java
 package com.UFO.dao.impl;
 
 import com.UFO.model.user.TestUser2;
@@ -242,7 +245,9 @@ public class DaoTestUser2 extends TestUser2{
 		return delete.delete() >0?"{status:'success',message:'数据修改成功'}":"{status:'failed',reason:'InnerErr',message:'服务器内部错误！'}";
 	}
 }
+```
 2）、使用main方法进行数据库调试
+```java
 package com;
 
 import java.io.File;
@@ -313,4 +318,4 @@ public class text extends Record {
 	}
 
 }
-
+```
