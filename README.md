@@ -85,7 +85,7 @@ public class ActionAnnotationsTest extends DefaultServlet{
 ```
 2）、result注解的使用（@Result)
 ```java
-package com.UFO.action.BBQ;
+package com.YaNan.demo;
 
 import com.YaNan.frame.core.annotations.Action;
 import com.YaNan.frame.core.annotations.ActionResults.Result;
@@ -180,7 +180,7 @@ class Student{
 ```
 持久层：
 ```java
-package com.UFO.dao.impl;
+package com.YaNan.demo;
 
 import com.UFO.model.user.TestUser2;
 import com.YaNan.frame.core.annotations.Action;
@@ -249,7 +249,7 @@ public class DaoTestUser2 extends TestUser2{
 ```
 2）、使用main方法进行数据库调试
 ```java
-package com;
+package com.YaNan.demo;
 
 import java.io.File;
 
