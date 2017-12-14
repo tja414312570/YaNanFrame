@@ -10,7 +10,7 @@
 		password 数据库密码
 		start 服务器启动时就初始化
 	 -->
-	<dataBase name="YaNan_SYSTEM">
+	<dataBase name="UFO_SYSTEM">
 		<driver>com.mysql.jdbc.Driver</driver>
 		<host>localhost</host>
 		<port>3306</port>
