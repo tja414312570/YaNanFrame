@@ -19,7 +19,6 @@ import com.YaNan.frame.core.annotations.ActionResults;
 import com.YaNan.frame.core.annotations.ActionResults.Result;
 import com.YaNan.frame.core.annotations.RESPONSE_METHOD;
 import com.YaNan.frame.hibernate.WebPath;
-import com.YaNan.frame.service.ClassInfo;
 import com.YaNan.frame.service.Log;
 
 /**
@@ -28,23 +27,22 @@ import com.YaNan.frame.service.Log;
  * @author Administrator
  *
  */
-@ClassInfo(version = 101)
 public class InitServlet {
 	private static InitServlet servletInstance;
 	private defaultServletMapping servletMannager;
 	private List<Document> servletPaths = new ArrayList<Document>();
 	private Log log = Log.getSystemLog();
+	private File classPath;
 
 	private InitServlet() {
-		String servletCfg = WebPath.getWebPath().getClassPath().realPath
-				+ "com/YaNan/frame/core/configure/servletCfg.xml";
-		if (new File(servletCfg).exists()) {
-			addServletXml(servletCfg);
-		} else {
-			log.error("could not find servlet defalut configure file 'servletCfg.xml',mabye some system function is not work at this framework");
+		if(WebPath.getWebPath()!=null&&WebPath.getWebPath().getClassPath()!=null){
+			String servletCfg = WebPath.getWebPath().getClassPath().realPath
+					+ "servlet.xml";
+			if (new File(servletCfg).exists()) 
+				addServletXml(servletCfg);
 		}
 		this.servletMannager = defaultServletMapping.getInstance();
-		init();
+		this.init();
 	}
 
 	/**
@@ -96,97 +94,93 @@ public class InitServlet {
 		SAXReader reader = new SAXReader();
 		return reader.read(xmlPath);
 	}
-
+	public void initByScanner(){
+		if(this.classPath==null){
+			this.classPath = new File(this.getClass().getClassLoader().getResource("").getPath().replace("%20"," "));
+		}
+		PackageScanner scanner = new PackageScanner();
+		scanner.setClassPath(classPath.getPath());
+		scanner.doScanner(new ClassInter(){
+			@Override
+			public void find(Class<?> cls) {
+				Method[] methods = cls.getMethods();
+				for(Method method :methods){
+					Action action = method.getAnnotation(Action.class);
+					if(action!=null){
+						ServletBean bean = new ServletBean();
+						if (method.getParameterCount()==0) {
+							bean.setMethod(method);
+						} else {
+							try {
+								throw new Exception("the Parameters at action method ["
+										+ method
+										+ "] should be null,please check class:["+cls.getName()+"]");
+							} catch (Exception e) {
+								e.printStackTrace();
+								e.printStackTrace();
+								log.write("the Parameters at action method ["
+										+ method
+										+ "] should be null,please check class:["+cls.getName()+"]");
+							}
+							continue;
+							//log.error();
+						}
+						String namespace  = action.namespace();
+						if(namespace.equals(""))namespace="*";
+						if(!namespace.equals("*")&&namespace.length()>2){
+							namespace=(namespace.substring(0,1).equals("/")?"":"/")+namespace+(namespace.substring(namespace.length()-1,namespace.length()).equals("/")?"":"/");
+						}
+						String actionName = action.value().equals("")?method.getName():action.value();
+						if (servletMannager.asExist(namespace ,actionName)) {
+							try {
+								throw new Exception("servelt [" + actionName
+										+ "] is exists at namespace [" +namespace
+										+ "] please check class:'"+cls.getName());
+							} catch (Exception e) {
+								e.printStackTrace();
+								log.write("servelt [" + actionName
+								+ "] is exists at namespace [" + namespace
+								+ "] please check class:'"+cls.getName());
+							}
+							continue;
+							}
+						bean.setArgs(action.args());
+						bean.setClassName(cls);
+						bean.setNameSpace(namespace);
+						bean.setOutputStream(action.output());
+						bean.setDecode(action.decode());
+						bean.setCorssOrgin(action.CorssOrgin());
+						bean.setType(action.method());
+						Result[] results =method.getAnnotationsByType(Result.class);
+						if(results.length==0){
+							ActionResults actionResults = method.getAnnotation(ActionResults.class);
+							if(actionResults!=null)results = actionResults.value();
+						}
+						for (Result result : results) {
+							ServletResult resultObj =new ServletResult();
+							resultObj.setName(result.name());
+							resultObj.setValue(result.value());
+							resultObj.setMethod(result.method());
+							bean.addResult(resultObj);
+						}
+						servletMannager.add(actionName,bean);
+					}
+				}
+			}
+		});
+	}
 	/**
 	 * 初始化servelt文件的内容并与对应的javaBean，生成对应的servlet Action
 	 */
 	@SuppressWarnings("unchecked")
 	public void init() {
+		this.initByScanner();
 		Iterator<Document> i = servletPaths.iterator();
 		while (i.hasNext()) {
 			Node root = i.next().getRootElement();
 			List<Element> packNode = root.selectNodes("package");
 			for (Element e : packNode) {
-				String packageName = e.attributeValue("package");
 				final String nameSpace = e.attributeValue("namespace");
-				if(packageName!=null&&!packageName.equals("")){
-					String classPath = WebPath.getWebPath().getClassPath().getRealPath();
-					PackageScanner scanner = new PackageScanner();
-					scanner.setClassPath(classPath);
-					scanner.setPackageName(packageName);
-					scanner.doScanner(new ClassInter(){
-						@Override
-						public void find(Class<?> cls) {
-							Method[] methods = cls.getMethods();
-							for(Method method :methods){
-								Action action = method.getAnnotation(Action.class);
-								if(action!=null){
-									ServletBean bean = new ServletBean();
-									if (method.getParameterCount()==0) {
-										bean.setMethod(method);
-									} else {
-										try {
-											throw new Exception("the Parameters at action method ["
-													+ method
-													+ "] should be null,please check class:["+cls.getName()+"]");
-										} catch (Exception e) {
-											e.printStackTrace();
-											e.printStackTrace();
-											log.write("the Parameters at action method ["
-													+ method
-													+ "] should be null,please check class:["+cls.getName()+"]");
-										}
-										continue;
-										//log.error();
-									}
-									String namespace  = action.namespace();
-									if(namespace=="")namespace="*";
-									if(nameSpace!=null)
-									namespace =(nameSpace.equals("*")&&namespace!=null?"":nameSpace)
-											+(action.namespace()==null ? ""
-											: (nameSpace.trim().equals("*")&&namespace!=null?"":"/") + namespace);
-									if(!namespace.equals("*")&&namespace.length()>2){
-										namespace=(namespace.substring(0,1).equals("/")?"":"/")+namespace+(namespace.substring(namespace.length()-1,namespace.length()).equals("/")?"":"/");
-									}
-									String actionName = action.value().equals("")?method.getName():action.value();
-									if (servletMannager.asExist(namespace ,actionName)) {
-										try {
-											throw new Exception("servelt [" + actionName
-													+ "] is exists at namespace [" +namespace
-													+ "] please check class:'"+cls.getName());
-										} catch (Exception e) {
-											e.printStackTrace();
-											log.write("servelt [" + actionName
-											+ "] is exists at namespace [" + namespace
-											+ "] please check class:'"+cls.getName());
-										}
-										continue;
-										}
-									bean.setArgs(action.args());
-									bean.setClassName(cls);
-									bean.setNameSpace(namespace);
-									bean.setOutputStream(action.output());
-									bean.setDecode(action.decode());
-									bean.setCorssOrgin(action.CorssOrgin());
-									bean.setType(action.method());
-									Result[] results =method.getAnnotationsByType(Result.class);
-									if(results.length==0){
-										ActionResults actionResults = method.getAnnotation(ActionResults.class);
-										if(actionResults!=null)results = actionResults.value();
-									}
-									for (Result result : results) {
-										ServletResult resultObj =new ServletResult();
-										resultObj.setName(result.name());
-										resultObj.setValue(result.value());
-										resultObj.setMethod(result.method());
-										bean.addResult(resultObj);
-									}
-									servletMannager.add(actionName,bean);
-								}
-							}
-						}
-					});
-				}else {
 					List<Element> servletNode = e.selectNodes("servlet");
 scan_elements:		for (Element s : servletNode) {
 						String name = s.attributeValue("name");
@@ -295,7 +289,6 @@ scan_elements:		for (Element s : servletNode) {
 									+ name);
 						}
 					}
-				}
 			}
 		}
 

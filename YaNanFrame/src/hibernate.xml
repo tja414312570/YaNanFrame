@@ -10,26 +10,12 @@
 		password 数据库密码
 		start 服务器启动时就初始化
 	 -->
-	<dataBase name="UFO_SYSTEM">
+	<dataBase name="YaNan_SYSTEM">
 		<driver>com.mysql.jdbc.Driver</driver>
 		<host>localhost</host>
 		<port>3306</port>
 		<username>root</username>
-		<password>tja950233140710W</password>
-	</dataBase>
-	<dataBase name="UFO_USER">
-		<driver>com.mysql.jdbc.Driver</driver>
-		<host>localhost</host>
-		<port>3306</port>
-		<username>root</username>
-		<password>tja950233140710W</password>
-	</dataBase>
-	<dataBase name="UFO_BBQ">
-		<driver>com.mysql.jdbc.Driver</driver>
-		<host>localhost</host>
-		<port>3306</port>
-		<username>root</username>
-		<password>tja950233140710W</password>
+		<password>root</password>
 	</dataBase>
 	<!-- 应用启动时验证
 	的数据表
@@ -43,5 +29,5 @@
 					内存较高
 	 -->
 	<package package="com.YaNan.frame.core.session.defaultConfigure"></package>	
-	<package package="com.UFO.model"></package>
+	<package package="com"></package>
 </Hibernate>
