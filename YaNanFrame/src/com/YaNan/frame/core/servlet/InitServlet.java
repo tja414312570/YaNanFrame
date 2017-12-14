@@ -17,6 +17,7 @@ import com.YaNan.frame.Native.PackageScanner.ClassInter;
 import com.YaNan.frame.core.annotations.Action;
 import com.YaNan.frame.core.annotations.ActionResults;
 import com.YaNan.frame.core.annotations.ActionResults.Result;
+import com.YaNan.frame.core.annotations.NameSpaces;
 import com.YaNan.frame.core.annotations.RESPONSE_METHOD;
 import com.YaNan.frame.hibernate.WebPath;
 import com.YaNan.frame.service.Log;
@@ -103,6 +104,10 @@ public class InitServlet {
 		scanner.doScanner(new ClassInter(){
 			@Override
 			public void find(Class<?> cls) {
+				NameSpaces nsa = cls.getAnnotation(NameSpaces.class);
+				String nameSpace = "*";
+				if(nsa!=null)
+					nameSpace=nsa.value();
 				Method[] methods = cls.getMethods();
 				for(Method method :methods){
 					Action action = method.getAnnotation(Action.class);
@@ -127,6 +132,10 @@ public class InitServlet {
 						}
 						String namespace  = action.namespace();
 						if(namespace.equals(""))namespace="*";
+						if(nameSpace!=null)
+						namespace =(nameSpace.equals("*")&&namespace!=null?"":nameSpace)
+								+(action.namespace()==null ? ""
+								: (nameSpace.trim().equals("*")&&namespace!=null?"":"/") + namespace);
 						if(!namespace.equals("*")&&namespace.length()>2){
 							namespace=(namespace.substring(0,1).equals("/")?"":"/")+namespace+(namespace.substring(namespace.length()-1,namespace.length()).equals("/")?"":"/");
 						}
