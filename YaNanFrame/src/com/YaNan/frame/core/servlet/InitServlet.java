@@ -14,11 +14,11 @@ import org.dom4j.io.SAXReader;
 
 import com.YaNan.frame.Native.PackageScanner;
 import com.YaNan.frame.Native.PackageScanner.ClassInter;
-import com.YaNan.frame.core.annotations.Action;
-import com.YaNan.frame.core.annotations.ActionResults;
-import com.YaNan.frame.core.annotations.ActionResults.Result;
-import com.YaNan.frame.core.annotations.NameSpaces;
-import com.YaNan.frame.core.annotations.RESPONSE_METHOD;
+import com.YaNan.frame.core.servlet.annotations.Action;
+import com.YaNan.frame.core.servlet.annotations.ActionResults;
+import com.YaNan.frame.core.servlet.annotations.NameSpaces;
+import com.YaNan.frame.core.servlet.annotations.RESPONSE_METHOD;
+import com.YaNan.frame.core.servlet.annotations.ActionResults.Result;
 import com.YaNan.frame.hibernate.WebPath;
 import com.YaNan.frame.service.Log;
 
@@ -131,10 +131,16 @@ public class InitServlet {
 							//log.error();
 						}
 						String namespace  = action.namespace();
-						if(namespace.equals(""))namespace="*";
-						if(nameSpace!=null)
+						while(nameSpace.substring(0, 1).equals("/"))
+							nameSpace=nameSpace.substring(1);
+						while(nameSpace.substring(nameSpace.length()-1,nameSpace.length()).equals("/"))
+							nameSpace=nameSpace.substring(0,nameSpace.length()-1);
+						while(namespace.substring(0, 1).equals("/"))
+							namespace=namespace.substring(1);
+						while(namespace.substring(namespace.length()-1,namespace.length()).equals("/"))
+							namespace=namespace.substring(0,namespace.length()-1);
 						namespace =(nameSpace.equals("*")&&namespace!=null?"":nameSpace)
-								+(action.namespace()==null ? ""
+								+(action.namespace().equals("*") ? ""
 								: (nameSpace.trim().equals("*")&&namespace!=null?"":"/") + namespace);
 						if(!namespace.equals("*")&&namespace.length()>2){
 							namespace=(namespace.substring(0,1).equals("/")?"":"/")+namespace+(namespace.substring(namespace.length()-1,namespace.length()).equals("/")?"":"/");

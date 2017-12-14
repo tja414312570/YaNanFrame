@@ -1,4 +1,4 @@
-package com.YaNan.frame.core.annotations;
+package com.YaNan.frame.core.servlet.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

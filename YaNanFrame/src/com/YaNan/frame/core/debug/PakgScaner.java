@@ -5,9 +5,9 @@ import java.lang.reflect.Method;
 
 import com.YaNan.frame.Native.Path;
 import com.YaNan.frame.Native.Path.PathInter;
-import com.YaNan.frame.core.annotations.Action;
-import com.YaNan.frame.core.annotations.ActionResults;
-import com.YaNan.frame.core.annotations.ActionResults.Result;
+import com.YaNan.frame.core.servlet.annotations.Action;
+import com.YaNan.frame.core.servlet.annotations.ActionResults;
+import com.YaNan.frame.core.servlet.annotations.ActionResults.Result;
 
 public class PakgScaner {
 	public static void main(String[] args) {

@@ -16,9 +16,9 @@ import javax.servlet.http.HttpSession;
 import org.apache.catalina.connector.RequestFacade;
 import org.apache.catalina.connector.ResponseFacade;
 
-import com.YaNan.frame.core.annotations.RESPONSE_METHOD;
-import com.YaNan.frame.core.annotations.Validate;
 import com.YaNan.frame.core.reflect.ClassLoader;
+import com.YaNan.frame.core.servlet.annotations.RESPONSE_METHOD;
+import com.YaNan.frame.core.servlet.annotations.Validate;
 import com.YaNan.frame.service.Log;
 import com.YaNan.frame.stringSupport.StringSupport;
 

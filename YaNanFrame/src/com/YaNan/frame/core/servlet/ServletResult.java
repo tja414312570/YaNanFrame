@@ -1,6 +1,6 @@
 package com.YaNan.frame.core.servlet;
 
-import com.YaNan.frame.core.annotations.RESPONSE_METHOD;
+import com.YaNan.frame.core.servlet.annotations.RESPONSE_METHOD;
 
 public class ServletResult {
 	private String name;

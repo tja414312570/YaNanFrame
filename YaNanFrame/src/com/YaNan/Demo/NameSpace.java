@@ -1,11 +1,11 @@
 package com.YaNan.Demo;
 
-import com.YaNan.frame.core.annotations.Action;
-import com.YaNan.frame.core.annotations.NameSpaces;
+import com.YaNan.frame.core.servlet.annotations.Action;
+import com.YaNan.frame.core.servlet.annotations.NameSpaces;
 
-@NameSpaces
+@NameSpaces("/user/ddd/ssss")
 public class NameSpace {
-	@Action
+	@Action(namespace="/test/")
 	public void name(){
 		
 	}

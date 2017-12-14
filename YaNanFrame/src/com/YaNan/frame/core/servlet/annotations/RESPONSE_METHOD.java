@@ -1,4 +1,4 @@
-package com.YaNan.frame.core.annotations;
+package com.YaNan.frame.core.servlet.annotations;
 
 public interface RESPONSE_METHOD {
 	public final static int OUTPUT=4280;
