@@ -1,12 +1,19 @@
 package com.YaNan.Demo;
 
-import com.YaNan.frame.core.servlet.annotations.Action;
-import com.YaNan.frame.core.servlet.annotations.NameSpaces;
 
-@NameSpaces("/user/ddd/ssss")
+import com.YaNan.Demo.model.Student;
+import com.YaNan.frame.core.servlet.annotations.Action;
 public class NameSpace {
-	@Action(namespace="/test/")
-	public void name(){
-		
+	
+	private Student student;
+	public Student getStudent() {
+		return student;
+	}
+	public void setStudent(Student student) {
+		this.student = student;
+	}
+	@Action
+	public String name(){
+		return student.toString();
 	}
 }

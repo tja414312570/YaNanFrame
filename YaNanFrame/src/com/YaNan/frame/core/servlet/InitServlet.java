@@ -142,7 +142,9 @@ public class InitServlet {
 						namespace =(nameSpace.equals("*")&&namespace!=null?"":nameSpace)
 								+(action.namespace().equals("*") ? ""
 								: (nameSpace.trim().equals("*")&&namespace!=null?"":"/") + namespace);
-						if(!namespace.equals("*")&&namespace.length()>2){
+						if(namespace.trim().contentEquals(""))
+							namespace="*";
+						if(!namespace.equals("*")&&namespace.length()>1){
 							namespace=(namespace.substring(0,1).equals("/")?"":"/")+namespace+(namespace.substring(namespace.length()-1,namespace.length()).equals("/")?"":"/");
 						}
 						String actionName = action.value().equals("")?method.getName():action.value();

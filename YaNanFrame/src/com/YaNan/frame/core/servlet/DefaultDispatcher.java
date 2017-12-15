@@ -62,8 +62,10 @@ public class DefaultDispatcher extends HttpServlet {
 		if (servletMap.isExist(namespace,servletName)) {
 			// get ServletBean
 			ServletBean bean = servletMap.getServlet(namespace,servletName);
-			if(bean.isCorssOrgin())
-				response.setHeader("Access-Control-Allow-Origin", "*");
+			if(bean.isCorssOrgin()){
+				response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"));
+				response.setHeader("Access-Control-Allow-Credentials","true");
+			}
 			// get nameSpace
 			String beanNamespace = bean.getNameSpace();
 			String urlNamespace = URLSupport.getNameSpace(request);
@@ -121,6 +123,8 @@ public class DefaultDispatcher extends HttpServlet {
 									else
 										valuationFailed(validate,validate.isNull(), response);
 									return;
+								}else {
+									if(!field.getType().equals(String.class)&&!valuationValue(validate, value, response))return;
 								}
 							}
 						}
@@ -200,7 +204,6 @@ public class DefaultDispatcher extends HttpServlet {
 					}
 				}
 			} catch (NoSuchFieldException | SecurityException e) {
-				//http://ufomedia.oss-cn-beijing.aliyuncs.com/user-dir/joshua-earle-252222.jpg				Log.getSystemLog().error("error parameter：field="+field+",value="+value.toString());
 				Log.getSystemLog().exception(e);
 			}
 			return true;
