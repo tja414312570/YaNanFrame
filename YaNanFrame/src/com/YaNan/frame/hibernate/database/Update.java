@@ -85,7 +85,6 @@ public class Update extends OperateImplement{
 	public Update(Class<?> cls) {
 		this.setDbTab(new DBTab(cls));
 	}
-
 	/**
 	 * 设置要更新的数据库字段
 	 * @param updateList

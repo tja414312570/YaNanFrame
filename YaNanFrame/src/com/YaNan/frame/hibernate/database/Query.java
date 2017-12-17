@@ -94,6 +94,10 @@ public static interface Order{
 					}
 					}
 			}
+		}else{
+			Iterator<Field> iterator = this.fieldMap.keySet().iterator();
+			while(iterator.hasNext())
+				this.key.add(iterator.next().getName());
 		}
 	}
 	public Query(Class<?> cls,boolean trans) {
@@ -242,6 +246,7 @@ public static interface Order{
 		this.condition.add(condition);
 	}
 
+	@Override
 	public String create() {
 		String sql = "SELECT ";
 		if (this.key.size() == 0) {
