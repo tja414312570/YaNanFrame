@@ -11,8 +11,14 @@ public class URLSupport {
 	 * @return
 	 */
 	public static String getRootURL(ServletRequest request) {
-		return "http://" + request.getServerName() + ":"
+		String cUrl = request.getScheme()+"://" + request.getServerName() + ":"
 				+ request.getServerPort();
+		int port = request.getServerPort();
+		if(port==80)
+			cUrl=cUrl.replace(":80", "");
+		if(port==443)
+			cUrl=cUrl.replace(":443", "");
+		return cUrl;
 	}
 
 	/**
@@ -22,13 +28,7 @@ public class URLSupport {
 	 * @return
 	 */
 	public static String getContextURL(ServletRequest request) {
-		String cUrl = "http://" + request.getServerName() + ":"
-				+ request.getServerPort()
-				+ ((HttpServletRequest) request).getContextPath() + "/";
-		int port = request.getServerPort();
-		if(port==80)
-			cUrl=cUrl.replace(":80/", "/");
-		return cUrl;
+		return getRootURL(request)+ ((HttpServletRequest) request).getContextPath() + "/";
 	}
 
 	/**
@@ -38,7 +38,14 @@ public class URLSupport {
 	 * @return
 	 */
 	public static String getURL(HttpServletRequest request) {
-		return request.getRequestURL().toString();
+		String cUrl = request.getRequestURL().toString();
+		int port = request.getServerPort();
+		if(port==80)
+			cUrl=cUrl.replace(":80", "");
+		if(port==443)
+			cUrl=cUrl.replace(":443", "");
+		return cUrl;
+		
 	}
 
 	/**
