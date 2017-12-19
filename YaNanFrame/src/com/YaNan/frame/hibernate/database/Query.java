@@ -57,10 +57,27 @@ public static interface Order{
 		this.dbTab = new DBTab(obj);
 		object = obj;
 		this.queryTab = this.dbTab;
-		this.fieldMap.putAll(dbTab.getFieldMap());
 		if (strings.length != 0) {
-			for (String str : strings)
+			for (String str : strings){
 				this.key.add(str);
+				try {
+				if(str.contains(" AS ")){
+					String fieldName = str.split(" AS ")[1];
+					Field field = this.queryTab.getCls().getDeclaredField(fieldName);
+						this.fieldMap.put(field,null);
+					
+					}else if(!str.trim().equals("*")){
+						Field field = this.queryTab.getCls().getDeclaredField(str);
+						this.fieldMap.put(field,null);
+					}else{
+						this.fieldMap.putAll(this.queryTab.getFieldMap());
+					}
+				} catch (NoSuchFieldException | SecurityException e) {
+					Log.getSystemLog().exception(e);
+				}
+			}
+		}else{
+			this.fieldMap.putAll(this.queryTab.getFieldMap());
 		}
 	}
 	public Query(Object obj, boolean starReplace) {
@@ -79,25 +96,27 @@ public static interface Order{
 	public Query(Class<?> cls,String... strings) {
 		this.dbTab = new DBTab(cls);
 		this.queryTab = this.dbTab;
-		this.fieldMap.putAll(dbTab.getFieldMap());
 		if (strings.length != 0) {
 			for (String str : strings){
 				this.key.add(str);
+				try {
 				if(str.contains(" AS ")){
 					String fieldName = str.split(" AS ")[1];
-					Field field;
-					try {
-						field = this.queryTab.getCls().getDeclaredField(fieldName);
+					Field field = this.queryTab.getCls().getDeclaredField(fieldName);
 						this.fieldMap.put(field,null);
-					} catch (NoSuchFieldException | SecurityException e) {
-						Log.getSystemLog().exception(e);
+					
+					}else if(!str.trim().equals("*")){
+						Field field = this.queryTab.getCls().getDeclaredField(str);
+						this.fieldMap.put(field,null);
+					}else{
+						this.fieldMap.putAll(this.queryTab.getFieldMap());
 					}
-					}
+				} catch (NoSuchFieldException | SecurityException e) {
+					Log.getSystemLog().exception(e);
+				}
 			}
 		}else{
-			Iterator<Field> iterator = this.fieldMap.keySet().iterator();
-			while(iterator.hasNext())
-				this.key.add(iterator.next().getName());
+			this.fieldMap.putAll(this.queryTab.getFieldMap());
 		}
 	}
 	public Query(Class<?> cls,boolean trans) {
@@ -125,28 +144,29 @@ public static interface Order{
 	public Query(Class<?> queryCls, Class<?> saveCls,String...strings) {
 		this.dbTab = new DBTab(queryCls);
 		this.queryTab = new DBTab(saveCls);
-		this.fieldMap.putAll(queryTab.getFieldMap());
 		if (strings.length != 0) {
 			for (String str : strings){
-				if(str.equals("*")){
-					Map<Field, DBColumn> map = queryTab.getFieldMap();
-					Iterator<DBColumn> iterator= map.values().iterator();
-					while(iterator.hasNext()){
-						this.key.add(iterator.next().getName());
-					}
-				}
+				this.key.add(str);
+				try {
 				if(str.contains(" AS ")){
-					this.key.add(str);
 					String fieldName = str.split(" AS ")[1];
-					Field field;
-					try {
-						field = this.queryTab.getCls().getDeclaredField(fieldName);
+					Field field = this.queryTab.getCls().getDeclaredField(fieldName);
 						this.fieldMap.put(field,null);
-					} catch (NoSuchFieldException | SecurityException e) {
-						Log.getSystemLog().exception(e);
+					
+					}else if(!str.trim().equals("*")){
+						Field field = this.queryTab.getCls().getDeclaredField(str);
+						this.fieldMap.put(field,null);
+					}else{
+						this.fieldMap.putAll(this.queryTab.getFieldMap());
 					}
-					}
+				} catch (NoSuchFieldException | SecurityException e) {
+					Log.getSystemLog().exception(e);
+				}
 			}
+		}else{
+			Iterator<Field> iterator = this.fieldMap.keySet().iterator();
+			while(iterator.hasNext())
+				this.fieldMap.put(iterator.next(),null);
 		}
 	}
 	public Query(Class<?> queryCls, Class<?> saveCls, boolean trans, String...strings) {

@@ -22,14 +22,12 @@ public class URLSupport {
 	 * @return
 	 */
 	public static String getContextURL(ServletRequest request) {
-		String cUrl = request.getScheme()+"://" + request.getServerName() + ":"
+		String cUrl = "http://" + request.getServerName() + ":"
 				+ request.getServerPort()
 				+ ((HttpServletRequest) request).getContextPath() + "/";
 		int port = request.getServerPort();
 		if(port==80)
 			cUrl=cUrl.replace(":80/", "/");
-		if(port==443)
-			cUrl=cUrl.replace(":443/", "/");
 		return cUrl;
 	}
 
