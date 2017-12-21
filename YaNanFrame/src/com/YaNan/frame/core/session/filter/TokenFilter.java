@@ -277,11 +277,6 @@ public class TokenFilter extends HttpServlet implements Filter {
 		if(token!=null&&token.isRole(tokenEntity.getRoles().split(","))){
 			return false;
 		}
-		if (tokenEntity.getRoles() == null || tokenEntity.getRoles().equals("")) {
-			tokenListener.onSuccess(request, response, chain);
-			return false;
-		} 
-		
 		if (tokenEntity.getChain() != null) {
 			String[] str =tokenEntity.getChain().split(",");
 			for (String s : str) {

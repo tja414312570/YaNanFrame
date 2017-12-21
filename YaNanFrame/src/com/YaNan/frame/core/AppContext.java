@@ -106,7 +106,7 @@ public class AppContext {
 					String namespace = namespaceIterator.next();
 					Log.getSystemLog().write("---------------------------------------------------------");
 					Log.getSystemLog().write("namespace:" + key + ",servlet:" + namespace
-							+ ",servletbean:" + namespaceMap.get(namespace));
+							+ ",servletbean:" +  namespaceMap.get(namespace).getClassName());
 					Log.getSystemLog().write("---------------------------------------------------------");
 				}
 	

@@ -20,7 +20,6 @@ import com.YaNan.frame.service.Log;
 import com.YaNan.frame.stringSupport.StringSupport;
 import com.mysql.jdbc.Connection;
 import com.mysql.jdbc.PreparedStatement;
-import com.mysql.jdbc.Statement;
 
 public class DBTab implements mySqlInterface {
 	private Object object;
@@ -448,7 +447,7 @@ public class DBTab implements mySqlInterface {
 	public Object insert(Insert insert) throws
 			IllegalArgumentException, IllegalAccessException {
 			try {
-				PreparedStatement ps = this.dataBase.execute(insert.create(),Statement.RETURN_GENERATED_KEYS);
+				PreparedStatement ps = this.dataBase.execute(insert.create(),java.sql.Statement.RETURN_GENERATED_KEYS);
 				if(ps!=null){
 					ResultSet rs = ps.getGeneratedKeys();
 					while(rs.next()){
@@ -473,7 +472,7 @@ public class DBTab implements mySqlInterface {
 	public Object insert(Insert insert,Connection connection) throws
 		IllegalArgumentException, IllegalAccessException, SecurityException, SQLException {
 	try {
-		PreparedStatement ps = this.dataBase.execute(insert.create(),connection,Statement.RETURN_GENERATED_KEYS);
+		PreparedStatement ps = this.dataBase.execute(insert.create(),connection,java.sql.Statement.RETURN_GENERATED_KEYS);
 		if(this.AIField!=null){
 			ResultSet rs = ps.getGeneratedKeys();
 			while(rs.next()){
@@ -548,7 +547,6 @@ public class DBTab implements mySqlInterface {
 		if (this.object != null) {
 			name = StringSupport.decodeVar(name, this.object);
 		}
-		Log.getSystemLog().info("build the DataTab Mapping:" + name);
 		this.name = name;
 	}
 
@@ -557,7 +555,6 @@ public class DBTab implements mySqlInterface {
 	}
 
 	public void setMust(boolean isMust) {
-		Log.getSystemLog().info("create the tab when the tab is not exists:" + isMust);
 		this.isMust = isMust;
 	}
 
@@ -578,7 +575,6 @@ public class DBTab implements mySqlInterface {
 		if (this.object != null) {
 			value = StringSupport.decodeVar(value, this.object);
 		}
-		Log.getSystemLog().info("set value：" + value);
 		this.value = value;
 	}
 
@@ -590,7 +586,6 @@ public class DBTab implements mySqlInterface {
 		if (this.object != null) {
 			dBName = StringSupport.decodeVar(dBName, this.object);
 		}
-		Log.getSystemLog().info("set the data base name:" + dBName);
 		DBName = dBName;
 	}
 
