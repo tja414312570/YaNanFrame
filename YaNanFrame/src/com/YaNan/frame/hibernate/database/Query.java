@@ -164,9 +164,7 @@ public static interface Order{
 				}
 			}
 		}else{
-			Iterator<Field> iterator = this.fieldMap.keySet().iterator();
-			while(iterator.hasNext())
-				this.fieldMap.put(iterator.next(),null);
+			this.fieldMap.putAll(this.queryTab.getFieldMap());
 		}
 	}
 	public Query(Class<?> queryCls, Class<?> saveCls, boolean trans, String...strings) {
