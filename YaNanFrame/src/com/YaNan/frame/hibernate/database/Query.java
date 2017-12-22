@@ -21,6 +21,8 @@ import com.YaNan.frame.stringSupport.StringSupport;
 public class Query extends OperateImplement{
 	protected List<String> key = new ArrayList<String>();
 	protected DBTab queryTab;
+	protected Query unionQuery=null;
+	protected boolean unionAll=false;
 	protected Object object;
 	protected Class<?> cls;
 	protected Map<String, Object> map = new HashMap<String, Object>();
@@ -272,7 +274,7 @@ public static interface Order{
 		sql += " FROM " 
 				+ (this.subQuery==null?dbTab.getName():"("+this.subQuery.create()+") AS T"+((int)Math.random()*100));
 		if(this.joinObject!=null){
-			sql +=" LEFT OUTER JOIN "+this.joinObject.getRight()+" ON ";
+			sql +=this.joinObject.isInnerJoin()?" INNER OUTER ":" LEFT "+"JOIN "+this.joinObject.getRight()+" ON ";
 			for(int i =0;i<this.joinObject.getConditions().length;i++){
 				sql+=this.joinObject.getConditions()[i]+
 						(i<this.joinObject.getConditions().length-1?" AND ":" ");
@@ -299,6 +301,9 @@ public static interface Order{
 			while (i.hasNext()) {
 				sql += i.next() + (i.hasNext() ? " AND " : "");
 			}
+		}
+		if(this.unionQuery!=null){
+			sql += this.unionAll?" ":" ALL "+this.unionQuery.create();
 		}
 		if(this.order.size()!=0){
 			Iterator<?> oI = this.order.iterator();
@@ -336,6 +341,13 @@ public static interface Order{
 	public void setSubQuery(Query subQuery){
 		this.subQuery = subQuery;
 	}
+	public void setUnionQuery(Query unionQurery){
+		this.unionQuery = unionQurery;
+	}
+	public void setUnionAllQuery(Query unionQurery){
+		this.unionQuery = unionQurery;
+		this.unionAll=true;
+	}
 	public Query getSubQuery(){
 		return this.subQuery;
 	}
@@ -343,12 +355,7 @@ public static interface Order{
 		return this.dbTab.getName();
 	}
 	public void setJoinLeft(Class<?> cls, String... conditions) {
-		if(conditions.length==0)return;
-		DBTab rTab = new DBTab(cls);
-		this.joinObject = new JoinObject(this.dbTab.getName(),rTab.getName());
-		this.joinObject.setConditions(conditions);
-		for(String condition : this.joinObject.getConditions())
-			this.condition.add(condition);
+		this.setJoinLeft(cls, false, conditions);
 	}
 	public void setJoinLeft(Class<?> cls,boolean trans, String... conditions) {
 		if(conditions.length==0)return;
@@ -359,16 +366,32 @@ public static interface Order{
 			for(String condition : this.joinObject.getConditions())
 				this.condition.add(condition);
 	}
+	public void setInnnerJoin(Class<?> cls, String... conditions) {
+		this.setInnnerJoin(cls,false, conditions);
+	}
+	public void setInnnerJoin(Class<?> cls,boolean trans, String... conditions) {
+		if(conditions.length==0)return;
+		DBTab rTab = new DBTab(cls);
+		this.joinObject = new JoinObject(this.dbTab.getName(),rTab.getName());
+		this.joinObject.setConditions(conditions);
+		this.joinObject.setInnerJoin(true);
+		if(trans)
+			for(String condition : this.joinObject.getConditions())
+				this.condition.add(condition);
+	}
 	/**
 	 * @author tja41
 	 *
 	 */
 	public static class JoinObject{
+		private String left;
+		private String right;
+		private String[] conditions;
+		private boolean innerJoin=false;
 		public JoinObject(String left, String right) {
 			this.left = left;
 			this.right = right;
 		}
-		private String left;
 		public String getLeft() {
 			return left;
 		}
@@ -390,8 +413,13 @@ public static interface Order{
 				this.conditions[i]=StringSupport.decodeVar(conditions[i], this);
 			}
 		}
-		private String right;
-		private String[] conditions;
+		public boolean isInnerJoin() {
+			return innerJoin;
+		}
+		public void setInnerJoin(boolean innerJoin) {
+			this.innerJoin = innerJoin;
+		}
+		
 	}
 	
 }
