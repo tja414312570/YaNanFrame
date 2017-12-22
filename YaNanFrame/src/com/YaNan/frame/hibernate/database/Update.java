@@ -253,4 +253,12 @@ public class Update extends OperateImplement{
 	public void setColumnExpression(String field, Object value) {
 		this.updateList.put(field,value);
 	}
+	/**
+	 * 设置列的Case表达式
+	 * @param field
+	 * @param value
+	 */
+	public void setColumnExpression(Case cases) {
+		this.updateList.put(cases.getColumn(),cases.create());
+	}
 }
