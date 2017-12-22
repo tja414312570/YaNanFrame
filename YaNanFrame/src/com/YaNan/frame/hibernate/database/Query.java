@@ -27,7 +27,6 @@ public class Query extends OperateImplement{
 	protected List<String> condition = new ArrayList<String>();
 	protected List<String> order = new ArrayList<String>();
 	protected Map<Field, DBColumn> fieldMap = new LinkedHashMap<Field, DBColumn>();
-	protected String orderType="";
 	protected String limit="";
 	protected String group=null;
 	private Query subQuery=null;
@@ -209,14 +208,13 @@ public static interface Order{
 	public void addOrder(String...strings ){
 		if(strings.length!=0){
 			for(String str : strings)
-				this.order.add(str);
+				this.order.add(str+" ASC");
 		}
 	}
 	public void addOrderByDesc(String...strings ){
-		if(strings.length!=0&&orderType!=null){
+		if(strings.length!=0){
 			for(String str : strings)
-				this.order.add(str);
-			this.orderType="DESC";
+				this.order.add(str+" DESC");
 		}
 	}
 	public void setlimit(int num){
@@ -313,7 +311,7 @@ public static interface Order{
 				sql += oI.next() + (oI.hasNext() ? "," : " ");
 			}
 		}
-		sql +=this.orderType+" "+(this.limit.equals("")?"":"LIMIT "+this.limit);
+		sql +=" "+(this.limit.equals("")?"":"LIMIT "+this.limit);
 		return sql;
 	}
 	public List<?> query() {
