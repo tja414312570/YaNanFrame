@@ -206,16 +206,12 @@ public static interface Order{
 		}
 	}
 	public void addOrder(String...strings ){
-		if(strings.length!=0){
-			for(String str : strings)
-				this.order.add(str+" ASC");
-		}
+		for(String str : strings)
+			this.order.add(str+" ASC");
 	}
 	public void addOrderByDesc(String...strings ){
-		if(strings.length!=0){
-			for(String str : strings)
-				this.order.add(str+" DESC");
-		}
+		for(String str : strings)
+			this.order.add(str+" DESC");
 	}
 	public void setlimit(int num){
 		this.limit = limit+"";
