@@ -320,7 +320,7 @@ public static interface Order{
 	}
 	public List<?> query(boolean mapping){
 	this.queryTab.setDataBase(this.dbTab.getDataBase());
-	return this.queryTab.query(this,create(),mapping);
+	return this.queryTab.query(this,mapping);
 }
 	public Map<Field, DBColumn> getFieldMap(){
 		return this.fieldMap;

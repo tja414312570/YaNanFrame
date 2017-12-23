@@ -4,6 +4,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.Date;
 import java.util.List;
 
 import com.YaNan.frame.core.aspect.AspectContainer;
@@ -705,7 +706,7 @@ public class ClassLoader {
 			InvocationTargetException {
 		return invokeMethod(this.loadObject, methodName,parameterType,args);
 	}
-	private Object invokeMethod(Object object,String methodName, Class<?>[] parameterType,
+	private Object invokeMethod(final Object object,final String methodName, Class<?>[] parameterType,
 			Object... args) throws NoSuchMethodException, SecurityException,
 			IllegalAccessException, IllegalArgumentException,
 			InvocationTargetException {
@@ -725,7 +726,7 @@ public class ClassLoader {
 			}
 		}).start();
 		Method method = this.loadClass.getMethod(methodName, parameterType);
-		Object result = method.invoke(object, args);
+		final Object result = method.invoke(object, args);
 		if(aspect)
 		new Thread(new Runnable() {
 			@Override
@@ -946,5 +947,35 @@ public class ClassLoader {
 
 	public void setAspect(boolean aspect) {
 		this.aspect = aspect;
+	}
+	public static Object castType(Object orgin, Class<?> targetType) {
+		if(orgin==null)return null;
+		// 整形
+		if (targetType.equals(int.class))
+			return Integer.parseInt((orgin.toString()).equals("")?"0":orgin.toString());
+		if (targetType.equals(short.class))
+			return Short.parseShort((String) orgin);
+		if (targetType.equals(long.class))
+			return Long.parseLong((String) orgin);
+		if (targetType.equals(byte.class))
+			return Byte.parseByte((String) orgin);
+		// 浮点
+		if (targetType.equals(float.class))
+			return Float.parseFloat(orgin.toString());
+		if (targetType.equals(double.class))
+			return Double.parseDouble((String) orgin);
+		// 日期
+		if (targetType.equals(Date.class))
+			return Date.valueOf((String) orgin);
+		// 布尔型
+		if (targetType.equals(boolean.class))
+			return Boolean.parseBoolean((String) orgin);
+		// char
+		if (targetType.equals(char.class))
+			return (char) orgin;
+		if (targetType.equals(String.class))
+			return orgin.toString();
+		// 没有匹配到返回源数据
+		return orgin;
 	}
 }

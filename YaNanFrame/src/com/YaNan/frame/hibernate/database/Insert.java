@@ -52,6 +52,7 @@ public class Insert extends OperateImplement{
 	/**
 	 * 此方法用于创建数据库操作的sql语句。可以用于调试
 	 */
+	@Override
 	public String create() {
 		String sql = "INSERT INTO " + this.dbTab.getName() + "(";
 		if (this.fieldMap.size() == 0) 

@@ -11,8 +11,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+
 import com.YaNan.frame.core.reflect.ClassLoader;
-import com.YaNan.frame.core.servlet.DefaultDispatcher;
 import com.YaNan.frame.hibernate.database.DBInterface.mySqlInterface;
 import com.YaNan.frame.hibernate.database.annotation.Column;
 import com.YaNan.frame.hibernate.database.annotation.Tab;
@@ -252,16 +252,13 @@ public class DBTab implements mySqlInterface {
 			while (iterator.hasNext()) {
 				Field field = iterator.next();
 				try {
-					if (loader.hasMethod(
-							ClassLoader.createFieldSetMethod(field),
-							field.getType()))
-						if(rs.getObject(this.map.get(field).getName())!=null)
-						loader.set(field.getName(), field.getType(),
-								DefaultDispatcher.castType(rs
-										.getObject(this.map.get(field)
-												.getName()), field.getType()));
+					String columnName= this.map.get(field)==null?field.getName():this.map.get(field).getName();
+					if(columnName.contains("."))columnName=columnName.substring(columnName.lastIndexOf(".")+1);
+					if(rs.getObject(columnName)!=null)
+						this.setField(loader, field, rs.getObject(columnName));
 				} catch (InvocationTargetException | NoSuchMethodException e) {
 					e.printStackTrace();
+					continue;
 				}
 			}
 			objects.add(loader.getLoadedObject());
@@ -270,28 +267,22 @@ public class DBTab implements mySqlInterface {
 	}
 
 	
-	public List<Object> query(Query query,String sql,boolean mapping) {
+	public List<Object> query(Query query,boolean mapping) {
 		List<Object> objects = new ArrayList<Object>();
 		try {
-			ResultSet rs =this.dataBase.executeQuery(sql);
+			ResultSet rs =this.dataBase.executeQuery(query.create());
 			while (rs.next()) {
 				loader = new ClassLoader(this.cls);
 				Iterator<Field> iterator = query.getFieldMap().keySet().iterator();
 				while (iterator.hasNext()) {
 					Field field = iterator.next();
 					try {
-						if (loader.hasMethod(
-								ClassLoader.createFieldSetMethod(field),
-								field.getType())){
-							String columnName= this.map.get(field)==null?field.getName():this.map.get(field).getName();
-							if(columnName.contains(".")&&mapping)columnName=columnName.substring(columnName.lastIndexOf(".")+1);
-							if(rs.getObject(columnName)!=null)
-							loader.set(field.getName(), field.getType(),
-									DefaultDispatcher.castType(rs
-											.getObject(columnName), field.getType()));
-						}
+						String columnName= this.map.get(field)==null?field.getName():this.map.get(field).getName();
+						if(columnName.contains(".")&&mapping)columnName=columnName.substring(columnName.lastIndexOf(".")+1);
+						if(rs.getObject(columnName)!=null)
+							this.setField(loader, field, rs.getObject(columnName));
 					} catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException | IllegalArgumentException | SecurityException | SQLException e) {
-						Log.getSystemLog().error(sql);
+						Log.getSystemLog().error(query.create());
 						e.printStackTrace();
 						continue;
 					}
@@ -299,7 +290,7 @@ public class DBTab implements mySqlInterface {
 				objects.add(loader.getLoadedObject());
 			}
 		} catch (SQLException e) {
-			Log.getSystemLog().error(sql);
+			Log.getSystemLog().error(query.create());
 			e.printStackTrace();
 		}
 		return objects;
@@ -308,29 +299,7 @@ public class DBTab implements mySqlInterface {
 	public List<Object> query(Query query) throws SQLException,
 			InstantiationException, IllegalAccessException,
 			NoSuchFieldException, SecurityException, IllegalArgumentException {
-		ResultSet rs = this.dataBase.executeQuery(query.create());
-		List<Object> objects = new ArrayList<Object>();
-		while (rs.next()) {
-			loader = new ClassLoader(cls, true);
-			Iterator<Field> iterator = this.map.keySet().iterator();
-			while (iterator.hasNext()) {
-				Field field = iterator.next();
-				try {
-					if (loader.hasMethod(
-							ClassLoader.createFieldSetMethod(field),
-							field.getType()))
-						if(rs.getObject(this.map.get(field).getName())!=null)
-						loader.set(field.getName(), field.getType(),
-								DefaultDispatcher.castType(rs
-										.getObject(this.map.get(field)
-												.getName()), field.getType()));
-				} catch (InvocationTargetException | NoSuchMethodException e) {
-					e.printStackTrace();
-				}
-			}
-			objects.add(loader.getLoadedObject());
-		}
-		return objects;
+		return this.query(query,false);
 	}
 	public List<Object> query(Query query,Connection connection) throws SQLException,
 		InstantiationException, IllegalAccessException,
@@ -343,14 +312,10 @@ public class DBTab implements mySqlInterface {
 		while (iterator.hasNext()) {
 			Field field = iterator.next();
 			try {
-				if (loader.hasMethod(
-						ClassLoader.createFieldSetMethod(field),
-						field.getType()))
-					if(rs.getObject(this.map.get(field).getName())!=null)
-					loader.set(field.getName(), field.getType(),
-							DefaultDispatcher.castType(rs
-									.getObject(this.map.get(field)
-											.getName()), field.getType()));
+				String columnName= this.map.get(field)==null?field.getName():this.map.get(field).getName();
+				if(columnName.contains("."))columnName=columnName.substring(columnName.lastIndexOf(".")+1);
+				if(rs.getObject(columnName)!=null)
+					this.setField(loader, field, rs.getObject(columnName));
 			} catch (InvocationTargetException | NoSuchMethodException e) {
 				e.printStackTrace();
 			}
@@ -393,7 +358,14 @@ public class DBTab implements mySqlInterface {
 	public Map<Field, DBColumn> getDBColumns() {
 		return this.map;
 	}
-
+	public void setField(ClassLoader loader,Field field,Object value) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException{
+		field.setAccessible(true);	
+		if (loader.hasMethod(ClassLoader.createFieldSetMethod(field),
+					field.getType()))
+				loader.set(field.getName(), field.getType(), ClassLoader.castType(value, field.getType()));
+			else
+			    field.set(loader.getLoadedObject(),ClassLoader.castType(value, field.getType()));
+	}
 	/**
 	 * 
 	 * @param insert
@@ -408,17 +380,12 @@ public class DBTab implements mySqlInterface {
 		PreparedStatement ps = this.dataBase.execute(insert.create());
 		ResultSet rs = ps.getGeneratedKeys();
 		ClassLoader loader = new ClassLoader(obj);
-			try {
-				if (this.AIField!=null&&loader.hasMethod(ClassLoader.createFieldSetMethod(this.AIField),
-						this.AIField.getType()))
-					loader.set(
-							this.AIField.getName(),
-							this.AIField.getType(),
-							DefaultDispatcher.castType(rs.getInt(1),
-									this.AIField.getType()));
-			} catch (InvocationTargetException | NoSuchMethodException e) {
-				Log.getSystemLog().exception(e);
-			}
+		try {
+			if (this.AIField!=null&&rs.next())
+				this.setField(loader, this.AIField, rs.getInt(1));
+		} catch (InvocationTargetException | NoSuchMethodException e) {
+			Log.getSystemLog().exception(e);
+		}
 		return obj;
 	}
 
@@ -450,16 +417,8 @@ public class DBTab implements mySqlInterface {
 				PreparedStatement ps = this.dataBase.execute(insert.create(),java.sql.Statement.RETURN_GENERATED_KEYS);
 				if(ps!=null){
 					ResultSet rs = ps.getGeneratedKeys();
-					while(rs.next()){
-						this.AIField.setAccessible(true);
-						if (loader.hasMethod(ClassLoader.createFieldSetMethod(this.AIField),
-								this.AIField.getType()))
-							loader.set(
-									this.AIField.getName(),
-									this.AIField.getType(),
-								DefaultDispatcher.castType(rs.getInt(1),
-										this.AIField.getType()));
-					}
+					if (this.AIField!=null&&rs.next())
+						this.setField(loader, this.AIField, rs.getInt(1));
 				}else{
 					return null;
 				}
@@ -475,16 +434,8 @@ public class DBTab implements mySqlInterface {
 		PreparedStatement ps = this.dataBase.execute(insert.create(),connection,java.sql.Statement.RETURN_GENERATED_KEYS);
 		if(this.AIField!=null){
 			ResultSet rs = ps.getGeneratedKeys();
-			while(rs.next()){
-				this.AIField.setAccessible(true);
-				if (loader.hasMethod(ClassLoader.createFieldSetMethod(this.AIField),
-						this.AIField.getType()))
-					loader.set(
-							this.AIField.getName(),
-							this.AIField.getType(),
-						DefaultDispatcher.castType(rs.getInt(1),
-								this.AIField.getType()));
-			}
+			if (this.AIField!=null&&rs.next())
+				this.setField(loader, this.AIField, rs.getInt(1));
 		}
 	} catch (InvocationTargetException | NoSuchMethodException  e) {
 		Log.getSystemLog().error(insert.create());;

@@ -254,7 +254,9 @@ public class DefaultDispatcher extends HttpServlet {
 					return false;
 				if (loader.hasMethod(ClassLoader.createFieldSetMethod(field),
 						field.getType()))
-					loader.set(field.getName(), field.getType(), castType(value, field.getType()));
+					loader.set(field.getName(), field.getType(), ClassLoader.castType(value, field.getType()));
+				else
+				    field.set(loader.getLoadedObject(),ClassLoader.castType(value, field.getType()));
 			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
 					| NoSuchMethodException | SecurityException e) {
 				e.printStackTrace();
@@ -262,36 +264,7 @@ public class DefaultDispatcher extends HttpServlet {
 		return true;
 	}
 
-	public static Object castType(Object orgin, Class<?> targetType) {
-		if(orgin==null)return null;
-		// 整形
-		if (targetType.equals(int.class))
-			return Integer.parseInt((orgin.toString()).equals("")?"0":orgin.toString());
-		if (targetType.equals(short.class))
-			return Short.parseShort((String) orgin);
-		if (targetType.equals(long.class))
-			return Long.parseLong((String) orgin);
-		if (targetType.equals(byte.class))
-			return Byte.parseByte((String) orgin);
-		// 浮点
-		if (targetType.equals(float.class))
-			return Float.parseFloat(orgin.toString());
-		if (targetType.equals(double.class))
-			return Double.parseDouble((String) orgin);
-		// 日期
-		if (targetType.equals(Date.class))
-			return Date.valueOf((String) orgin);
-		// 布尔型
-		if (targetType.equals(boolean.class))
-			return Boolean.parseBoolean((String) orgin);
-		// char
-		if (targetType.equals(char.class))
-			return (char) orgin;
-		if (targetType.equals(String.class))
-			return orgin.toString();
-		// 没有匹配到返回源数据
-		return orgin;
-	}
+	
 
 	/**
 	 * 判断是否用户需要跳转,或自己获取输出流，不需要则直接将回调传入前台
