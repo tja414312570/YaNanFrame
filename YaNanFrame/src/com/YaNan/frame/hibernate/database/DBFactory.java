@@ -33,6 +33,7 @@ public class DBFactory {
 	private Map<String,DataBase> dbMap = new HashMap<String,DataBase>();
 	private DataBase defaultDB = null;
 	private File xmlFile;//new File("src/hibernate.xml");//
+	private String classPath;
 	public static DBFactory getDBFactory(){
 		if (dbFactory ==null)
 				dbFactory=new DBFactory();
@@ -78,7 +79,9 @@ public class DBFactory {
 	}
 	
 	public void initTabs() {
-		String classPath = WebPath.getWebPath().getClassPath().getRealPath();
+		if(classPath==null)
+			classPath = this.getClass().getClassLoader().getResource("").getPath().replace("%20"," ");
+		this.initTables(classPath, null);
 		this.initTabs(classPath);
 	}
 	public void initTabs(String classPath) {
@@ -92,10 +95,6 @@ public class DBFactory {
 		xmlBean.addNameMaping("package","PACKAGE");
 		List<Object> lists = xmlBean.execute();
 		Iterator<Object> iterator = lists.iterator();
-		while(iterator.hasNext()){
-			Package pkg = (Package) iterator.next();
-			initTables(pkg,classPath);
-		}
 		//初始化配置式
 		xmlBean = BeanFactory.getXMLBean();
 		xmlBean.addXMLFile(xmlFile);
@@ -111,22 +110,22 @@ public class DBFactory {
 			initTab(xmlPath,tabs);
 		}
 	}
-	private void initTables(Package pkg,String classPath){
-		String packageName = pkg.getPACKAGE();
-		if(packageName!=null&&!packageName.equals("")){
-			PackageScanner scanner = new PackageScanner();
-			scanner.setClassPath(classPath);
-			scanner.setPackageName(packageName);
-			scanner.doScanner(new ClassInter(){
-				@Override
-				public void find(Class<?> cls) {
-					if(cls.getAnnotation(com.YaNan.frame.hibernate.database.annotation.Tab.class)!=null){
-						Log.getSystemLog().info("scan hibernate class:"+cls.getName());
-						new DBTab(cls);
-					}
+	public void initTables(String classPath,String pkg){
+		PackageScanner scanner = new PackageScanner();
+		if(classPath==null)
+			classPath = this.getClass().getClassLoader().getResource("").getPath().replace("%20"," ");
+		scanner.setClassPath(classPath);
+		if(pkg!=null&&!pkg.equals("*"))
+			scanner.setPackageName(pkg);
+		scanner.doScanner(new ClassInter(){
+			@Override
+			public void find(Class<?> cls) {
+				if(cls.getAnnotation(com.YaNan.frame.hibernate.database.annotation.Tab.class)!=null){
+					Log.getSystemLog().info("scan hibernate class:"+cls.getName());
+					new DBTab(cls);
 				}
-			});
-		}
+			}
+		});
 	}
 	public void initTab(String xmlPath,Tabs tabs){
 		XMLBean xmlBean = BeanFactory.getXMLBean();

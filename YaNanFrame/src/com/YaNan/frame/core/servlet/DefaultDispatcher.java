@@ -3,7 +3,6 @@ package com.YaNan.frame.core.servlet;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.sql.Date;
 import java.util.Enumeration;
 
 import javax.servlet.ServletException;
@@ -274,8 +273,8 @@ public class DefaultDispatcher extends HttpServlet {
 	 */
 	private void response(ServletBean bean, String callResult,HttpServletRequest request,
 			HttpServletResponse response,ClassLoader loader) {
-		if (!bean.hasOutputStream()) {
-			try {
+		try {	
+			if (!bean.hasOutputStream())
 				if (bean.hasResult() && bean.hasResultName(callResult)) {
 					ServletResult result= bean.getResult(callResult);
 					switch(result.getMethod()){
@@ -308,20 +307,16 @@ public class DefaultDispatcher extends HttpServlet {
 						break;
 					}
 				}
-			} catch (IOException | ServletException e) {
-				log.error(e.toString());
-				e.printStackTrace();
-			}
+			//destroy
+			if (loader!=null&&loader.hasMethod("destroy"))
+					loader.invokeMethod("destroy");
+		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
+				| InvocationTargetException | ServletException | IOException e) {
+			e.printStackTrace();
+		}finally{
+			loader=null;
+			System.gc();
 		}
-		//destroy
-		if (loader!=null&&loader.hasMethod("destroy"))
-			try {
-				loader.invokeMethod("destroy");
-			} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
-					| InvocationTargetException e) {
-				e.printStackTrace();
-			}
-
 	}
 
 }

@@ -150,9 +150,11 @@ public class InitServlet {
 						String actionName = action.value().equals("")?method.getName():action.value();
 						if (servletMannager.asExist(namespace ,actionName)) {
 							try {
+								ServletBean servlet = servletMannager.getServlet(namespace, actionName);
 								throw new Exception("servelt [" + actionName
 										+ "] is exists at namespace [" +namespace
-										+ "] please check class:'"+cls.getName());
+										+ "] please check class:'"+cls.getName() + "',repeat class:'" 
+										+ servlet.getClassName().getName()+"',method:"+servlet.getMethod().getName());
 							} catch (Exception e) {
 								e.printStackTrace();
 								log.write("servelt [" + actionName
