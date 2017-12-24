@@ -47,5 +47,9 @@ public @interface Column {
 	String Default() default "";
 
 	boolean encrypt() default false;
+    
+	String collate() default "";
+	
+	String charset() default "";
 	
 }

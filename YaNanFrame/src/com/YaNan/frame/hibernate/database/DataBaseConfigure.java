@@ -10,6 +10,8 @@ public class DataBaseConfigure {
 	private String port = "3306";
 	private String username = "root";
 	private String password = "";
+	private String cahrset = "utf8";
+	private String collate = "utf8_general_ci";
 	private String encoding = "utf-8";
 	private String defaulted;
 	private String log="false";
@@ -88,18 +90,17 @@ public class DataBaseConfigure {
 	public void setPassword(String password) {
 		this.password = password;
 	}
-	public String getEncoding() {
-		return encoding;
+	public String getCahrset() {
+		return cahrset;
 	}
-	@Override
-	public String toString() {
-		return "DataBaseConfigure [id=" + id + ", name=" + name + ", driver=" + driver + ", type=" + type + ", scheme="
-				+ scheme + ", host=" + host + ", port=" + port + ", username=" + username + ", password=" + password
-				+ ", encoding=" + encoding + ", defaulted=" + defaulted + ", log=" + log + ", minNum=" + minNum
-				+ ", maxNum=" + maxNum + ", addNum=" + addNum + "]";
+	public void setCahrset(String cahrset) {
+		this.cahrset = cahrset;
 	}
-	public void setEncoding(String encoding) {
-		this.encoding = encoding;
+	public String getCollate() {
+		return collate;
+	}
+	public void setCollate(String collate) {
+		this.collate = collate;
 	}
 	public String getDefaulted() {
 		return defaulted;
@@ -112,5 +113,18 @@ public class DataBaseConfigure {
 	}
 	public void setLog(String log) {
 		this.log = log;
+	}
+	public String getEncoding() {
+		return encoding;
+	}
+	public void setEncoding(String encoding) {
+		this.encoding = encoding;
+	}
+	@Override
+	public String toString() {
+		return "DataBaseConfigure [id=" + id + ", name=" + name + ", driver=" + driver + ", type=" + type + ", scheme="
+				+ scheme + ", host=" + host + ", port=" + port + ", username=" + username + ", password=" + password
+				+ ", cahrset=" + cahrset + ", collate=" + collate + ", encoding=" + encoding + ", defaulted="
+				+ defaulted + ", log=" + log + ", minNum=" + minNum + ", maxNum=" + maxNum + ", addNum=" + addNum + "]";
 	}
 }

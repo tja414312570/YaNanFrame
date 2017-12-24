@@ -42,7 +42,7 @@ public class Insert extends OperateImplement{
 				if (this.dbTab.getDBColumn(field).isAuto_Increment())
 					continue;
 				if(this.dbTab.getLoader().get(field.getName())!=null){
-					this.fieldMap.put(this.dbTab.getFieldMap().get(field).getName(),"'"+this.dbTab.getLoader().get(field.getName())+"'");
+					this.fieldMap.put(this.dbTab.getFieldMap().get(field).getName(),"'"+this.dbTab.getLoader().get(field.getName()).toString().replace("'", "\\'")+"'");
 				}
 			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
 				e.printStackTrace();

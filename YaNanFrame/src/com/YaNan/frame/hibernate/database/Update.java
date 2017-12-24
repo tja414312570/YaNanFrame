@@ -35,9 +35,8 @@ public class Update extends OperateImplement{
 		while(fI.hasNext()){
 			Field field = fI.next();
 			try {
-				if(this.dbTab.getLoader().get(field.getName())!=null){
-					this.updateList.put(this.getDbTab().getDBColumn(field).getName(),"'"+this.dbTab.getLoader().get(field.getName())+"'");
-				}
+				if(this.dbTab.getLoader().get(field.getName())!=null)
+					this.updateList.put(this.getDbTab().getDBColumn(field).getName(),"'"+this.dbTab.getLoader().get(field.getName()).toString().replace("'", "\\'")+"'");
 			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
 				Log.getSystemLog().exception(e);
 			}
@@ -53,9 +52,8 @@ public class Update extends OperateImplement{
 		while(fI.hasNext()){
 			Field field = fI.next();
 			try {
-				if(this.dbTab.getLoader().get(field.getName())!=null){
-					this.updateList.put(this.getDbTab().getDBColumn(field).getName(),"'"+this.dbTab.getLoader().get(field.getName())+"'");
-				}
+				if(this.dbTab.getLoader().get(field.getName())!=null)
+					this.updateList.put(this.getDbTab().getDBColumn(field).getName(),"'"+this.dbTab.getLoader().get(field.getName()).toString().replace("'", "\\'")+"'");
 			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
 				Log.getSystemLog().exception(e);
 			}
@@ -70,9 +68,8 @@ public class Update extends OperateImplement{
 			this.setDbTab(new DBTab(object));
 			for(String strField : fields){
 				Field field =this.getDbTab().getCls().getDeclaredField(strField);
-				if(this.dbTab.getLoader().get(field.getName())!=null){
-					this.updateList.put(this.getDbTab().getDBColumn(field).getName(),"'"+this.dbTab.getLoader().get(field.getName())+"'");
-				}
+				if(this.dbTab.getLoader().get(field.getName())!=null)
+					this.updateList.put(this.getDbTab().getDBColumn(field).getName(),"'"+this.dbTab.getLoader().get(field.getName()).toString().replace("'", "\\'")+"'");
 			}
 		}catch(Exception e){
 			Log.getSystemLog().exception(e);
@@ -110,7 +107,7 @@ public class Update extends OperateImplement{
 	 */
 	public void setField(String field,Object value) throws NoSuchFieldException, SecurityException{
 		String column = this.getDbTab().getDBColumn(field).getName();
-		this.updateList.put(column,  "'"+value+"'");
+		this.updateList.put(column,  "'"+value.toString().replace("'", "\\'")+"'");
 	}
 	/**
 	 * 添加要更新的域
@@ -118,7 +115,7 @@ public class Update extends OperateImplement{
 	 * @param value
 	 */
 	public void setColumn(String field,Object value){
-		this.updateList.put(field, "'"+value+"'");
+		this.updateList.put(field, "'"+value.toString().replace("'", "\\'")+"'");
 	}
 	/**
 	 * 设置要更新的域
@@ -133,23 +130,19 @@ public class Update extends OperateImplement{
 	}
 
 	public void addCondition(Field field, Object condition) {
-		this.map.put(getDbTab().getDBColumn(field).getName(), condition + "");
+		this.map.put(getDbTab().getDBColumn(field).getName(), condition.toString().replace("'", "\\'") );
 	}
 
 	public void addCondition(String field,Object condition) {
 		try {
-			this.map.put(getDbTab().getDBColumn(field).getName(), condition+"");
+			this.map.put(getDbTab().getDBColumn(field).getName(), condition.toString().replace("'", "\\'"));
 		} catch (NoSuchFieldException | SecurityException e) {
 			Log.getSystemLog().exception(e);
 		}
 	}
 
-	public void addCondition(String condition) {
+	public void addConditionCommand(String condition) {
 		this.condition.add(condition);
-	}
-
-	public void addCondition(Field condition) {
-		this.condition.add(condition.getName());
 	}
 
 	public String create() {

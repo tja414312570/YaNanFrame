@@ -11,7 +11,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-
 import com.YaNan.frame.core.reflect.ClassLoader;
 import com.YaNan.frame.hibernate.database.DBInterface.mySqlInterface;
 import com.YaNan.frame.hibernate.database.annotation.Column;
@@ -22,37 +21,123 @@ import com.mysql.jdbc.Connection;
 import com.mysql.jdbc.PreparedStatement;
 
 public class DBTab implements mySqlInterface {
-	private Object object;
-	private String name;
-	private boolean isMust;
-	private String include;
-	private String value;
-	private String DBName;
+	private Field AIField;
 	private boolean autoUpdate;
+	private String charset;
 	private Class<?> cls;
+	private String collate;
+	private Map<String, String> columns = new LinkedHashMap<String, String>();
+	private DataBase dataBase;
+	private String DBName;
+	private String include;
+	private boolean isMust;
 	private ClassLoader loader;
 	private Map<Field, DBColumn> map = new LinkedHashMap<Field, DBColumn>();
-	private Map<String, String> columns = new LinkedHashMap<String, String>();
-	private Map<String, ResultSet> session = new HashMap<String, ResultSet>();
-	private Field AIField;
+	private String name;
+	private Object object;
 	private Field Primary_key;
-	private DataBase dataBase;
-	public ClassLoader getLoader() {
-		return loader;
+	private Map<String, ResultSet> session = new HashMap<String, ResultSet>();
+	private String value;
+
+	/**
+	 * 默认构造器，需要传入一个Class《？》的class 构造器会默认从DataBase中获得connection
+	 * 同时该构造器会对cls进行处理，进行class与Field的映射
+	 * 
+	 * @param cls
+	 */
+	public DBTab(Class<?> cls) {
+		this(new ClassLoader(cls).getLoadedObject());
 	}
-	private void Clone(DBTab tab) {
-		this.dataBase = tab.dataBase;
-		this.object = tab.object;
-		this.name = tab.name;
-		this.isMust = tab.isMust;
-		this.include = tab.include;
-		this.value = tab.value;
-		this.DBName = tab.DBName;
-		this.cls = tab.cls;
-		this.map = tab.map;
-		this.session = tab.session;
-		this.AIField = tab.AIField;
-		this.Primary_key = tab.Primary_key;
+
+	public DBTab(com.YaNan.frame.hibernate.database.entity.Tab tabEntity)
+			throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+		this(new ClassLoader(tabEntity.getCLASS()).getLoadedClass());
+	}
+
+	public DBTab(Object obj) {
+		this.cls = obj.getClass();
+		this.object = obj;
+		this.loader = new ClassLoader(obj);
+		Tab tab = this.loader.getLoadedClass().getAnnotation(Tab.class);
+		if (tab == null) {
+			Class<?> sCls = this.cls.getSuperclass();
+			tab = sCls.getAnnotation(Tab.class);
+			if (tab != null) {
+				this.cls = sCls;
+			}
+		}
+		// 如果表缓存中有当前类得表
+		if (Class2TabMappingCache.hasTab(this.cls)) {
+			this.Clone(Class2TabMappingCache.getDBTab(this.cls), obj);
+			if (tab != null) {
+				this.setName(tab.name().equals("") ? this.DBName + "." + this.cls.getSimpleName()
+						: this.DBName + "." + tab.name());
+				try {
+					if (!this.DBName.equals("") && this.isMust&& !this.exists()) {
+						this.create();
+					}
+				} catch (Exception e) {
+					Log.getSystemLog().error("the databaes [" + this.DBName
+							+ "] is't init ,please try to init database! at class [" + this.getCls().getName() + "]");
+					e.printStackTrace();
+				}
+			}
+			// 如果表缓存中不存在当前表
+		} else {
+			// 重新解析数据表
+			Log.getSystemLog().info(
+					"================================================================================================================");
+			Log.getSystemLog().info("the current class：" + cls.getSimpleName());
+			// 如果当前类有Tab注解
+			if (tab != null) {
+				this.setDBName(tab.DB());
+				this.setInclude(tab.include());
+				this.setMust(tab.isMust());
+				this.setName(tab.name().equals("") ? this.DBName + "." + cls.getSimpleName()
+						: this.DBName + "." + tab.name());
+				this.setValue(tab.value());
+				this.setAutoUpdate(tab.autoUpdate());
+				if (!tab.charset().equals(""))
+					this.setCharset(tab.charset());
+				if (!tab.collate().equals(""))
+					this.setCollate(tab.collate());
+			} else {
+				Log.getSystemLog().info("not annotion configure,try to set default");
+				this.setDBName("");
+				this.setInclude("");
+				this.setMust(false);
+				this.setName(cls.getSimpleName());
+				this.setValue("");
+				this.setAutoUpdate(false);
+			}
+			this.setMap(cls);
+			try {
+				if (this.DBName != null && !this.DBName.equals(""))
+					this.dataBase = DBFactory.HasDB(this.DBName) ? DBFactory.getDataBase(this.DBName)
+							: DBFactory.getDefaultDB();
+				Class2TabMappingCache.addTab(this);
+				if (this.isMust&&!this.DBName.equals("") && !this.exists()) {
+					this.create();
+				}
+			} catch (Exception e) {
+				Log.getSystemLog().error("the databaes [" + this.DBName
+						+ "] is't init ,please try to init database! at class [" + this.getCls().getName() + "]");
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public void addColumn(Map<String, String> columns) {
+		Iterator<String> i = columns.keySet().iterator();
+		while (i.hasNext()) {
+			String key = i.next();
+			this.columns.put(key, columns.get(key));
+		}
+
+	}
+
+	public void addColumn(String column, String type) {
+		this.columns.put(column, type);
 	}
 
 	private void Clone(DBTab tab, Object obj) {
@@ -68,182 +153,206 @@ public class DBTab implements mySqlInterface {
 		this.session = tab.session;
 		this.AIField = tab.AIField;
 		this.Primary_key = tab.Primary_key;
+		this.charset = tab.charset;
+		this.collate = tab.collate;
 
 	}
-	public DBTab(com.YaNan.frame.hibernate.database.entity.Tab tabEntity) throws ClassNotFoundException{
-		this.cls = Class.forName(tabEntity.getCLASS());
-		this.loader = new ClassLoader(this.cls);
-		Tab tab = this.loader.getLoadedClass().getAnnotation(Tab.class);
-		if(tab==null){
-			Class<?> sCls=this.cls.getSuperclass();
-			tab = sCls.getAnnotation(Tab.class); 
-			if(tab!=null){
-				this.cls = sCls;
-				this.loader = new ClassLoader(this.cls);
-			}
-		}
-		if (Class2TabMappingCache.hasTab(this.cls)) {
-			this.Clone(Class2TabMappingCache.getDBTab(this.cls));
-		} else {
-			Log.getSystemLog()
-			.info("================================================================================================================");
-			Log.getSystemLog().info("the current class：" + this.cls.getSimpleName());
-			if (tab != null) {
-				this.setDBName(tab.DB().equals("")?tabEntity.getDb():tab.DB());
-				this.setInclude(tab.include());
-				this.setMust(tab.isMust());
-				this.setName(tab.name().equals("") ? this.DBName+"."+this.cls.getSimpleName() : this.DBName+"."+tab
-						.name());
-				this.setValue(tab.value());
-				this.setAutoUpdate(tab.autoUpdate());
-			} else {
-				Log.getSystemLog().info("not annotion configure,try to set default");
-				this.setDBName(tabEntity.getDb()==null?"":tabEntity.getDb());
-				this.setInclude("");
-				this.setMust(false);
-				this.setName(this.cls.getSimpleName());
-				this.setValue("");
-				this.setAutoUpdate(false);
-			}
-			this.setMap(this.cls);
-			try {
-				if(this.DBName!=null&&!this.DBName.equals(""))
-				this.dataBase = DBFactory.HasDB(this.DBName)?DBFactory.getDataBase(this.DBName):DBFactory.getDefaultDB();
-				Class2TabMappingCache.addTab(this);
-				if(this.isMust&&!this.exists()){
-					this.create();
-				}
-			} catch (Exception e) {
-				Log.getSystemLog().error("the databaes ["+this.DBName+"] is't init ,please try to init database! at class ["+this.getCls().getName()+"]");
-				e.printStackTrace();
-			} 
-		}
+
+	public boolean create() {
+		return create(new Create(this)) > 0;
+	}
+
+	public int create(Create create) {
+		return this.dataBase.executeUpdate(create.create());
+
+	}
+
+	public boolean delete() {
+		return true;
+	}
+
+	public int delete(Delete delete) {
+		return this.dataBase.executeUpdate(delete.create());
+
+	}
+
+	public boolean delete(Delete delete, Connection connection) throws SQLException {
+		this.dataBase.executeUpdate(delete.create(), connection);
+		return true;
+	}
+
+	public boolean exists() throws Exception {
+		String sql = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='" + this.DBName
+				+ "' AND TABLE_NAME='"
+				+ this.name.substring(!this.name.contains(".") ? 0 : this.name.lastIndexOf(".") + 1, this.name.length())
+				+ "'";
+		if (this.dataBase == null)
+			throw new Exception("unknow database exception");
+		ResultSet rs = this.dataBase.executeQuery(sql);
+		return rs.next();
+	}
+
+	private String FilterSql(String sql) {
+
+		return sql.replace("\\", "/");
+	}
+
+	public Field getAIField() {
+		return AIField;
+	}
+
+	public String getCharset() {
+		return charset;
+	}
+
+	public Class<?> getCls() {
+		return cls;
+	}
+
+	public String getCollate() {
+		return collate;
+	}
+
+	public Map<String, String> getColumns() {
+		return columns;
+	}
+
+	public DataBase getDataBase() {
+		return dataBase;
 	}
 
 	/**
-	 * 默认构造器，需要传入一个Class《？》的class 构造器会默认从DataBase中获得connection
-	 * 同时该构造器会对cls进行处理，进行class与Field的映射
+	 * getDBColumn
 	 * 
-	 * @param cls
+	 * @param field
+	 * @return
 	 */
-	public DBTab(Class<?> cls) {
-		this.cls = cls;
-		this.loader = new ClassLoader(this.cls);
-		Tab tab = this.loader.getLoadedClass().getAnnotation(Tab.class);
-		if(tab==null){
-			Class<?> sCls=this.cls.getSuperclass();
-			tab = sCls.getAnnotation(Tab.class); 
-			if(tab!=null){
-				this.cls = sCls;
-				this.loader = new ClassLoader(this.cls);
-			}
+	public DBColumn getDBColumn(Field field) {
+		if (this.map.containsKey(field))
+			return this.map.get(field);
+		Log.getSystemLog().info(
+				"--------------------------------------------------------------------------------------------------");
+		Log.getSystemLog().info("current field:" + field.getName());
+		Column column = field.getAnnotation(Column.class);
+		if (column != null && column.ignore() == true) {
+			Log.getSystemLog().info(field.getName() + " ignore,jump decode the field!");
+			return null;
 		}
-		if (Class2TabMappingCache.hasTab(this.cls)) {
-			this.Clone(Class2TabMappingCache.getDBTab(this.cls));
-		} else {
-			Log.getSystemLog()
-					.info("================================================================================================================");
-			Log.getSystemLog().info("the current class：" + cls.getSimpleName());
-			if (tab != null) {
-				this.setDBName(tab.DB());
-				this.setInclude(tab.include());
-				this.setMust(tab.isMust());
-				this.setName(tab.name().equals("") ? this.DBName+"."+cls.getSimpleName() : this.DBName+"."+tab
-						.name());
-				this.setValue(tab.value());
-				this.setAutoUpdate(tab.autoUpdate());
-			} else {
-				Log.getSystemLog().info("not annotion configure,try to set default");
-				this.setDBName("");
-				this.setInclude("");
-				this.setMust(false);
-				this.setName(cls.getSimpleName());
-				this.setValue("");
-				this.setAutoUpdate(false);
-			}
-			this.setMap(cls);
-			try {
-				if(this.DBName!=null&&!this.DBName.equals(""))
-				this.dataBase = DBFactory.HasDB(this.DBName)?DBFactory.getDataBase(this.DBName):DBFactory.getDefaultDB();
-				Class2TabMappingCache.addTab(this);
-				if(this.isMust&&!this.exists()){
-					this.create();
-				}
-			} catch (Exception e) {
-				Log.getSystemLog().error("the databaes ["+this.DBName+"] is't init ,please try to init database! at class ["+this.getCls().getName()+"]");
-				e.printStackTrace();
-			} 
+		if (column != null) {
+			if (column.Auto_Increment()) {
+				this.AIField = field;
+				this.Primary_key = field;
+			} else if (column.Primary_Key())
+				this.Primary_key = field;
+			DBColumn db = new DBColumn(field, column);
+			this.map.put(field, db);
+			return db;
 		}
+		DBColumn db = new DBColumn(field);
+		this.map.put(field, db);
+		return db;
 	}
-	public DBTab(Object obj) {
-			this.cls = obj.getClass();
-			this.object=obj;
-			this.loader = new ClassLoader(obj);
-			Tab tab = this.loader.getLoadedClass().getAnnotation(Tab.class);
-			if(tab==null){
-				Class<?> sCls=this.cls.getSuperclass();
-				tab = sCls.getAnnotation(Tab.class); 
-				if(tab!=null){
-					this.cls = sCls;
-				}
-			}
-		//如果表缓存中有当前类得表
-		if (Class2TabMappingCache.hasTab(this.cls)) {
-			this.Clone(Class2TabMappingCache.getDBTab(this.cls), obj);
-			if (tab != null) {
-				this.setName(tab.name().equals("") ? this.DBName+"."+this.cls.getSimpleName() : this.DBName+"."+tab
-						.name());
-				try {
-					if(this.isMust&&!this.exists()){
-						this.create();
-					}
-				} catch (Exception e) {
-					Log.getSystemLog().error("the databaes ["+this.DBName+"] is't init ,please try to init database! at class ["+this.getCls().getName()+"]");
-					e.printStackTrace();
-				}
-			}
-			//如果表缓存中不存在当前表
-		} else {
-			//重新解析数据表
-			Log.getSystemLog()
-					.info("================================================================================================================");
-			Log.getSystemLog().info("the current class：" + cls.getSimpleName());
-			//如果当前类有Tab注解
-			if (tab != null) {
-				this.setDBName(tab.DB());
-				this.setInclude(tab.include());
-				this.setMust(tab.isMust());
-				this.setName(tab.name().equals("") ? this.DBName+"."+cls.getSimpleName() : this.DBName+"."+tab
-						.name());
-				this.setValue(tab.value());
-				this.setAutoUpdate(tab.autoUpdate());
-			} else {
-					Log.getSystemLog().info("not annotion configure,try to set default");
-					this.setDBName("");
-					this.setInclude("");
-					this.setMust(false);
-					this.setName(cls.getSimpleName());
-					this.setValue("");
-					this.setAutoUpdate(false);
-				}
-			this.setMap(cls);
-			try {
-				if(this.DBName!=null&&!this.DBName.equals(""))
-				this.dataBase = DBFactory.HasDB(this.DBName)?DBFactory.getDataBase(this.DBName):DBFactory.getDefaultDB();
-				Class2TabMappingCache.addTab(this);
-				if(this.isMust&&!this.exists()){
-					this.create();
-				}
-			} catch (Exception e) {
-				Log.getSystemLog().error("the databaes ["+this.DBName+"] is't init ,please try to init database! at class ["+this.getCls().getName()+"]");
-				e.printStackTrace();
-			} 
-		}
+
+	public DBColumn getDBColumn(String field) throws NoSuchFieldException, SecurityException {
+		Field f = this.cls.getDeclaredField(field);
+		return getDBColumn(f);
 	}
-	public List<Object> query(Connection connection, String sql)
-			throws SQLException, InstantiationException,
-			IllegalAccessException, NoSuchFieldException, SecurityException,
-			IllegalArgumentException {
+
+	
+
+	public Object insert(Insert insert) throws IllegalArgumentException, IllegalAccessException {
+		try {
+			PreparedStatement ps = this.dataBase.execute(insert.create(), java.sql.Statement.RETURN_GENERATED_KEYS);
+			if (ps != null) {
+				ResultSet rs = ps.getGeneratedKeys();
+				if (this.AIField != null && rs.next())
+					this.setField(loader, this.AIField, rs.getInt(1));
+			} else {
+				return null;
+			}
+		} catch (InvocationTargetException | NoSuchMethodException | SQLException | SecurityException e) {
+			Log.getSystemLog().error(insert.create());
+			;
+			Log.getSystemLog().exception(e);
+		}
+		return this.loader.getLoadedObject();
+	}
+
+	public Object insert(Insert insert, Connection connection)
+			throws IllegalArgumentException, IllegalAccessException, SecurityException, SQLException {
+		try {
+			PreparedStatement ps = this.dataBase.execute(insert.create(), connection,
+					java.sql.Statement.RETURN_GENERATED_KEYS);
+			if (this.AIField != null) {
+				ResultSet rs = ps.getGeneratedKeys();
+				if (this.AIField != null && rs.next())
+					this.setField(loader, this.AIField, rs.getInt(1));
+			}
+		} catch (InvocationTargetException | NoSuchMethodException e) {
+			Log.getSystemLog().error(insert.create());
+			;
+			Log.getSystemLog().exception(e);
+		}
+		return this.loader.getLoadedObject();
+	}
+
+	/**
+	 * 
+	 * @param insert
+	 * @param obj
+	 * @return
+	 * @throws SQLException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 */
+	public Object insert(Insert insert, Object obj)
+			throws SQLException, IllegalArgumentException, IllegalAccessException {
+		PreparedStatement ps = this.dataBase.execute(insert.create());
+		ResultSet rs = ps.getGeneratedKeys();
+		ClassLoader loader = new ClassLoader(obj);
+		try {
+			if (this.AIField != null && rs.next())
+				this.setField(loader, this.AIField, rs.getInt(1));
+		} catch (InvocationTargetException | NoSuchMethodException e) {
+			Log.getSystemLog().exception(e);
+		}
+		return obj;
+	}
+
+	public Object insertOrUpdate(Insert insert) throws Exception {
+		if (this.autoUpdate) {
+			if (this.AIField == null) {
+				throw new Exception("When a primary key is empty does not automatically update table");
+			}
+			Query query = new Query(insert.getObj());
+			query.addField(this.AIField);
+			if (query.query().size() == 1) {
+				Update update = new Update(insert.getObj());
+				update.addCondition(this.AIField.getName(), this.AIField.get(insert.getObj()));
+				update.update();
+				query = new Query(insert.getObj());
+				return query.query().get(0);
+			} else {
+				return insert(insert);
+			}
+		}
+		return insert(insert);
+	}
+
+	public boolean isAutoUpdate() {
+		return autoUpdate;
+	}
+
+	public boolean isMust() {
+		return isMust;
+	}
+
+	public Iterator<Field> iterator() {
+		return this.map.keySet().iterator();
+	}
+
+	public List<Object> query(Connection connection, String sql) throws SQLException, InstantiationException,
+			IllegalAccessException, NoSuchFieldException, SecurityException, IllegalArgumentException {
 		ResultSet rs = this.dataBase.executeQuery(sql);
 		List<Object> objects = new ArrayList<Object>();
 		while (rs.next()) {
@@ -252,9 +361,10 @@ public class DBTab implements mySqlInterface {
 			while (iterator.hasNext()) {
 				Field field = iterator.next();
 				try {
-					String columnName= this.map.get(field)==null?field.getName():this.map.get(field).getName();
-					if(columnName.contains("."))columnName=columnName.substring(columnName.lastIndexOf(".")+1);
-					if(rs.getObject(columnName)!=null)
+					String columnName = this.map.get(field) == null ? field.getName() : this.map.get(field).getName();
+					if (columnName.contains("."))
+						columnName = columnName.substring(columnName.lastIndexOf(".") + 1);
+					if (rs.getObject(columnName) != null)
 						this.setField(loader, field, rs.getObject(columnName));
 				} catch (InvocationTargetException | NoSuchMethodException e) {
 					e.printStackTrace();
@@ -266,22 +376,29 @@ public class DBTab implements mySqlInterface {
 		return objects;
 	}
 
-	
-	public List<Object> query(Query query,boolean mapping) {
+	public List<Object> query(Query query) throws SQLException, InstantiationException, IllegalAccessException,
+			NoSuchFieldException, SecurityException, IllegalArgumentException {
+		return this.query(query, false);
+	}
+
+	public List<Object> query(Query query, boolean mapping) {
 		List<Object> objects = new ArrayList<Object>();
 		try {
-			ResultSet rs =this.dataBase.executeQuery(query.create());
+			ResultSet rs = this.dataBase.executeQuery(query.create());
 			while (rs.next()) {
 				loader = new ClassLoader(this.cls);
 				Iterator<Field> iterator = query.getFieldMap().keySet().iterator();
 				while (iterator.hasNext()) {
 					Field field = iterator.next();
 					try {
-						String columnName= this.map.get(field)==null?field.getName():this.map.get(field).getName();
-						if(columnName.contains(".")&&mapping)columnName=columnName.substring(columnName.lastIndexOf(".")+1);
-						if(rs.getObject(columnName)!=null)
+						String columnName = this.map.get(field) == null ? field.getName()
+								: this.map.get(field).getName();
+						if (columnName.contains(".") && mapping)
+							columnName = columnName.substring(columnName.lastIndexOf(".") + 1);
+						if (rs.getObject(columnName) != null)
 							this.setField(loader, field, rs.getObject(columnName));
-					} catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException | IllegalArgumentException | SecurityException | SQLException e) {
+					} catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException
+							| IllegalArgumentException | SecurityException | SQLException e) {
 						Log.getSystemLog().error(query.create());
 						e.printStackTrace();
 						continue;
@@ -296,291 +413,38 @@ public class DBTab implements mySqlInterface {
 		return objects;
 	}
 
-	public List<Object> query(Query query) throws SQLException,
-			InstantiationException, IllegalAccessException,
-			NoSuchFieldException, SecurityException, IllegalArgumentException {
-		return this.query(query,false);
-	}
-	public List<Object> query(Query query,Connection connection) throws SQLException,
-		InstantiationException, IllegalAccessException,
-		NoSuchFieldException, SecurityException, IllegalArgumentException {
-	ResultSet rs = this.dataBase.executeQuery(query.create(),connection);
-	List<Object> objects = new ArrayList<Object>();
-	while (rs.next()) {
-		loader = new ClassLoader(cls, true);
-		Iterator<Field> iterator = this.map.keySet().iterator();
-		while (iterator.hasNext()) {
-			Field field = iterator.next();
-			try {
-				String columnName= this.map.get(field)==null?field.getName():this.map.get(field).getName();
-				if(columnName.contains("."))columnName=columnName.substring(columnName.lastIndexOf(".")+1);
-				if(rs.getObject(columnName)!=null)
-					this.setField(loader, field, rs.getObject(columnName));
-			} catch (InvocationTargetException | NoSuchMethodException e) {
-				e.printStackTrace();
-			}
-		}
-		objects.add(loader.getLoadedObject());
-	}
-	return objects;
-	}
-	public <T> T query(Query query, Class<T> obj) throws SQLException,
-			InstantiationException, IllegalAccessException,
-			NoSuchFieldException, SecurityException, IllegalArgumentException {
-		ResultSet rs = this.dataBase.executeQuery(query.create());
-		
-		Object object = null;
+	public List<Object> query(Query query, Connection connection) throws SQLException, InstantiationException,
+			IllegalAccessException, NoSuchFieldException, SecurityException, IllegalArgumentException {
+		ResultSet rs = this.dataBase.executeQuery(query.create(), connection);
+		List<Object> objects = new ArrayList<Object>();
 		while (rs.next()) {
-			object = obj.newInstance();
+			loader = new ClassLoader(cls, true);
 			Iterator<Field> iterator = this.map.keySet().iterator();
 			while (iterator.hasNext()) {
 				Field field = iterator.next();
-				field.setAccessible(true);
-				field.set(object, rs.getObject(this.map.get(field).getName()));
-			}
-		}
-		return obj.cast(object);
-	}
-
-	public boolean exists() throws Exception
-	  {
-	    String sql = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='" + this.DBName + "' and TABLE_NAME='" + this.name.substring(!this.name.contains(".") ? 0 : this.name.lastIndexOf(".") + 1, this.name.length()) + "'";
-	    	if(this.dataBase==null)
-	    		throw new Exception("unknow database exception");
-		    ResultSet rs = this.dataBase.executeQuery(sql);
-		      return rs.next();
-	  }
-
-	public Iterator<Field> iterator() {
-		return this.map.keySet().iterator();
-	}
-
-	public Map<Field, DBColumn> getDBColumns() {
-		return this.map;
-	}
-	public void setField(ClassLoader loader,Field field,Object value) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException{
-		field.setAccessible(true);	
-		if (loader.hasMethod(ClassLoader.createFieldSetMethod(field),
-					field.getType()))
-				loader.set(field.getName(), field.getType(), ClassLoader.castType(value, field.getType()));
-			else
-			    field.set(loader.getLoadedObject(),ClassLoader.castType(value, field.getType()));
-	}
-	/**
-	 * 
-	 * @param insert
-	 * @param obj
-	 * @return
-	 * @throws SQLException
-	 * @throws IllegalArgumentException
-	 * @throws IllegalAccessException
-	 */
-	public Object insert(Insert insert, Object obj) throws SQLException,
-			IllegalArgumentException, IllegalAccessException {
-		PreparedStatement ps = this.dataBase.execute(insert.create());
-		ResultSet rs = ps.getGeneratedKeys();
-		ClassLoader loader = new ClassLoader(obj);
-		try {
-			if (this.AIField!=null&&rs.next())
-				this.setField(loader, this.AIField, rs.getInt(1));
-		} catch (InvocationTargetException | NoSuchMethodException e) {
-			Log.getSystemLog().exception(e);
-		}
-		return obj;
-	}
-
-	public Object insertOrUpdate(Insert insert) throws Exception {
-		if (this.autoUpdate) {
-			if (this.AIField == null) {
-				throw new Exception(
-						"When a primary key is empty does not automatically update table");
-			}
-			Query query = new Query(insert.getObj());
-			query.addField(this.AIField);
-			if (query.query().size() == 1) {
-				Update update = new Update(insert.getObj());
-					update.addCondition(this.AIField.getName(),
-							this.AIField.get(insert.getObj()));
-				update.update();
-				query = new Query(insert.getObj());
-				return query.query().get(0);
-			} else {
-				return insert(insert);
-			}
-		}
-		return insert(insert);
-	}
-
-	public Object insert(Insert insert) throws
-			IllegalArgumentException, IllegalAccessException {
-			try {
-				PreparedStatement ps = this.dataBase.execute(insert.create(),java.sql.Statement.RETURN_GENERATED_KEYS);
-				if(ps!=null){
-					ResultSet rs = ps.getGeneratedKeys();
-					if (this.AIField!=null&&rs.next())
-						this.setField(loader, this.AIField, rs.getInt(1));
-				}else{
-					return null;
+				try {
+					String columnName = this.map.get(field) == null ? field.getName() : this.map.get(field).getName();
+					if (columnName.contains("."))
+						columnName = columnName.substring(columnName.lastIndexOf(".") + 1);
+					if (rs.getObject(columnName) != null)
+						this.setField(loader, field, rs.getObject(columnName));
+				} catch (InvocationTargetException | NoSuchMethodException e) {
+					e.printStackTrace();
 				}
-			} catch (InvocationTargetException | NoSuchMethodException | SQLException | SecurityException e) {
-				Log.getSystemLog().error(insert.create());;
-				Log.getSystemLog().exception(e);
 			}
-		return this.loader.getLoadedObject();
-	}
-	public Object insert(Insert insert,Connection connection) throws
-		IllegalArgumentException, IllegalAccessException, SecurityException, SQLException {
-	try {
-		PreparedStatement ps = this.dataBase.execute(insert.create(),connection,java.sql.Statement.RETURN_GENERATED_KEYS);
-		if(this.AIField!=null){
-			ResultSet rs = ps.getGeneratedKeys();
-			if (this.AIField!=null&&rs.next())
-				this.setField(loader, this.AIField, rs.getInt(1));
+			objects.add(loader.getLoadedObject());
 		}
-	} catch (InvocationTargetException | NoSuchMethodException  e) {
-		Log.getSystemLog().error(insert.create());;
-		Log.getSystemLog().exception(e);
+		return objects;
 	}
-	return this.loader.getLoadedObject();
-	}
-	public int update(Update update) {
-		String sql = update.create();
-		sql = FilterSql(sql);
-		int start = 7;
-		int end = sql.indexOf(" ", 7);
-		String sub = sql.substring(start, end);
-		sql = sql.replaceFirst(sub, this.name);
-		return this.dataBase.executeUpdate(sql);
-	}
-	
-	public int update(Update update,Connection connection) throws SQLException  {
-		String sql = update.create();
-		sql = FilterSql(sql);
-		int start = 7;
-		int end = sql.indexOf(" ", 7);
-		String sub = sql.substring(start, end);
-		sql = sql.replaceFirst(sub, this.name);
-		return this.dataBase.executeUpdate(sql,connection);
-	}
-	
-	private String FilterSql(String sql) {
-
-		return sql.replace("\\", "/");
+	public void setField(ClassLoader loader, Field field, Object value) throws IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+		field.setAccessible(true);
+		if (loader.hasMethod(ClassLoader.createFieldSetMethod(field), field.getType()))
+			loader.set(field.getName(), field.getType(), ClassLoader.castType(value, field.getType()));
+		else
+			field.set(loader.getLoadedObject(), ClassLoader.castType(value, field.getType()));
 	}
 
-	public int create(Create create) {
-		return this.dataBase.executeUpdate(create.create());
-	
-	}
-
-	public boolean create(){
-		return create(new Create(this))>0;
-	}
-
-	public int delete(Delete delete) {
-		return this.dataBase.executeUpdate(delete.create());
-	
-	}
-	public boolean delete(Delete delete,Connection connection) throws SQLException {
-			this.dataBase.executeUpdate(delete.create(),connection);
-			return true;
-	}
-
-	public boolean delete() {
-		return true;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		if (this.object != null) {
-			name = StringSupport.decodeVar(name, this.object);
-		}
-		this.name = name;
-	}
-
-	public boolean isMust() {
-		return isMust;
-	}
-
-	public void setMust(boolean isMust) {
-		this.isMust = isMust;
-	}
-
-	public String getInclude() {
-		return include;
-	}
-
-	public void setInclude(String include) {
-		Log.getSystemLog().info("contain orthers xml file" + include);
-		this.include = include;
-	}
-
-	public String getValue() {
-		return value;
-	}
-
-	public void setValue(String value) {
-		if (this.object != null) {
-			value = StringSupport.decodeVar(value, this.object);
-		}
-		this.value = value;
-	}
-
-	public String getDBName() {
-		return DBName;
-	}
-
-	public void setDBName(String dBName) {
-		if (this.object != null) {
-			dBName = StringSupport.decodeVar(dBName, this.object);
-		}
-		DBName = dBName;
-	}
-
-	public Map<Field, DBColumn> getFieldMap() {
-		return map;
-	}
-
-	/**
-	 * getDBColumn
-	 * 
-	 * @param field
-	 * @return
-	 */
-	public DBColumn getDBColumn(Field field) {
-		if (this.map.containsKey(field))
-			return this.map.get(field);
-		Log.getSystemLog()
-				.info("--------------------------------------------------------------------------------------------------");
-		Log.getSystemLog().info("current field:" + field.getName());
-		Column column = field.getAnnotation(Column.class);
-		if (column != null && column.ignore() == true) {
-			Log.getSystemLog().info(field.getName() + " ignore,jump decode the field!");
-			return null;
-		}
-		if (column != null){
-			if(column.Auto_Increment()){
-				this.AIField=field;
-				this.Primary_key = field;
-			}else if(column.Primary_Key())
-				this.Primary_key=field;
-			DBColumn db = new DBColumn(field, column);
-			this.map.put(field, db);
-			return db;
-		}
-		DBColumn db = new DBColumn(field);
-		this.map.put(field, db);
-		return db;
-	}
-
-	public DBColumn getDBColumn(String field) throws NoSuchFieldException,
-			SecurityException {
-		Field f = this.cls.getDeclaredField(field);
-		return getDBColumn(f);
-	}
 
 	private void setMap(Class<?> cls) {
 		DBColumn dbColumn;
@@ -591,51 +455,12 @@ public class DBTab implements mySqlInterface {
 			}
 		}
 	}
-	
-	public void setMap(Map<Field, DBColumn> map) {
-		this.map = map;
-	}
-
-	public Class<?> getCls() {
-		return cls;
-	}
-
-	public void addColumn(String column, String type) {
-		this.columns.put(column, type);
-	}
-
-	public void addColumn(Map<String, String> columns) {
-		Iterator<String> i = columns.keySet().iterator();
-		while (i.hasNext()) {
-			String key = i.next();
-			this.columns.put(key, columns.get(key));
-		}
-
-	}
-
-	public boolean isAutoUpdate() {
-		return autoUpdate;
-	}
-
-	public void setAutoUpdate(boolean autoUpdate) {
-		this.autoUpdate = autoUpdate;
-	}
-
-	@Override
-	public String toString() {
-		return "DBTab [object=" + object
-				+ ", name=" + name + ", isMust=" + isMust + ", include="
-				+ include + ", value=" + value + ", DBName=" + DBName
-				+ ", autoUpdate=" + autoUpdate + ", cls=" + cls + ", loader="
-				+ loader + ", map=" + map + ", columns=" + columns
-				+ ", session=" + session + ", AIField=" + AIField + "]";
-	}
 
 	public List<Object> showTab() {
 		String sql = "SELECT * FROM " + this.name;
 		List<Object> objs = new ArrayList<Object>();
 		try {
-			ResultSet rs =this.dataBase.executeQuery(sql);
+			ResultSet rs = this.dataBase.executeQuery(sql);
 			while (rs.next()) {
 				Object obj = this.cls.newInstance();
 				Iterator<Field> i = this.iterator();
@@ -645,8 +470,7 @@ public class DBTab implements mySqlInterface {
 					try {
 						f.set(obj, rs.getObject(this.map.get(f).getName()));
 					} catch (IllegalArgumentException | IllegalAccessException e) {
-						f.set(obj, Boolean.parseBoolean((String) rs
-								.getObject(this.map.get(f).getName())));
+						f.set(obj, Boolean.parseBoolean((String) rs.getObject(this.map.get(f).getName())));
 					}
 				}
 				objs.add(obj);
@@ -656,23 +480,135 @@ public class DBTab implements mySqlInterface {
 		}
 		return objs;
 	}
-	public DataBase getDataBase() {
-		return dataBase;
+
+	@Override
+	public String toString() {
+		return "DBTab [object=" + object + ", name=" + name + ", isMust=" + isMust + ", include=" + include + ", value="
+				+ value + ", DBName=" + DBName + ", autoUpdate=" + autoUpdate + ", cls=" + cls + ", loader=" + loader
+				+ ", map=" + map + ", columns=" + columns + ", session=" + session + ", AIField=" + AIField + "]";
 	}
-	public void setDataBase(DataBase dataBase) {
-		this.dataBase = dataBase;
+
+	public int update(Update update) {
+		String sql = update.create();
+		sql = FilterSql(sql);
+		int start = 7;
+		int end = sql.indexOf(" ", 7);
+		String sub = sql.substring(start, end);
+		sql = sql.replaceFirst(sub, this.name);
+		return this.dataBase.executeUpdate(sql);
 	}
-	public Field getAIField() {
-		return AIField;
+
+	public int update(Update update, Connection connection) throws SQLException {
+		String sql = update.create();
+		sql = FilterSql(sql);
+		int start = 7;
+		int end = sql.indexOf(" ", 7);
+		String sub = sql.substring(start, end);
+		sql = sql.replaceFirst(sub, this.name);
+		return this.dataBase.executeUpdate(sql, connection);
 	}
+	
+
+	public void setInclude(String include) {
+		Log.getSystemLog().info("contain orthers xml file" + include);
+		this.include = include;
+	}
+
+	public void setLoader(ClassLoader loader) {
+		this.loader = loader;
+	}
+
+	public void setMap(Map<Field, DBColumn> map) {
+		this.map = map;
+	}
+
 	public void setAIField(Field aIField) {
 		AIField = aIField;
 	}
-	public Field getPrimary_key() {
-		return Primary_key;
+
+	public void setAutoUpdate(boolean autoUpdate) {
+		this.autoUpdate = autoUpdate;
 	}
+
+	public void setCharset(String charset) {
+		this.charset = charset;
+	}
+
+	public void setCls(Class<?> cls) {
+		this.cls = cls;
+	}
+
+	public void setCollate(String collate) {
+		this.collate = collate;
+	}
+
+	public void setColumns(Map<String, String> columns) {
+		this.columns = columns;
+	}
+
+	public void setDataBase(DataBase dataBase) {
+		this.dataBase = dataBase;
+	}
+
+	public void setDBName(String dBName) {
+		if (this.object != null) {
+			dBName = StringSupport.decodeVar(dBName, this.object);
+		}
+		DBName = dBName;
+	}
+
+
+	public void setMust(boolean isMust) {
+		this.isMust = isMust;
+	}
+
+	public void setName(String name) {
+		if (this.object != null) {
+			name = StringSupport.decodeVar(name, this.object);
+		}
+		this.name = name;
+	}
+
 	public void setPrimary_key(Field primary_key) {
 		Primary_key = primary_key;
 	}
 
+	public void setValue(String value) {
+		if (this.object != null) {
+			value = StringSupport.decodeVar(value, this.object);
+		}
+		this.value = value;
+	}
+
+	public Map<Field, DBColumn> getDBColumns() {
+		return this.map;
+	}
+
+	public String getDBName() {
+		return DBName;
+	}
+
+	public Map<Field, DBColumn> getFieldMap() {
+		return map;
+	}
+
+	public String getInclude() {
+		return include;
+	}
+
+	public ClassLoader getLoader() {
+		return loader;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public Field getPrimary_key() {
+		return Primary_key;
+	}
+
+	public String getValue() {
+		return value;
+	}
 }

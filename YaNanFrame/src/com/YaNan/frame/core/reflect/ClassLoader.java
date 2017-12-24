@@ -882,26 +882,25 @@ public class ClassLoader {
 			}
 	}
 
-	public static Object clone(Class<?> target, Object source) {
-			
-			try {
-				Object obj = target.newInstance();
-				Field[] fields = target.getDeclaredFields();
-				for (Field f : fields) {
-					f.setAccessible(true);
-					Field fs;
-					try {
-						fs = source.getClass().getDeclaredField(f.getName());
-						fs.setAccessible(true);
-						f.set(obj, fs.get(source));
-					} catch (NoSuchFieldException | SecurityException e) {
-					}
+	public static <T> T clone(Class<T> target, Object source) {
+		try {
+			T object = target.newInstance();
+			Field[] fields = target.getDeclaredFields();
+			for (Field f : fields) {
+				f.setAccessible(true);
+				Field fs;
+				try {
+					fs = source.getClass().getDeclaredField(f.getName());
+					fs.setAccessible(true);
+					f.set(object, fs.get(source));
+				} catch (NoSuchFieldException | SecurityException e) {
 				}
-				return obj;
-			} catch (IllegalArgumentException | IllegalAccessException | InstantiationException e) {
-				e.printStackTrace();
-				return null;
 			}
+			return object;
+		} catch (IllegalArgumentException | IllegalAccessException | InstantiationException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 	public static boolean implementOf(Class<?> orginClass,Class<?> interfaceClass){
 		Class<?>[] cls = orginClass.getInterfaces();

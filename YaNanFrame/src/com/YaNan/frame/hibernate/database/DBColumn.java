@@ -31,6 +31,8 @@ public class DBColumn implements mySqlInterface {
 	private boolean Auto_Fill;
 	private boolean Unique;
 	private String Annotations;
+	private String charset="";
+	private String collate="";
 
 	public DBColumn(Field field, Column column) {
 		setAuto_Fill(column.Auto_Fill());
@@ -47,6 +49,8 @@ public class DBColumn implements mySqlInterface {
 		setType(column.type().equals("") ? this.getType(field) : column.type());
 		setValue(column.value());
 		setAnnotations(column.Annotations());
+		setCharset(column.charset());
+		setCollate(column.collate());
 		Log.getSystemLog().info(columnDesc());
 	}
 
@@ -209,6 +213,8 @@ public class DBColumn implements mySqlInterface {
 	public String Constraints() {
 
 		return this.getTypeConstraints()
+				+(charset.equals("")?"":" CHARACTER SET "+charset)
+				+(collate.equals("")?"":" COLLATE "+collate)
 				+ (Not_Null == true ? " NOT NULL" : "")
 				+ (Auto_Increment == true ? " AUTO_INCREMENT" : "")
 				// +(Not_Sign==true?" NOT SIGN ":"")
@@ -284,5 +290,21 @@ public class DBColumn implements mySqlInterface {
 
 	public void setUnique(boolean unique) {
 		Unique = unique;
+	}
+
+	public String getCharset() {
+		return charset;
+	}
+
+	public void setCharset(String charset) {
+		this.charset = charset;
+	}
+
+	public String getCollate() {
+		return collate;
+	}
+
+	public void setCollate(String collate) {
+		this.collate = collate;
 	}
 }

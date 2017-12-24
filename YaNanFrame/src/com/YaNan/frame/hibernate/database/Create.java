@@ -7,7 +7,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.YaNan.frame.service.ClassInfo;
 import com.YaNan.frame.service.Log;
 
 /**
@@ -16,7 +15,6 @@ import com.YaNan.frame.service.Log;
  * @author Administrator
  *
  */
-@ClassInfo(version = 100)
 public class Create {
 	private String PrimaryKey;
 	private List<String> uniques = new ArrayList<String>();
@@ -108,12 +106,13 @@ public class Create {
 				sql += i.next() + (i.hasNext() ? "," : "))");
 			}
 		}
-		try {
-			sql += "DEFAULT CHARSET="
-					+ (DBFactory.HasDB(tab.getDBName())?DBFactory.getDataBase(tab.getDBName()):DBFactory.getDefaultDB()).getDbConfigure().getEncoding().replace("-", "");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+
+		if(this.tab.getCharset()!=null||this.tab.getCollate()!=null)
+			sql+=" DEFAULT";
+		if(this.tab.getCharset()!=null)
+			sql += " CHARACTER SET " + this.tab.getCharset();
+		if(this.tab.getCollate()!=null)
+			sql += " COLLATE "+ this.tab.getCollate();
 		return sql;
 	}
 

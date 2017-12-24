@@ -25,7 +25,7 @@ public class Query extends OperateImplement{
 	protected boolean unionAll=false;
 	protected Object object;
 	protected Class<?> cls;
-	protected Map<String, Object> map = new HashMap<String, Object>();
+	protected Map<String, String> map = new HashMap<String, String>();
 	protected List<String> condition = new ArrayList<String>();
 	protected List<String> order = new ArrayList<String>();
 	protected Map<Field, DBColumn> fieldMap = new LinkedHashMap<Field, DBColumn>();
@@ -232,12 +232,12 @@ public static interface Order{
 	}
 
 	public void addCondition(Field field, String condition) {
-		this.map.put(dbTab.getName()+"."+dbTab.getDBColumn(field).getName(), condition);
+		this.map.put(dbTab.getName()+"."+dbTab.getDBColumn(field).getName(), condition.toString().replace("'", "\\'"));
 	}
 
 	public void addCondition(String field, Object condition) {
 		try {
-			map.put(dbTab.getName()+"."+dbTab.getDBColumn(field).getName(), condition);
+			map.put(dbTab.getName()+"."+dbTab.getDBColumn(field).getName(), condition.toString().replace("'", "\\'"));
 		} catch (NoSuchFieldException | SecurityException e) {
 			Log.getSystemLog().exception(e);
 		}
@@ -248,7 +248,7 @@ public static interface Order{
 			try {
 				Field f = object.getClass().getDeclaredField(str);
 				f.setAccessible(true);
-				map.put(dbTab.getName()+"."+dbTab.getDBColumn(str).getName(), f.get(object));
+				map.put(dbTab.getName()+"."+dbTab.getDBColumn(str).getName(), f.get(object).toString().replace("'", "\\'"));
 			} catch (NoSuchFieldException | SecurityException
 					| IllegalArgumentException | IllegalAccessException e) {
 				Log.getSystemLog().exception(e);
