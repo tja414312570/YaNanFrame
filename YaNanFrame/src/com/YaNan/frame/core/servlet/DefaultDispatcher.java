@@ -254,8 +254,10 @@ public class DefaultDispatcher extends HttpServlet {
 				if (loader.hasMethod(ClassLoader.createFieldSetMethod(field),
 						field.getType()))
 					loader.set(field.getName(), field.getType(), ClassLoader.castType(value, field.getType()));
-				else
-				    field.set(loader.getLoadedObject(),ClassLoader.castType(value, field.getType()));
+				else{
+					field.setAccessible(true);
+					field.set(loader.getLoadedObject(),ClassLoader.castType(value, field.getType()));
+				}
 			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
 					| NoSuchMethodException | SecurityException e) {
 				e.printStackTrace();
