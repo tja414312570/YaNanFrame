@@ -182,6 +182,7 @@ public class Token {
 		return getToken(tokenId);
 	}
 	public static Token getToken(String tokenId){
+		if(tokenId==null)return null;
 		if(TokenPool.hasToken(tokenId))
 			return TokenPool.getToken(tokenId);
 		if(TokenManager.getHibernateInterface()!=null)
