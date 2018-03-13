@@ -94,17 +94,16 @@ public class Delete extends OperateImplement{
 			Iterator<String> i = this.map.keySet().iterator();
 			while (i.hasNext()) {
 				String s = i.next();
-				sql += s + "=" + this.map.get(s);
+				sql += s + "='" + this.map.get(s)
+					+ (i.hasNext() ? "' AND " : "'");
 			}
-		} else {
-			if (this.condition.size() != 0) {
-				sql += " WHERE ";
-				Iterator<String> i = this.condition.iterator();
-				while (i.hasNext()) {
-					sql += i.next();
-				}
-			} else {
-				//do some thing
+		} 
+		if (this.condition.size() != 0) {
+			sql += (this.map.size()==0?" WHERE ":" AND ");
+			Iterator<String> i = this.condition.iterator();
+			while (i.hasNext()) {
+				sql += i.next()
+				+ (i.hasNext() ? " AND " : "");
 			}
 		}
 		return sql;

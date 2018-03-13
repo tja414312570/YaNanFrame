@@ -164,11 +164,7 @@ public class Update extends OperateImplement{
 			}
 		} 
 		if (this.condition.size() != 0) {
-			if(this.map.size()==0){
-				sql += " WHERE ";
-			}else{
-				sql+=" AND ";
-			}
+			sql += (this.map.size()==0?" WHERE ":" AND ");
 			Iterator<String> i = this.condition.iterator();
 			while (i.hasNext()) {
 				sql += i.next()

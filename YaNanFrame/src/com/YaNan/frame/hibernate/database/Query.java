@@ -263,25 +263,21 @@ public static interface Order{
 	@Override
 	public String create() {
 		String sql = "SELECT ";
-		if (this.key.size() == 0) {
+		if (this.key.size() == 0)
 			sql += "* ";
-		} else {
+		else {
 			Iterator<String>  s = this.key.iterator();
-			while(s.hasNext()) {
+			while(s.hasNext())
 				sql += s.next() + (s.hasNext()?",":"");
-			}
 		}
 		sql += " FROM " 
 				+ (this.subQuery==null?dbTab.getName():"("+this.subQuery.create()+") AS T"+((int)Math.random()*100));
 		if(this.joinObject!=null){
 			sql +=this.joinObject.isInnerJoin()?" INNER OUTER ":" LEFT "+"JOIN "+this.joinObject.getRight()+" ON ";
-			for(int i =0;i<this.joinObject.getConditions().length;i++){
+			for(int i =0;i<this.joinObject.getConditions().length;i++)
 				sql+=this.joinObject.getConditions()[i]+
 						(i<this.joinObject.getConditions().length-1?" AND ":" ");
-			}
 		}
-		if(this.group!=null)
-			sql+= " GROUP BY "+this.group;
 		if (map.size() != 0) {
 			sql += " WHERE ";
 			Iterator<String> i = map.keySet().iterator();
@@ -292,25 +288,20 @@ public static interface Order{
 			}
 		}
 		if (this.condition.size() != 0) {
-			if(this.map.size()==0){
-				sql += " WHERE ";
-			}else{
-				sql += " AND ";
-			}
+			sql += (this.map.size()==0?" WHERE ":" AND ");
 			Iterator<String> i = this.condition.iterator();
-			while (i.hasNext()) {
+			while (i.hasNext()) 
 				sql += i.next() + (i.hasNext() ? " AND " : "");
-			}
 		}
-		if(this.unionQuery!=null){
+		if(this.group!=null)
+			sql+= " GROUP BY "+this.group;
+		if(this.unionQuery!=null)
 			sql += this.unionAll?" ":" ALL "+this.unionQuery.create();
-		}
 		if(this.order.size()!=0){
 			Iterator<?> oI = this.order.iterator();
 			sql +=" ORDER BY ";
-			while(oI.hasNext()){
+			while(oI.hasNext())
 				sql += oI.next() + (oI.hasNext() ? "," : " ");
-			}
 		}
 		sql +=" "+(this.limit.equals("")?"":"LIMIT "+this.limit);
 		return sql;
