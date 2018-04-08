@@ -1,0 +1,63 @@
+package com.YaNan.demo;
+
+import com.YaNan.frame.core.annotations.Action;
+import com.YaNan.frame.core.session.Token;
+import com.YaNan.frame.core.session.annotation.TokenObject;
+import com.YaNan.frame.core.session.servletSupport.TokenServlet;
+/**
+ * TokenServlet简单案例
+ * @author yanan
+ *
+ */
+public class TokenServletTest extends TokenServlet{
+	@TokenObject
+	private Student student;
+	/**
+	 * 保存学生信息
+	 * @return
+	 */
+	@Action
+	public String saveStudentInfo(){
+		Student student = new Student();
+		student.name="java";
+		student.age = 22;
+		this.TokenContext.set(student);
+		//or this.TokenContext.set(Student.class,student);
+		return "保存学生信息成功";
+	}
+	/**
+	 * 获取学生信息
+	 * @return
+	 */
+	@Action
+	public String getStudentInfo(){
+		return this.student.toString();
+	}
+	@Action
+	public String saveStudentInfo2(){
+		Student student = new Student();
+		student.name="php";
+		student.age =5;
+		Token token = this.TokenContext;
+		token.set(Student.class, student);
+		return "保存学生信息成功";
+	}
+	@Action
+	public String getStudentInfo2(){
+		return this.TokenContext.get(Student.class).toString();
+	}
+	public Student getStudent() {
+		return student;
+	}
+	public void setStudent(Student student) {
+		this.student = student;
+	}
+}
+class Student{
+	@Override
+	public String toString() {
+		return "Student [name=" + name + ", age=" + age + "]";
+	}
+	String name;
+	int age;
+}

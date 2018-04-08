@@ -12,6 +12,8 @@ import java.util.UUID;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.websocket.server.HandshakeRequest;
 
 import com.YaNan.frame.core.session.entity.TokenCell;
 /**
@@ -214,7 +216,6 @@ public class Token {
 			}
 			cookie = cookie.replace(tokenMark,"");
 		}
-		tokenMark=null;
 		return cookie;
 	}
 	
@@ -241,6 +242,7 @@ public class Token {
 			tc.setCreateDate(new Date());
 			TokenManager.getHibernateInterface().addToken(tc);
 		}
+		request.getSession().setAttribute(TokenManager.getTokenMark(), tokenId);
 		return addToken(tokenId);
 	}
 	/**

@@ -13,7 +13,7 @@ import org.dom4j.Element;
 import com.YaNan.frame.core.init.InitXML;
 import com.YaNan.frame.core.servlet.InitServlet;
 import com.YaNan.frame.core.servlet.ServletBean;
-import com.YaNan.frame.core.servlet.defaultServletMapping;
+import com.YaNan.frame.core.servlet.DefaultServletMapping;
 import com.YaNan.frame.core.session.TokenManager;
 import com.YaNan.frame.hibernate.WebPath;
 import com.YaNan.frame.hibernate.database.DBFactory;
@@ -89,7 +89,7 @@ public class AppContext {
 			InitServlet.getInstance();
 			Log.getSystemLog().write("Retrieve the servlet configuration");
 			Log.getSystemLog().write("get servlet Mapping Object");
-			defaultServletMapping servletManager = defaultServletMapping
+			DefaultServletMapping servletManager = DefaultServletMapping
 					.getInstance();
 			Log.getSystemLog().write("get Servlet Mapping iterator");
 			Iterator<String> iterator = servletManager.getActionKSIterator();

@@ -112,9 +112,11 @@ public class DBTab implements mySqlInterface {
 			}
 			this.setMap(cls);
 			try {
-				if (this.DBName != null && !this.DBName.equals(""))
+				if (this.DBName != null && !this.DBName.equals("")){
 					this.dataBase = DBFactory.HasDB(this.DBName) ? DBFactory.getDataBase(this.DBName)
 							: DBFactory.getDefaultDB();
+					this.dataBase.addTab(this);
+				}
 				Class2TabMappingCache.addTab(this);
 				if (this.isMust&&!this.DBName.equals("") && !this.exists()) {
 					this.create();

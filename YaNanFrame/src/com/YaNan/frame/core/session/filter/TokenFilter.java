@@ -17,9 +17,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.YaNan.frame.core.reflect.ClassLoader;
+import com.YaNan.frame.core.servlet.DefaultServletMapping;
 import com.YaNan.frame.core.servlet.ServletBean;
 import com.YaNan.frame.core.servlet.URLSupport;
-import com.YaNan.frame.core.servlet.defaultServletMapping;
 import com.YaNan.frame.core.session.Token;
 import com.YaNan.frame.core.session.TokenManager;
 import com.YaNan.frame.core.session.annotation.Chain;
@@ -108,7 +108,7 @@ public class TokenFilter extends HttpServlet implements Filter {
 
 	private boolean dispatcherServlet(ServletRequest request, ServletResponse response, FilterChain chain) {
 		servletName =servletName.replace(".do", "");
-		defaultServletMapping servletMap = defaultServletMapping.getInstance();
+		DefaultServletMapping servletMap = DefaultServletMapping.getInstance();
 		if (servletMap.isExist(namespace,servletName)) {
 			try {
 				ServletBean servletBean = servletMap.getServlet(namespace,servletName);

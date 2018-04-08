@@ -3,7 +3,7 @@ package com.YaNan.frame.core.session.defaultConfigure;
 import com.YaNan.frame.hibernate.database.annotation.Column;
 import com.YaNan.frame.hibernate.database.annotation.Tab;
 
-@Tab(DB="UFO_SYSTEM")
+@Tab(DB="YaNan_SYSTEM")
 public class TokenDataEntity {
 	@Column(type="varchar")
 	public String TokenId;

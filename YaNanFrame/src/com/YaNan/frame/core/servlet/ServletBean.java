@@ -8,12 +8,14 @@ public class ServletBean {
 	private Map<String, ServletResult> result = new HashMap<String,ServletResult>();
 	private Class<?> className;
 	private String namespace;
+	private String actionName;
 	private Method method;
 	private int type;
 	private boolean output;
 	private boolean decode;
 	private boolean corssOrgin;
 	private String[] args={};
+	private String description;
 	public Class<?> getClassName() {
 		return this.className;
 	}
@@ -79,6 +81,18 @@ public class ServletBean {
 	}
 	public void setType(int type) {
 		this.type = type;
+	}
+	public String getDescription() {
+		return description;
+	}
+	public void setDescription(String description) {
+		this.description = description;
+	}
+	public String getActionName() {
+		return actionName;
+	}
+	public void setActionName(String actionName) {
+		this.actionName = actionName;
 	}
 	
 }

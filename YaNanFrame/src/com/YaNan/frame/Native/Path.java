@@ -16,8 +16,9 @@ import com.YaNan.frame.service.ClassInfo;
  */
 @ClassInfo(version = 0)
 public class Path {
-	private List<File> source = new ArrayList<File>();
-	private int scanLevel=0;
+	private File file;
+	private List<String> filter = new ArrayList<String>();
+	private int scanLevel=-1;
 	private int currentScanLevel=0;
 	public boolean createWhenNotExists = true;
 	public boolean deleteWhenExists = true;
@@ -30,9 +31,6 @@ public class Path {
 	private File target;
 	private int buffSize = 1024;
 
-	public List<File> getSource() {
-		return source;
-	}
 
 	public File getTarget() {
 		return target;
@@ -47,28 +45,16 @@ public class Path {
 		// 添加事件
 		File file = new File(source);
 		if (file.exists()) {
-			this.source.add(file);
+			this.file = file;
 		} else {
 			dialog("源路径：" + file.toString() + "无效");
 		}
 	}
 
-	// 传入多个路径
-	public Path(String[] source) {
-		// 添加事件
-		for (String str : source) {
-			File file = new File(str);
-			if (file.exists()) {
-				this.source.add(file);
-			} else {
-				dialog("源路径：" + file.toPath() + "无效");
-			}
-		}
-	}
 
 	public Path(File file) {
 		if (file.exists()) {
-			this.source.add(file);
+			this.file=file;
 		} else {
 			dialog("源路径：" + file.toString() + "无效");
 		}
@@ -83,7 +69,6 @@ public class Path {
 					return false;
 			this.target.mkdirs();
 		}
-		for (File file : this.source)
 			if (!copyPath(file, this.target))
 				return false;
 		// 更新事件
@@ -103,30 +88,25 @@ public class Path {
 
 	// 删除源路径及以下所有项
 	public boolean del() {
-		for (File file : this.source)
-			delete(file);
+		delete(file);
 		return true;
 	}
 
 	public void scanner(PathInter p) {
-		if(this.source.size()>0) 
-		for (File file : this.source)
 			doScanner(p, file);
 	}
 	public void scanner(PathInter p,int scanLevel) {
 		this.scanLevel=scanLevel;
-		for (File file : this.source)
-			if(this.scanLevel==0)
-				doScanner(p, file);
-			else
-				doScanner(p,file,null);
+		if(this.scanLevel==0)
+			doScanner(p, file);
+		else
+			doScanner(p,file,null);
 	}
 	public void scanner(PathInter p,boolean scanAllPath) {
 		scanner(p,scanAllPath?0:1);
 	}
 	public void scannerOnCurrentPath(PathInter p) {
 		this.scanLevel=1;
-		for (File file : this.source)
 			doScanner(p, file,null);
 	}
 	
@@ -137,22 +117,51 @@ public class Path {
 			for (File f : list)
 				doScanner(p, f,file);
 		}
-		p.find(file);
+		if(filter.isEmpty())
+			p.find(file);
+		else for(String word : filter)
+			if(file.getName().contains(word))
+				p.find(file);
 	}
 	
 	private void doScanner(PathInter p, File file,File currentPath) {
-		if(currentPath!=null&&currentPath.getAbsolutePath().equals(file.getAbsolutePath().replace("\\"+file.getName(), "")))
-			this.currentScanLevel++;
+		if(this.file.getAbsolutePath().equals(file.getAbsolutePath()))
+			this.currentScanLevel=0;
+		else{
+			String filePathSpace = file.getAbsolutePath().replace(File.separator+file.getName(), "");
+			if(this.file.getAbsolutePath().equals(filePathSpace))
+				this.currentScanLevel=0;
+			else{
+				String orginPathSpace = this.file.getAbsolutePath().substring(this.file.getAbsolutePath().length()-1).equals(File.separator)?this.file.getAbsolutePath():this.file.getAbsolutePath()+File.separator;
+				String space = filePathSpace.replace(orginPathSpace,"");
+				this.currentScanLevel = space.split(File.separator).length;
+			}
+		}
+		if(scanLevel>0&&currentScanLevel>scanLevel)
+			return;
 		if (file.isDirectory()) {
 			File[] list = file.listFiles();
 			if(list!=null)
 			for (File f : list)
-				if(currentScanLevel<scanLevel||scanLevel==0)
+				if(currentScanLevel<=scanLevel||scanLevel==-1)
 				doScanner(p, f,file);
-				else
-				p.find(f);
+				else{
+					if(filter.isEmpty())
+						p.find(file);
+					else for(String word : filter)
+						if(file.getName().contains(word))
+							p.find(file);
+				}
 		}
-		p.find(file);
+		if(filter.isEmpty())
+			p.find(file);
+		else for(String word : filter)
+			if(file.getName().contains(word))
+				p.find(file);
+	}
+
+	public int getCurrentScanLevel() {
+		return currentScanLevel;
 	}
 
 	// 内部文件删除
@@ -234,5 +243,10 @@ public class Path {
 
 	public void stop() {
 		this.alive=false;
+	}
+
+	public void filter(String... strings) {
+		for(String word : strings)
+			this.filter.add(word);
 	}
 }

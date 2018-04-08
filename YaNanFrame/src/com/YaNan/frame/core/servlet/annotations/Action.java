@@ -15,4 +15,5 @@ public @interface Action {
 	boolean CorssOrgin() default false;//是否需要跨域
 	String[] args() default {};//所需参数
 	int method() default RESPONSE_METHOD.OUTPUT;
+	String description() default"";//action 描述
 	}

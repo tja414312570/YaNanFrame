@@ -10,7 +10,7 @@ public class DataBaseConfigure {
 	private String port = "3306";
 	private String username = "root";
 	private String password = "";
-	private String cahrset = "utf8";
+	private String charset = "utf8";
 	private String collate = "utf8_general_ci";
 	private String encoding = "utf-8";
 	private String defaulted;
@@ -90,11 +90,11 @@ public class DataBaseConfigure {
 	public void setPassword(String password) {
 		this.password = password;
 	}
-	public String getCahrset() {
-		return cahrset;
+	public String getCharset() {
+		return charset;
 	}
-	public void setCahrset(String cahrset) {
-		this.cahrset = cahrset;
+	public void setCharset(String cahrset) {
+		this.charset = cahrset;
 	}
 	public String getCollate() {
 		return collate;
@@ -124,7 +124,7 @@ public class DataBaseConfigure {
 	public String toString() {
 		return "DataBaseConfigure [id=" + id + ", name=" + name + ", driver=" + driver + ", type=" + type + ", scheme="
 				+ scheme + ", host=" + host + ", port=" + port + ", username=" + username + ", password=" + password
-				+ ", cahrset=" + cahrset + ", collate=" + collate + ", encoding=" + encoding + ", defaulted="
+				+ ", charset=" + charset + ", collate=" + collate + ", encoding=" + encoding + ", defaulted="
 				+ defaulted + ", log=" + log + ", minNum=" + minNum + ", maxNum=" + maxNum + ", addNum=" + addNum + "]";
 	}
 }

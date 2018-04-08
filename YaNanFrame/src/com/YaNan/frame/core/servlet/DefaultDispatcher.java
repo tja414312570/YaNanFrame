@@ -56,7 +56,7 @@ public class DefaultDispatcher extends HttpServlet {
 		String namespace = URLSupport.getNameSpace(request);
 		HttpSession session = request.getSession();
 		// 获取servletMap实例
-		defaultServletMapping servletMap = defaultServletMapping.getInstance();
+		DefaultServletMapping servletMap = DefaultServletMapping.getInstance();
 		// 如果ServletBean存在
 		if (servletMap.isExist(namespace,servletName)) {
 			// get ServletBean

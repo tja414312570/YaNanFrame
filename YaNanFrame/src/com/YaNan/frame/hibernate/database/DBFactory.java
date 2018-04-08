@@ -39,6 +39,9 @@ public class DBFactory {
 				dbFactory=new DBFactory();
 		return dbFactory;
 	}
+	public Map<Class<?>, DBTab> getTabMappingCaches(){
+		return Class2TabMappingCache.getDBTabelsMap();
+	}
 	private DBFactory(){};
 	public void init(){
 		if(xmlFile==null)
@@ -180,5 +183,8 @@ public class DBFactory {
 			}
 		    }
 		}
+	}
+	public Map<String, DataBase> getDataBases() {
+		return dbMap;
 	}
 }

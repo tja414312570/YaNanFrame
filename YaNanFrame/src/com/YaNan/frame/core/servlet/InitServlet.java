@@ -30,7 +30,7 @@ import com.YaNan.frame.service.Log;
  */
 public class InitServlet {
 	private static InitServlet servletInstance;
-	private defaultServletMapping servletMannager;
+	private DefaultServletMapping servletMannager;
 	private List<Document> servletPaths = new ArrayList<Document>();
 	private Log log = Log.getSystemLog();
 	private File classPath;
@@ -42,7 +42,7 @@ public class InitServlet {
 			if (new File(servletCfg).exists()) 
 				addServletXml(servletCfg);
 		}
-		this.servletMannager = defaultServletMapping.getInstance();
+		this.servletMannager = DefaultServletMapping.getInstance();
 		this.init();
 	}
 
@@ -170,6 +170,8 @@ public class InitServlet {
 						bean.setDecode(action.decode());
 						bean.setCorssOrgin(action.CorssOrgin());
 						bean.setType(action.method());
+						bean.setDescription(action.description());
+						bean.setActionName(actionName);
 						Result[] results =method.getAnnotationsByType(Result.class);
 						if(results.length==0){
 							ActionResults actionResults = method.getAnnotation(ActionResults.class);

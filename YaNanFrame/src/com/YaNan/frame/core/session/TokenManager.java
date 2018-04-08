@@ -32,6 +32,9 @@ public class TokenManager {
 	
 	private static TokenManager manager;
 	private Map<String, TokenEntity> tokenMap = new LinkedHashMap<String, TokenEntity>();
+	public Map<String, TokenEntity> getTokenMap() {
+		return tokenMap;
+	}
 	private File file;
 	private TokenManager() {
 	};

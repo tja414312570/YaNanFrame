@@ -7,6 +7,10 @@ public class Class2TabMappingCache {
 	private static Class2TabMappingCache dbManager;
 	private static Map<Class<?>, DBTab> map = new HashMap<Class<?>, DBTab>();
 
+	public static Map<Class<?>, DBTab> getDBTabelsMap() {
+		return map;
+	}
+
 	public Class2TabMappingCache getManager() {
 		if (dbManager == null)
 			dbManager = new Class2TabMappingCache();

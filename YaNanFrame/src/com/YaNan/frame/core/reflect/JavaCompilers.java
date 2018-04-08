@@ -50,7 +50,7 @@ public class JavaCompilers implements CompilerInterface {
 	private JavaCompiler javaCompiler = ToolProvider.getSystemJavaCompiler();
 	private String[] arguments = null;
 	private String classDir;
-	private String javaDir[];
+	private String javaDir;
 	private OutputStream out;
 	private InputStream in;
 	private OutputStream err;
@@ -80,11 +80,11 @@ public class JavaCompilers implements CompilerInterface {
 		return classDir;
 	}
 
-	public String[] getJavaDir() {
+	public String getJavaDir() {
 		return this.javaDir;
 	}
 
-	public void setJavaDir(String... dir) {
+	public void setJavaDir(String dir) {
 		this.javaDir = dir;
 	}
 

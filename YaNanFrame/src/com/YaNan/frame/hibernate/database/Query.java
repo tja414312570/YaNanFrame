@@ -256,8 +256,9 @@ public static interface Order{
 		}
 	}
 
-	public void addConditionCommand(String condition) {
-		this.condition.add(condition);
+	public void addConditionCommand(String... conditions) {
+		for(String condition : conditions)
+			this.condition.add(condition);
 	}
 
 	@Override

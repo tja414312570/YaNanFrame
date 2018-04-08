@@ -122,7 +122,7 @@ public class DataBase {
 					+ dbConfigure.getHost() + ":" + dbConfigure.getPort()
 					+ "?characterEncoding=" + dbConfigure.getEncoding()+"&"+SUFFIX, dbConfigure.getUsername(),
 					dbConfigure.getPassword());
-			String sql = "CREATE DATABASE IF NOT EXISTS " + databaseName+" DEFAULT CHARACTER SET "+dbConfigure.getCahrset()+" COLLATE "+dbConfigure.getCollate();
+			String sql = "CREATE DATABASE IF NOT EXISTS " + databaseName+" DEFAULT CHARACTER SET "+dbConfigure.getCharset()+" COLLATE "+dbConfigure.getCollate();
 			PreparedStatement ps = (PreparedStatement) connect
 					.prepareStatement(sql);
 			return ps.execute();

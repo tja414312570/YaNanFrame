@@ -6,7 +6,7 @@ import com.YaNan.frame.core.session.entity.TokenCell;
 import com.YaNan.frame.hibernate.database.annotation.Column;
 import com.YaNan.frame.hibernate.database.annotation.Tab;
 
-@Tab(DB="UFO_SYSTEM",name="Token")
+@Tab(DB="YaNan_SYSTEM",name="Token")
 public class TokenCellEntity {
 	@Column(type="varchar",length=256,Primary_Key=true)
 	private String tokenId;

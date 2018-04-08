@@ -12,5 +12,7 @@
 		<path name="systemLog" id="systemLog">systemLog/</path>
 	<!-- default end -->
 		<path name="resource" id="resource">resource/</path>
+		<path name="hibernateXml" id="hibernateXml">$classPath+hibernate.xml</path>
+		<path name="RPCCustomer" id="RPCCustomer">$classPath+RPCCustomer.xml</path>
 	</webPath>
 </config>
