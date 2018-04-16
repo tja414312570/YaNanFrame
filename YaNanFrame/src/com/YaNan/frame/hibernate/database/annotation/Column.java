@@ -20,9 +20,9 @@ public @interface Column {
 
 	String type() default "";
 
-	int length() default -1;
+	int length() default 255;
 
-	int size() default -1;
+	int size() default 11;
 
 	String format() default "";
 

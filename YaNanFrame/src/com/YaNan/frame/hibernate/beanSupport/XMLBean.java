@@ -17,7 +17,6 @@ import org.dom4j.Element;
 import org.dom4j.Node;
 import org.dom4j.io.SAXReader;
 
-import com.YaNan.frame.service.Log;
 /**
  * 
  * @author YaNan
@@ -90,13 +89,13 @@ public class XMLBean {
 	public List<Object> execute() {
 		// if XML fileList list is zero,throw exception and stop process
 		if (this.fileList.size() == 0) {
-			Log.getSystemLog().exception(
+			this.exception(
 					new Exception("token xml fileList is '0'"));
 			return null;
 		}
 		// if bean class is null throw exception and stop process
 		if (this.beanClass == null) {
-			Log.getSystemLog().exception(new Exception("bean class is null"));
+			this.exception(new Exception("bean class is null"));
 			return null;
 		}
 		// traversal XML fileList list
@@ -106,9 +105,8 @@ public class XMLBean {
 			// execute
 			File xmlFile = iterator.next();
 			if (!xmlFile.exists()) {
-				Log.getSystemLog().error(
-						"a xml file is not exist,ignore the xml file,at : "
-								+ xmlFile.getAbsolutePath());
+				this.warrn("a xml file is not exist,ignore the xml file,at : "
+						+ xmlFile.getAbsolutePath());
 			} else {
 				// read xmlFile and get document,the love always exists;
 				SAXReader reader = new SAXReader();
@@ -120,8 +118,7 @@ public class XMLBean {
 					// if element path is null , throw exception and stop
 					// process
 					if (this.elementPath.size() == 0) {
-						Log.getSystemLog().exception(
-								new Exception("token element list is '0'"));
+						this.warrn("token element list is '0'");
 						return null;
 					}
 					// traversal element path
@@ -132,22 +129,16 @@ public class XMLBean {
 						String path = pIterator.next();
 						Node pNode = document.selectSingleNode(path);
 						if (pNode == null) {
-							Log.getSystemLog().error(
-									"XML Path expression :" + path);
+							this.warrn("XML Path expression :" + path);
 							continue;
 						}
 						if (!pNode.hasContent()) {
-							Log.getSystemLog()
-									.error("XML Path has not any content at : "
-											+ path);
+							this.warrn("XML Path has not any content at : "+ path);
 							continue;
 						}
 						// if node name is null , throw error and continue
 						if (this.nodeName == null) {
-							Log.getSystemLog().exception(
-									new Exception(
-											"node name is null at node name :"
-													+ this.nodeName));
+							this.warrn("node name is null at node name :"+ this.nodeName);
 							return null;
 						}
 						List<?> nList = pNode.selectNodes(this.nodeName);
@@ -159,7 +150,7 @@ public class XMLBean {
 						rootElement(bIterator, this.beanObjectList);
 					}
 				} catch (DocumentException e) {
-					Log.getSystemLog().exception(e);
+					this.exception(e);
 				}
 
 			}
@@ -167,6 +158,8 @@ public class XMLBean {
 		return this.beanObjectList;
 
 	}
+
+	
 
 	public void rootElement(Iterator<?> eIterator, List<Object> objectList) {
 		while (eIterator.hasNext()) {
@@ -176,7 +169,7 @@ public class XMLBean {
 			try {
 				obj = this.beanClass.newInstance();
 			} catch (InstantiationException | IllegalAccessException e1) {
-				Log.getSystemLog().exception(e1);
+				this.exception(e1);
 				return;
 			}
 			Element beanElement = (Element) eIterator.next();
@@ -333,5 +326,11 @@ public class XMLBean {
 
 	public void removeNode(String field) {
 		this.removeNodes.add(field);
+	}
+	private void exception(Exception exception){
+		exception.printStackTrace();
+	}
+	private void warrn(String string) {
+		System.out.println(string);
 	}
 }

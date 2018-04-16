@@ -1,9 +1,13 @@
 package com.YaNan.frame.core.servlet;
 
+
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 
-public class URLSupport {
+import com.YaNan.frame.core.cache.ResourceCache;
+
+public class URLSupport{
+
 	/**
 	 * Http://YaNan.photo/YaNan/r.do ---->Http://YaNan.photo/
 	 * 
@@ -11,13 +15,14 @@ public class URLSupport {
 	 * @return
 	 */
 	public static String getRootURL(ServletRequest request) {
-		String cUrl = request.getScheme()+"://" + request.getServerName() + ":"
-				+ request.getServerPort();
-		int port = request.getServerPort();
-		if(port==80)
-			cUrl=cUrl.replace(":80", "");
-		if(port==443)
-			cUrl=cUrl.replace(":443", "");
+		String cUrl = ResourceCache.getResource(request.getScheme(),request.getServerName(),request.getServerPort()+"");
+		if(cUrl==null){
+			StringBuilder sb  = new StringBuilder(request.getScheme()).append("://").append(request.getServerName());
+			if(request.getServerPort()!=80&&request.getServerPort()!=443)
+				sb.append(":").append(request.getServerPort());
+			cUrl = sb.toString();
+		}
+		ResourceCache.putResource(cUrl,request.getScheme(),request.getServerName(),request.getServerPort()+"");
 		return cUrl;
 	}
 
@@ -28,7 +33,13 @@ public class URLSupport {
 	 * @return
 	 */
 	public static String getContextURL(ServletRequest request) {
-		return getRootURL(request)+ ((HttpServletRequest) request).getContextPath() + "/";
+		String rootPath = getRootURL(request);
+		String cUrl = ResourceCache.getResource(rootPath,((HttpServletRequest) request).getContextPath());
+		if(cUrl==null){
+			cUrl = new StringBuilder(getRootURL(request)).append(((HttpServletRequest) request).getContextPath()).append("/").toString();
+			ResourceCache.putResource(cUrl,rootPath,((HttpServletRequest) request).getContextPath());
+		}
+		return cUrl;
 	}
 
 	/**
@@ -38,12 +49,16 @@ public class URLSupport {
 	 * @return
 	 */
 	public static String getURL(HttpServletRequest request) {
-		String cUrl = request.getRequestURL().toString();
-		int port = request.getServerPort();
-		if(port==80)
-			cUrl=cUrl.replace(":80", "");
-		if(port==443)
-			cUrl=cUrl.replace(":443", "");
+		String cUrl = ResourceCache.getResource(request.getRequestURL().toString(),request.getServerPort()+"");
+		if(cUrl==null){
+			cUrl= request.getRequestURL().toString();
+			int port = request.getServerPort();
+			if(port==80)
+				cUrl = new StringBuilder(cUrl.substring(0,cUrl.indexOf(":80"))).append(cUrl.indexOf(":80")+3).toString();
+			if(port==443)
+				cUrl = new StringBuilder(cUrl.substring(0,cUrl.indexOf(":443"))).append(cUrl.indexOf(":443")+4).toString();
+			ResourceCache.putResource(cUrl,request.getRequestURL().toString(),request.getServerPort()+"");
+		}
 		return cUrl;
 		
 	}
@@ -55,8 +70,13 @@ public class URLSupport {
 	 * @return
 	 */
 	public static String getServlet(HttpServletRequest request) {
-		String url = getURL(request);
-		return url.substring(url.lastIndexOf("/") + 1).replace(".do", "");
+		String url = ResourceCache.getResource(getURL(request),"servlet");
+		if(url==null){
+			url = getURL(request);
+			url = new StringBuilder(url).substring(url.lastIndexOf("/")+1);
+			ResourceCache.putResource(url,getURL(request),"servlet");
+		}
+		return url;
 	}
 
 	/**
@@ -66,7 +86,13 @@ public class URLSupport {
 	 * @return
 	 */
 	public static String getRequestPath(HttpServletRequest request) {
-		return getURL(request).replace(getContextURL(request), "/");
+		String url = ResourceCache.getResource(getURL(request),"RequestPath"); ;
+		if(url==null){
+			url = getURL(request);
+			url = new StringBuilder().substring(url.lastIndexOf(getContextURL(request)));
+			ResourceCache.putResource(url,getURL(request),"RequestPath");
+		}
+		return url;
 	}
 
 	/**
@@ -106,5 +132,16 @@ public class URLSupport {
 		System.out.println("ServerPort:"+request.getServerPort());
 		
 		return null;
+	}
+
+	public static String getRequestFileType(HttpServletRequest request) {
+		String url = getURL(request);
+		String fileType = ResourceCache.getResource(url,"FileType");
+		if(fileType==null){
+			int fileMarkIndex =url.indexOf(".");  
+			fileType =fileMarkIndex>0?new StringBuilder(url).substring(fileMarkIndex+1):"" ;
+			ResourceCache.putResource(fileType,url,"FileType");
+		}
+		return fileType;
 	}
 }

@@ -1,0 +1,11 @@
+package com.YaNan.Demo.model;
+
+import com.YaNan.frame.hibernate.database.Query;
+
+public class Hibernate {
+	public static void main(String[] args) {
+		Query query = new Query(Student.class);
+		String sql = query.create();
+		System.out.println(sql);
+	}
+}

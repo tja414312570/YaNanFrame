@@ -6,6 +6,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
+
 public class ApplicationContext {
 	private static ApplicationContext applicationContext;
 	private String localAddr;

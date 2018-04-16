@@ -8,7 +8,6 @@ import javax.websocket.HandshakeResponse;
  import javax.websocket.server.HandshakeRequest;
  import javax.websocket.server.ServerEndpointConfig;
 
-import com.YaNan.frame.core.session.Token;
 import com.YaNan.frame.core.session.TokenManager;
  
  public class SocketConfigurator extends ServerEndpointConfig.Configurator

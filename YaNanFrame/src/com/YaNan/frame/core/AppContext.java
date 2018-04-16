@@ -11,15 +11,14 @@ import javax.servlet.ServletContextEvent;
 import org.dom4j.Element;
 
 import com.YaNan.frame.core.init.InitXML;
-import com.YaNan.frame.core.servlet.InitServlet;
+import com.YaNan.frame.core.servlet.ServletBuilder;
 import com.YaNan.frame.core.servlet.ServletBean;
 import com.YaNan.frame.core.servlet.DefaultServletMapping;
 import com.YaNan.frame.core.session.TokenManager;
 import com.YaNan.frame.hibernate.WebPath;
 import com.YaNan.frame.hibernate.database.DBFactory;
-import com.YaNan.frame.security.DH;
-import com.YaNan.frame.service.ClassInfo;
-import com.YaNan.frame.service.Log;
+import com.YaNan.frame.logging.Log;
+import com.YaNan.frame.plugs.PlugsFactory;
 
 /**
  * @version 1.0.1
@@ -28,12 +27,11 @@ import com.YaNan.frame.service.Log;
  * @author YaNan
  *
  */
-@ClassInfo(version = 0, author = "YaNan")
 public class AppContext {
 	private static AppContext appcontext;
 	private ServletContextEvent servletContextEvent;
 	private boolean InitCompleted=false;
-
+	private final Log log = PlugsFactory.getPlugsInstance(Log.class, AppContext.class);
 	/*
 	 * single context
 	 */
@@ -60,67 +58,61 @@ public class AppContext {
 
 	public void init() throws Exception {
 		try{
-			Log.getSystemLog().write("init start");
-			Log.getSystemLog().write("AppContext init:please waiting...");
-			Log.getSystemLog().write("get webPath object");
+			log.debug("init start");
+			log.debug("AppContext init:please waiting...");
+			log.debug("get webPath object");
 			WebPath webPath = WebPath.getWebPath();
-			Log.getSystemLog().write("get webPath object done");
-			Log.getSystemLog().write("request get app root realPath:"+File.separator);
+			log.debug("get webPath object done");
+			log.debug("request get app root realPath:"+File.separator);
 			ServletContext servletContext = servletContextEvent.getServletContext();
 			String rootPath = servletContext.getRealPath("/");
-			Log.getSystemLog().write("get servletRootPath :" + rootPath);
-			Log.getSystemLog().write("init rootPath...");
+			log.debug("get servletRootPath :" + rootPath);
+			log.debug("init rootPath...");
 			webPath.setRoot(rootPath);
-			Log.getSystemLog().write("decode init.xml");
-			Log.getSystemLog().write("done...");
-			Log.getSystemLog().write("traverse Path");
+			log.debug("decode init.xml");
+			log.debug("done...");
+			log.debug("traverse Path");
 			InitXML.init();
 			List<?> list = InitXML.getPath();
-			Log.getSystemLog().write("get path size:" + list.size());
+			log.debug("get path size:" + list.size());
 			if (list.size() > 0)
 				for (int i = 0; i < list.size(); i++) {
 					String id = ((Element)list.get(i)).attributeValue("id");
 					String path = InitXML.getPathById(id);
-					Log.getSystemLog().write("init webPath " + id + ",addr=" + path);
+					log.debug("init webPath " + id + ",addr=" + path);
 					webPath.set(id, path);
 	
 				}
-			Log.getSystemLog().write("Init servletXml");
-			InitServlet.getInstance();
-			Log.getSystemLog().write("Retrieve the servlet configuration");
-			Log.getSystemLog().write("get servlet Mapping Object");
+			log.debug("Init servletXml");
+			ServletBuilder.getInstance();
+			log.debug("Retrieve the servlet configuration");
+			log.debug("get servlet Mapping Object");
 			DefaultServletMapping servletManager = DefaultServletMapping
 					.getInstance();
-			Log.getSystemLog().write("get Servlet Mapping iterator");
+			log.debug("get Servlet Mapping iterator");
 			Iterator<String> iterator = servletManager.getActionKSIterator();
-			Log.getSystemLog().write("get servlet Mapping");
-			Map<String, Map<String, ServletBean>> servletMapping = servletManager
+			log.debug("get servlet Mapping");
+			Map<String, ServletBean> servletMapping = servletManager
 					.getServletMapping();
-			Log.getSystemLog().write("Traverse the servlet collection");
+			log.debug("Traverse the servlet collection");
 			while (iterator.hasNext()) {
 				String key = iterator.next();
-				Map<String, ServletBean> namespaceMap = servletMapping.get(key);
-				Iterator<String> namespaceIterator = namespaceMap.keySet()
-						.iterator();
-				while (namespaceIterator.hasNext()) {
-					String namespace = namespaceIterator.next();
-					Log.getSystemLog().write("---------------------------------------------------------");
-					Log.getSystemLog().write("namespace:" + key + ",servlet:" + namespace
-							+ ",servletbean:" +  namespaceMap.get(namespace).getClassName());
-					Log.getSystemLog().write("---------------------------------------------------------");
-				}
+				ServletBean bean = servletMapping.get(key);
+				log.debug("---------------------------------------------------------");
+				log.debug("url mapping:" + key + ",servlet method:" + bean.getMethod()
+						+ ",servlet type:" +bean.getType());
+				log.debug("---------------------------------------------------------");
 	
 			}
 			DBFactory.getDBFactory().init();
 			DBFactory.getDBFactory().initTabs();
 			TokenManager.init();
-			DH.init();
 		}catch (Exception e){
 			e.printStackTrace();
 		}finally{
 			this.InitCompleted=true;
 		}
-		Log.getSystemLog().write("application context inited!");
+		log.debug("application context inited!");
 	}
 	
 	public boolean isInitCompleted() {

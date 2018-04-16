@@ -4,55 +4,56 @@ import com.YaNan.frame.RPC.Implements.RPCListener;
 import com.YaNan.frame.RPC.customer.RPCCustomerServiceRuntime;
 import com.YaNan.frame.RPC.customer.RPCService;
 import com.YaNan.frame.RPC.customer.Reconnection;
-import com.YaNan.frame.service.Log;
+import com.YaNan.frame.logging.Log;
+import com.YaNan.frame.plugs.PlugsFactory;
 
 public class defaultRPCListener implements RPCListener{
+	private final Log log = PlugsFactory.getPlugsInstance(Log.class, defaultRPCListener.class);
 
 	@Override
 	public void InitCompleted(RPCService rpcService) {
-		Log.getSystemLog().write("inited ! configure info："+rpcService.getRpcConfigXML().toString());
+		log.debug("inited ! configure info："+rpcService.getRpcConfigXML().toString());
 	}
 
 	@Override
 	public void OnStarted(RPCService rpcService) {
-		Log.getSystemLog().write("rpc service is started");
+		log.debug("rpc service is started");
 	}
 
 	@Override
 	public void OnException(RPCService rpcService, Exception e) {
-		Log.getSystemLog().write("catch exception : "+e.toString());
-	e.printStackTrace();
-		
+		log.error(e);
+		e.printStackTrace();
 	}
 
 	@Override
 	public void OnShutdown(RPCService rpcService) {
-		Log.getSystemLog().write("rpc service is stoped");
+		log.debug("rpc service is stoped");
 	}
 
 	@Override
 	public void OnLostConnection(RPCService rpcService) {
-		Log.getSystemLog().write("rpc service is lost connect");
+		log.debug("rpc service is lost connect");
 	}
 
 	@Override
 	public void onRegistSuccess(RPCService rpcService) {
-		Log.getSystemLog().write("rpc service regist failed");
+		log.debug("rpc service regist failed");
 	}
 
 	@Override
 	public void onRegistFailed(RPCService rpcService) {
-		Log.getSystemLog().write("rpc service regist successed");
+		log.debug("rpc service regist successed");
 	}
 
 	@Override
 	public void onReconnected(RPCService manager, Reconnection reconnection, int i, RPCCustomerServiceRuntime runtime) {
-		Log.getSystemLog().write("try "+i+" connection，the result is:"+runtime.isAlive());
+		log.debug("try "+i+" connection，the result is:"+runtime.isAlive());
 	}
 
 	@Override
 	public void OnReconnectFailed(RPCService manager) {
-		Log.getSystemLog().write("rpc service reconnection failed,rpc service stoped!");
+		log.debug("rpc service reconnection failed,rpc service stoped!");
 	}
 
 }

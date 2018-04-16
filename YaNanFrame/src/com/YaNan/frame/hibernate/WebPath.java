@@ -4,7 +4,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import com.YaNan.frame.service.Log;
+import com.YaNan.frame.logging.Log;
+import com.YaNan.frame.plugs.PlugsFactory;
+
 
 /**
  * @version 1.0.1
@@ -15,6 +17,7 @@ import com.YaNan.frame.service.Log;
  */
 public class WebPath {
 	private static WebPath webpath;
+	private final Log log = PlugsFactory.getPlugsInstance(Log.class, WebPath.class);
 	private Map<String, Path> map = new HashMap<String, Path>();
 
 	private WebPath() {
@@ -35,7 +38,7 @@ public class WebPath {
 	}
 
 	public Path get(String name) {
-		if(!this.map.containsKey(name))Log.getSystemLog().exception(new Exception("path id ["+name+"] is not exists,please check init configure file at <init.xml>!"));
+		if(!this.map.containsKey(name))log.error(new Exception("path id ["+name+"] is not exists,please check init configure file at <init.xml>!"));
 		return this.map.get(name);
 	}
 

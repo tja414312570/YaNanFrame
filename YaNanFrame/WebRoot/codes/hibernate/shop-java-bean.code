@@ -1,0 +1,126 @@
+package com.YaNan.Demo.model.sign;
+
+
+import com.YaNan.frame.core.servlet.annotations.Validate;
+import com.YaNan.frame.core.session.servletSupport.TokenServlet;
+import com.YaNan.frame.hibernate.database.annotation.Column;
+import com.YaNan.frame.hibernate.database.annotation.Tab;
+
+@Tab(DB="YaNan-Demo")
+public class SignShopModel{
+	@Column(type="varchar",length=255,Primary_Key=true,Annotations="商品标识")
+	protected String SSID;
+	@Column(type="varchar",length=255,Annotations="商品标题")
+	protected String title;
+	@Column(type="varchar",length=255,Annotations="商品图片")
+	protected String imgs;
+	protected int score;//礼品所需积分
+	protected int num;//礼品数量
+	protected int stock;//礼品库存
+	@Column(type="varchar",length=255,Annotations="商品描述")
+	protected String description;
+	protected int status;
+	@Column(type="varchar",length=255,Annotations="备注")
+	protected String note;
+	@Column(type="datetime",Annotations="上传日期")
+	protected String date_create;
+	@Column(type="datetime",Annotations="有效兑换开始日期")
+	protected String date_start;
+	@Column(type="datetime",Annotations="有效兑换结束日期")
+	protected String date_end;
+	@Column(ignore=true)
+	private String[] files;
+	protected int need;//需要连续天数
+	protected String provide;//礼品提供方
+	public String getSSID() {
+		return SSID;
+	}
+	public void setSSID(String sSID) {
+		SSID = sSID;
+	}
+	public String getTitle() {
+		return title;
+	}
+	public void setTitle(String title) {
+		this.title = title;
+	}
+	public String getImgs() {
+		return imgs;
+	}
+	public void setImgs(String imgs) {
+		this.imgs = imgs;
+		this.files = this.imgs.split(",");
+	}
+	public int getScore() {
+		return score;
+	}
+	public void setScore(int score) {
+		this.score = score;
+	}
+	public int getNum() {
+		return num;
+	}
+	public void setNum(int num) {
+		this.num = num;
+	}
+	public int getStock() {
+		return stock;
+	}
+	public void setStock(int stock) {
+		this.stock = stock;
+	}
+	public String getDescription() {
+		return description;
+	}
+	public void setDescription(String description) {
+		this.description = description;
+	}
+	public int getStatus() {
+		return status;
+	}
+	public void setStatus(int status) {
+		this.status = status;
+	}
+	public String getNote() {
+		return note;
+	}
+	public void setNote(String note) {
+		this.note = note;
+	}
+	public String getDate_create() {
+		return date_create;
+	}
+	public void setDate_create(String date_create) {
+		this.date_create = date_create;
+	}
+	public String getDate_start() {
+		return date_start;
+	}
+	public void setDate_start(String date_start) {
+		this.date_start = date_start;
+	}
+	public String getDate_end() {
+		return date_end;
+	}
+	public void setDate_end(String date_end) {
+		this.date_end = date_end;
+	}
+	public String[] getFiles() {
+		return files;
+	}
+	public void setFiles(String[] files) {
+		this.files = files;
+	}
+	public int getNeed() {
+		return need;
+	}
+	public void setNeed(int need) {
+		this.need = need;
+	}
+	public String getProvide() {
+		return provide;
+	}
+	public void setProvide(String provide) {
+		this.provide = provide;
+	}
+}

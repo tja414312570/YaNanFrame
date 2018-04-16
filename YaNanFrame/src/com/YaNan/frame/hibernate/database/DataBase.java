@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.YaNan.frame.hibernate.beanSupport.DecodeBean;
-import com.YaNan.frame.service.Log;
-import com.YaNan.frame.support.ignore;
+import com.YaNan.frame.logging.Log;
+import com.YaNan.frame.plugs.PlugsFactory;
 import com.mysql.jdbc.Connection;
 import com.mysql.jdbc.PreparedStatement;
 
@@ -23,20 +23,14 @@ import com.mysql.jdbc.PreparedStatement;
 public class DataBase {
 	@DecodeBean(key="id",value="object")
 	private Map<String,String> map = new HashMap<String,String>();
-	@ignore
 	private Map<String, DBTab> tabMapping = new HashMap<String, DBTab>();
-	@ignore
-	private Log log;
-	@ignore
 	private DataBaseConfigure dbConfigure;
-	@ignore
 	private int initialConnections = 2; 
-	@ignore
 	private int incrementalConnections = 2;
-	@ignore
 	private int maxConnections = 6; 
 	private final String SUFFIX = "autoReconnect=true&failOverReadOnly=false";
 	private ConnectionPools connectionPools;
+	private final Log log = PlugsFactory.getPlugsInstance(Log.class,DataBase.class);
 	public int getInitialConnections() {
 		return initialConnections;
 	}
@@ -65,7 +59,6 @@ public class DataBase {
 		this.incrementalConnections = dbConf.getAddNum();
 		this.initialConnections = dbConf.getMinNum();
 		this.maxConnections = dbConf.getMaxNum();
-		this.log = Log.getSystemLog();
 	}
 	public void init(){
 		this.connectionPools =ConnectionPools.getConnectionPools(this);
@@ -128,6 +121,7 @@ public class DataBase {
 			return ps.execute();
 		} catch (SQLException | ClassNotFoundException e) {
 			e.printStackTrace();
+			log.error(e);
 			return false;
 		}finally{
 			if(connect!=null)
@@ -135,6 +129,7 @@ public class DataBase {
 					connect.close();
 				} catch (SQLException e) {
 					e.printStackTrace();
+					log.error(e);
 				}
 		}
 	}
@@ -157,6 +152,7 @@ public class DataBase {
 			this.releaseConnection(connect);
 			return ps.execute();
 		} catch (SQLException e) {
+			log.error(e);
 			e.printStackTrace();
 			return false;
 		}
@@ -175,7 +171,7 @@ public class DataBase {
 					dbConfigure.getUsername(), dbConfigure.getPassword());
 			return connection == null ? false : true;
 		} catch (ClassNotFoundException | SQLException e) {
-			log.exception(e);
+			log.error(e);
 		}
 		return false;
 	}
@@ -195,14 +191,14 @@ public class DataBase {
 			throws SQLException {
 		PreparedStatement ps = (PreparedStatement) connection
 				.prepareStatement(sql);
-		log(ps.asSql());
+		log.debug(ps.asSql());
 		return ps.executeQuery();
 	}
 	public int executeUpdate(String sql,Connection connection)
 			throws SQLException {
 		PreparedStatement ps = (PreparedStatement) connection
 				.prepareStatement(sql);
-		log(ps.asSql());
+		log.debug(ps.asSql());
 		return ps.executeUpdate();
 	}
 	public PreparedStatement execute(String sql,Connection connection,int... statement)
@@ -212,7 +208,7 @@ public class DataBase {
 			ps = (PreparedStatement) connection.prepareStatement(sql);
 		else
 			ps = (PreparedStatement) connection.prepareStatement(sql,statement[0]);
-		log(ps.asSql());
+		log.debug(ps.asSql());
 		ps.execute();
 		return ps;
 	}
@@ -224,7 +220,7 @@ public class DataBase {
 			this.releaseConnection(connection);
 			return ps.executeQuery();
 		} catch (SQLException e) {
-			System.out.println(sql);
+			log.error(e);
 			e.printStackTrace();
 		}
 		return null;
@@ -237,8 +233,7 @@ public class DataBase {
 			this.releaseConnection(connection);
 			return ps.executeUpdate();
 		} catch (SQLException e) {
-			System.out.println(sql);
-			e.printStackTrace();
+			log.error(e);
 		}
 		return 0;
 	}
@@ -254,18 +249,9 @@ public class DataBase {
 				ps.execute();
 				return ps;
 			} catch (SQLException e) {
-				System.out.println(sql);
+				log.error(e);
 				e.printStackTrace();
 			}
 			return null;
-	}
-	public void log(String sql){
-			Log.getSystemLog().info("SQL : " + sql);
-	}
-	public Log getLog() {
-		return log;
-	}
-	public void setLog(Log log) {
-		this.log = log;
 	}
 }

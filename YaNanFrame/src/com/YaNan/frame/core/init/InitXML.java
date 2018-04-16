@@ -10,7 +10,6 @@ import org.dom4j.Node;
 import org.dom4j.io.SAXReader;
 
 import com.YaNan.frame.hibernate.WebPath;
-import com.YaNan.frame.service.Log;
 
 /**
  * @version 1.0.1
@@ -21,8 +20,6 @@ import com.YaNan.frame.service.Log;
  */
 public class InitXML {
 	private static String xmlPath;
-	private static Log log = Log.getSystemLog();
-	private static Log.LogBuffer lb = log.getBuffer();
 	final private static String nodePath = "//config/webPath/path";
 	static Document document;
 	static Document hDocument;
@@ -40,7 +37,6 @@ public class InitXML {
 		List<?> node = new ArrayList<Element>();
 		if(document!=null){
 		node = document.selectNodes(nodePath);
-		log.write("node is null:"+(node==null));
 		}
 		return node;
 	}

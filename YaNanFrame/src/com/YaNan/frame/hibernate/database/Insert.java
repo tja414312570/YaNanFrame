@@ -9,7 +9,8 @@ import java.util.Map;
 
 import com.YaNan.frame.core.reflect.ClassLoader;
 import com.YaNan.frame.hibernate.database.DBInterface.OperateImplement;
-import com.YaNan.frame.service.Log;
+import com.YaNan.frame.logging.Log;
+import com.YaNan.frame.plugs.PlugsFactory;
 
 /**
  * 该类用于提供给DATab的query一个查询的SQL语句的生成方法 提过一个构造器，传入一个DBTab型的表对象，应为他需要使用DBTab context
@@ -20,6 +21,7 @@ import com.YaNan.frame.service.Log;
 public class Insert extends OperateImplement{
 	private Object obj;
 	private Map<String, String> fieldMap = new LinkedHashMap<String, String>();
+	private Log log = PlugsFactory.getPlugsInstance(Log.class,Insert.class);
 	/**
 	 * 默认构造方法
 	 * @param obj
@@ -54,23 +56,17 @@ public class Insert extends OperateImplement{
 	 */
 	@Override
 	public String create() {
-		String sql = "INSERT INTO " + this.dbTab.getName() + "(";
+		StringBuilder sb = new StringBuilder("INSERT INTO ").append(this.dbTab.getName()).append("(");
 		if (this.fieldMap.size() == 0) 
-			Log.getSystemLog().error(
-					"没有任何字段，请检查对象是否所有元素的值都为null或是否所有元素都设置了自增。具体请查看sql语句");
+			log.error("没有任何字段，请检查植入对象是否所有元素的值都为null或是否所有元素都设置了自增。具体请查看sql语句");
 		Iterator<String> iterator = this.fieldMap.keySet().iterator();
 		while (iterator.hasNext()) {
-				sql += iterator.next()
-						+ (iterator.hasNext() ? "," : ") VALUES(");
+				sb.append(iterator.next()).append(iterator.hasNext() ? "," : ") VALUES(");
 		}
 		iterator = this.fieldMap.keySet().iterator();
-		while (iterator.hasNext()) {
-			String field = iterator.next();
-			sql += this.fieldMap.get(field)
-					+ (iterator.hasNext() ? "," : ")");
-		}
-		sql.replace(",)", ")");
-		return sql;
+		while (iterator.hasNext())
+			sb.append(this.fieldMap.get(iterator.next())).append(iterator.hasNext() ? "," : ")");
+		return sb.toString();
 	}
 	/**
 	 * 导入数据到数据库

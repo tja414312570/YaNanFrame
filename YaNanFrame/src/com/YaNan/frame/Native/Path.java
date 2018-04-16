@@ -8,13 +8,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-import com.YaNan.frame.service.ClassInfo;
-
 /*
  * encoding = "utf-8"
- * 次类用于路径的批量操作，目前只用于 删除，复制，移动
+ * 用于路径的批量操作，目前只用于 删除，复制，移动
  */
-@ClassInfo(version = 0)
 public class Path {
 	private File file;
 	private List<String> filter = new ArrayList<String>();
@@ -23,7 +20,6 @@ public class Path {
 	public boolean createWhenNotExists = true;
 	public boolean deleteWhenExists = true;
 	private int num;
-	private boolean alive=true;
 	public int getNum() {
 		return num;
 	}
@@ -239,10 +235,6 @@ public class Path {
 
 	public static interface PathInter {
 		public void find(File file);
-	}
-
-	public void stop() {
-		this.alive=false;
 	}
 
 	public void filter(String... strings) {

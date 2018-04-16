@@ -13,7 +13,7 @@ public class PackageScanner {
 		this.classPath = classPath;
 	}
 	public PackageScanner(){
-		
+		this.classPath = this.getClass().getClassLoader().getResource("").getPath().replace("%20", " ");
 	}
 	public void doScanner(final ClassInter inter) {
 		if(this.packageName==null)this.packageName=".";

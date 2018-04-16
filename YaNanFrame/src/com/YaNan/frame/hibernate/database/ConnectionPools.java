@@ -4,7 +4,8 @@ import java.sql.SQLException;
 import java.util.Enumeration;
 import java.util.Vector;
 
-import com.YaNan.frame.service.Log;
+import com.YaNan.frame.logging.Log;
+import com.YaNan.frame.plugs.PlugsFactory;
 import com.mysql.jdbc.Connection;
 
 public class ConnectionPools {
@@ -16,6 +17,7 @@ public class ConnectionPools {
      private int releaseNum = 0;//连接池释放次数
      private int maxBusy = 0;//最大使用连接量
      private int connectionNum = 0;//连接申请次数
+     private Log log = PlugsFactory.getPlugsInstance(Log.class,ConnectionPools.class);
      private ConnectionPools(DataBase db) {
     	 this.dataBase = db;
     	 this.all = new Vector<Connection>();
@@ -38,8 +40,8 @@ public class ConnectionPools {
 	 * 从DataBase中创建一个Connection并保存在all与free中
 	 */
 	private synchronized void initial(){
-		Log.getSystemLog().info("****初始化数据库连接池["+this.dataBase.getDbConfigure().getName()+"]****");
-		Log.getSystemLog().info("连接池配置:"+this.dataBase.getDbConfigure().toString());
+		log.debug("****初始化数据库连接池["+this.dataBase.getDbConfigure().getName()+"]****");
+		log.debug("连接池配置:"+this.dataBase.getDbConfigure().toString());
 		this.create(this.dataBase.getInitialConnections());
 	}
 	private synchronized void create(int num){
@@ -49,7 +51,7 @@ public class ConnectionPools {
 				this.all.add(connection);
 				this.free.add(connection);
 			} catch (ClassNotFoundException | SQLException e) {
-				Log.getSystemLog().exception(e);
+				log.error(e);
 			}
 		}
 		if(this.all.size()>this.maxConnections)this.maxConnections = this.all.size();
@@ -77,7 +79,7 @@ public class ConnectionPools {
 						try {
 							connection.close();
 						} catch (SQLException e) {
-							Log.getSystemLog().exception(e);
+							log.error(e);
 						}
 						this.all.remove(j);
 						this.free.remove(i);

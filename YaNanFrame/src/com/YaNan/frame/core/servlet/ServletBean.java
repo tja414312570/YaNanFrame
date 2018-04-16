@@ -1,32 +1,75 @@
 package com.YaNan.frame.core.servlet;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 public class ServletBean {
+	/**
+	 * 返回类型
+	 */
 	private Map<String, ServletResult> result = new HashMap<String,ServletResult>();
+	/**
+	 * 域缓存 action风格有效
+	 */
+	private Map<String,Field> fieldMap = new HashMap<String,Field>();
+	/**
+	 * 参数缓存 restful风格有效
+	 */
+	private Map<Parameter,Object> parameterMap = new LinkedHashMap<Parameter,Object>();
+	/**
+	 * 接口类
+	 */
 	private Class<?> className;
-	private String namespace;
-	private String actionName;
+	/**
+	 * 接口url
+	 */
+	private String urlmapping;
+	/**
+	 * 接口方法
+	 */
 	private Method method;
+	/**
+	 * 接口返回类型
+	 */
 	private int type;
+	/**
+	 * 接口风格
+	 */
+	private String style;
+	/**
+	 * 接口是否需要输出
+	 */
 	private boolean output;
+	/**
+	 * 接口是否需要转换
+	 */
 	private boolean decode;
+	/**
+	 * 接口是否跨域
+	 */
 	private boolean corssOrgin;
+	/**
+	 * 接口需要验证的参数   action风格有效
+	 */
 	private String[] args={};
+	/**
+	 * 接口描述
+	 */
 	private String description;
+	/**
+	 * 
+	 * @return
+	 */
+	private String pathRegex;
 	public Class<?> getClassName() {
 		return this.className;
 	}
 	public void setClassName(Class<?> className) {
 		this.className = className;
-	}
-	public String getNameSpace() {
-		return this.namespace;
-	}
-	public void setNameSpace(String namespace) {
-		this.namespace=namespace;
 	}
 	public void setOutputStream(boolean output) {
 		this.output=output;
@@ -88,11 +131,32 @@ public class ServletBean {
 	public void setDescription(String description) {
 		this.description = description;
 	}
-	public String getActionName() {
-		return actionName;
+	public Map<String,Field> getFieldMap() {
+		return fieldMap;
 	}
-	public void setActionName(String actionName) {
-		this.actionName = actionName;
+	public void setFieldMap(Map<String,Field> fieldMap) {
+		this.fieldMap = fieldMap;
+	}
+	public String getUrlmapping() {
+		return urlmapping;
+	}
+	public void setUrlmapping(String urlmapping) {
+		this.urlmapping = urlmapping;
+	}
+	public String getStyle() {
+		return style;
+	}
+	public void setStyle(String style) {
+		this.style = style;
+	}
+	public void addParameter(Parameter parameter,Object annotation){
+		this.parameterMap.put(parameter, annotation);
+	}
+	public String getPathRegex() {
+		return pathRegex;
+	}
+	public void setPathRegex(String pathRegex) {
+		this.pathRegex = pathRegex;
 	}
 	
 }

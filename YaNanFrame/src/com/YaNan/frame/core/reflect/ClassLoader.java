@@ -4,14 +4,13 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.sql.Date;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Collection;
+import java.util.Date;
 
-import com.YaNan.frame.core.aspect.AspectContainer;
-import com.YaNan.frame.core.aspect.JoinPoint;
-import com.YaNan.frame.core.aspect.interfaces.AspectInterface;
+import com.YaNan.frame.core.reflect.cache.CacheContainer;
+import com.YaNan.frame.core.reflect.cache.ClassInfoCache;
 
 
 /**
@@ -25,16 +24,11 @@ import com.YaNan.frame.core.aspect.interfaces.AspectInterface;
 public class ClassLoader {
 	private Object loadObject;
 	private Class<?> loadClass;
-	private List<AspectInterface> aspectInterfaces;
-	private JoinPoint joinPoint;
-	private boolean aspect=true;
-	private final static ExecutorService fixedThreadPool;
-	private final static AspectContainer aspectContainer;
-	static{
-		aspectContainer= AspectContainer.getAspectContainer();
-		aspectContainer.init();
-		fixedThreadPool = Executors.newFixedThreadPool(3);
+	private ClassInfoCache infoCache=null;
+	public ClassInfoCache getInfoCache() {
+		return infoCache;
 	}
+
 	/*
 	 * static method
 	 */
@@ -46,7 +40,7 @@ public class ClassLoader {
 	 */
 	public static boolean exists(String className) {
 		try {
-			Class.forName(className);
+			CacheContainer.classForName(className);
 			return true;
 		} catch (Exception e) {
 			return false;
@@ -59,16 +53,13 @@ public class ClassLoader {
 	 * @param className
 	 * @return
 	 */
-	public static Field[] getFields(String className) {
-		Class<?> objClass;
-		Field[] fields = null;
+	public static Collection<Field> getFields(String className) {
 		try {
-			objClass = Class.forName(className);
-			fields = objClass.getFields();
+			return CacheContainer.getClassInfoCache(CacheContainer.classForName(className)).getFields();
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
-		return fields;
+		return null;
 	}
 
 	/**
@@ -77,16 +68,13 @@ public class ClassLoader {
 	 * @param className
 	 * @return
 	 */
-	public static Field[] getAllFields(String className) {
-		Class<?> objClass;
-		Field[] fields = null;
-		try {
-			objClass = Class.forName(className);
-			fields = objClass.getDeclaredFields();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-		return fields;
+	public static Collection<Field> getAllFields(String className) {
+			try {
+				return CacheContainer.getClassInfoCache(CacheContainer.classForName(className)).getDeclaredFields();
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+			}
+			return null;
 	}
 
 	/**
@@ -98,18 +86,14 @@ public class ClassLoader {
 	 * @return
 	 * @throws ClassNotFoundException
 	 */
-	public static boolean hasMethod(String ClassName, String Method,
+	public static boolean hasMethod(String className, String methodName,
 			Class<?>... args) {
-
-		try {
-			Class<?> cls = Class.forName(ClassName);
-			cls.getMethod(Method, args);
-			return true;
-		} catch (NoSuchMethodException | SecurityException
-				| ClassNotFoundException e) {
-			// e.printStackTrace();
+			 try {
+				return CacheContainer.getClassInfoCache(CacheContainer.classForName(className)).getMethod(methodName, args)!=null;
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+			}
 			return false;
-		}
 	}
 
 	/**
@@ -121,14 +105,11 @@ public class ClassLoader {
 	 * @return
 	 * @throws ClassNotFoundException
 	 */
-	public static boolean hasDeclaredMethod(String ClassName, String Method,
-			Class<?>... args) throws ClassNotFoundException {
-		Class<?> cls = Class.forName(ClassName);
+	public static boolean hasDeclaredMethod(String className, String methodName,
+			Class<?>... args){
 		try {
-			cls.getDeclaredMethod(Method, args);
-			return true;
-		} catch (NoSuchMethodException | SecurityException e) {
-			// e.printStackTrace();
+			return CacheContainer.getClassInfoCache(CacheContainer.classForName(className)).getMethod(methodName, args)!=null;
+		} catch ( SecurityException | ClassNotFoundException e) {
 			return false;
 		}
 	}
@@ -140,11 +121,16 @@ public class ClassLoader {
 	 * @return
 	 */
 	public static Class<?>[] getParameterTypes(Object... args) {
-		Class<?>[] argsClass = new Class[args.length];
-		for (int i = 0; i < args.length; i++) {
-			argsClass[i] = args[i].getClass();
-		}
-		return argsClass;
+		Class<?>[] parmType = new Class[args.length];
+		for (int i = 0; i < args.length; i++) 
+			parmType[i] = args[i].getClass();
+		return parmType;
+	}
+	public static Class<?>[] getParameterBaseType(Object... args){
+		Class<?>[] parmType = new Class<?>[args.length];
+		for(int i = 0;i<args.length;i++)
+			parmType[i] = patchBaseType(args[i]);
+		return parmType;
 	}
 
 	/**
@@ -164,9 +150,7 @@ public class ClassLoader {
 	 * @return
 	 */
 	public static String createFieldGetMethod(String name) {
-		String nameMethod = ("get" + name.substring(0, 1).toUpperCase() + name
-				.substring(1, name.length()));
-		return nameMethod;
+		return CacheContainer.getFieldGetMethod(name);
 	}
 
 	/**
@@ -176,16 +160,11 @@ public class ClassLoader {
 	 * @return
 	 */
 	public static String createFieldSetMethod(String name) {
-		String nameMethod = ("set" + name.substring(0, 1).toUpperCase() + name
-				.substring(1, name.length()));
-		return nameMethod;
+		return CacheContainer.getFieldSetMethod(name);
 	}
 
 	public static String createFieldSetMethod(Field field) {
-		String name = field.getName();
-		String nameMethod = ("set" + name.substring(0, 1).toUpperCase() + name
-				.substring(1, name.length()));
-		return nameMethod;
+		return CacheContainer.getFieldSetMethod(field.getName());
 	}
 
 	/**
@@ -195,9 +174,7 @@ public class ClassLoader {
 	 * @return
 	 */
 	public static String createFieldAddMethod(String name) {
-		String nameMethod = ("add" + name.substring(0, 1).toUpperCase() + name
-				.substring(1, name.length()));
-		return nameMethod;
+		return CacheContainer.getFieldAddMethod(name);
 	}
 
 	/**
@@ -212,14 +189,8 @@ public class ClassLoader {
 	 * @throws ClassNotFoundException
 	 */
 	public static Method getMethod(Class<?> cls, String methodName,
-			Class<?>... args) throws NoSuchMethodException, SecurityException {
-		Method method;
-		if (args.length == 0) {
-			method = cls.getMethod(methodName);
-		} else {
-			method = cls.getMethod(methodName, args);
-		}
-		return method;
+			Class<?>... parameterTypes) throws NoSuchMethodException, SecurityException {
+		return CacheContainer.getClassInfoCache(cls).getMethod(methodName, parameterTypes);
 	}
 
 	/**
@@ -234,14 +205,8 @@ public class ClassLoader {
 	 * @throws ClassNotFoundException
 	 */
 	public static Method getDeclaredMethod(Class<?> cls, String methodName,
-			Class<?>... args) throws NoSuchMethodException, SecurityException {
-		Method method;
-		if (args.length == 0) {
-			method = cls.getDeclaredMethod(methodName);
-		} else {
-			method = cls.getDeclaredMethod(methodName, args);
-		}
-		return method;
+			Class<?>... parameterTypes) throws NoSuchMethodException, SecurityException {
+		return CacheContainer.getClassInfoCache(cls).getDeclaredMethod(methodName, parameterTypes);
 	}
 
 	/*
@@ -265,6 +230,7 @@ public class ClassLoader {
 	public ClassLoader(Object object) {
 		this.loadObject = object;
 		this.loadClass = this.loadObject.getClass();
+		this.infoCache = CacheContainer.getClassInfoCache(this.loadClass);
 	}
 
 	/**
@@ -276,6 +242,7 @@ public class ClassLoader {
 	 */
 	public ClassLoader(Class<?> cls) {
 		this.loadClass = cls;
+		this.infoCache = CacheContainer.getClassInfoCache(this.loadClass);
 		try {
 			this.loadObject = cls.newInstance();
 		} catch (InstantiationException | IllegalAccessException e) {
@@ -294,6 +261,7 @@ public class ClassLoader {
 	public ClassLoader(Class<?> cls, boolean instance)
 			{
 		this.loadClass = cls;
+		this.infoCache = CacheContainer.getClassInfoCache(this.loadClass);
 		try {
 			if (instance)
 				this.loadObject = cls.newInstance();
@@ -320,6 +288,7 @@ public class ClassLoader {
 	public ClassLoader(String className) throws ClassNotFoundException,
 			InstantiationException, IllegalAccessException {
 		this.loadClass = Class.forName(className);
+		this.infoCache = CacheContainer.getClassInfoCache(this.loadClass);
 		this.loadObject = this.loadClass.newInstance();
 	}
 
@@ -338,11 +307,9 @@ public class ClassLoader {
 	 * @throws IllegalArgumentException
 	 * @throws InvocationTargetException
 	 */
-	public ClassLoader(String className, boolean instance)
-			throws InstantiationException, IllegalAccessException,
-			ClassNotFoundException, NoSuchMethodException, SecurityException,
-			IllegalArgumentException, InvocationTargetException {
+	public ClassLoader(String className, boolean instance) throws ClassNotFoundException, InstantiationException, IllegalAccessException{
 		this.loadClass = Class.forName(className);
+		this.infoCache = CacheContainer.getClassInfoCache(this.loadClass);
 		if (instance)
 			this.loadObject = this.loadClass.newInstance();
 	}
@@ -367,6 +334,7 @@ public class ClassLoader {
 			ClassNotFoundException, NoSuchMethodException, SecurityException,
 			IllegalArgumentException, InvocationTargetException {
 		this.loadClass = Class.forName(className);
+		this.infoCache = CacheContainer.getClassInfoCache(this.loadClass);
 		if (args.length == 0) {
 			this.loadObject = this.loadClass.newInstance();
 		} else {
@@ -411,7 +379,7 @@ public class ClassLoader {
 			SecurityException, IllegalAccessException,
 			IllegalArgumentException, InvocationTargetException,
 			InstantiationException {
-		Constructor<?> cls = this.loadClass
+		Constructor<?> cls = this.infoCache
 				.getConstructor(getParameterTypes(args));
 		this.loadObject = cls.newInstance(args);
 		return this.loadObject;
@@ -491,8 +459,8 @@ public class ClassLoader {
 	 * 
 	 * @return
 	 */
-	public Field[] getFields() {
-		return this.loadClass.getFields();
+	public Collection<Field> getFields() {
+		return this.infoCache.getFields();
 	}
 	
 
@@ -501,8 +469,8 @@ public class ClassLoader {
 	 * 
 	 * @return
 	 */
-	public Field[] getDeclaredFields() {
-		return this.loadClass.getDeclaredFields();
+	public Collection<Field> getDeclaredFields() {
+		return this.infoCache.getDeclaredFields();
 	}
 
 	/**
@@ -512,12 +480,7 @@ public class ClassLoader {
 	 * @return
 	 */
 	public boolean hasField(String field) {
-		try {
-			this.loadClass.getField(field);
-			return true;
-		} catch (NoSuchFieldException | SecurityException e) {
-			return false;
-		}
+		return this.infoCache.getField(field)!=null;
 	}
 
 	/**
@@ -527,12 +490,7 @@ public class ClassLoader {
 	 * @return
 	 */
 	public boolean hasDeclaredField(String field) {
-		try {
-			this.loadClass.getDeclaredField(field);
-			return true;
-		} catch (NoSuchFieldException | SecurityException e) {
-			return false;
-		}
+		return this.infoCache.getDeclaredField(field)!=null;
 	}
 
 	/**
@@ -545,10 +503,10 @@ public class ClassLoader {
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	public Object getFieldValue(String field) throws NoSuchFieldException,
+	public Object getFieldValue(String fieldName) throws NoSuchFieldException,
 			SecurityException, IllegalArgumentException, IllegalAccessException {
-		Field f = this.loadClass.getField(field);
-		return getFieldValue(f);
+		Field field = this.infoCache.getField(fieldName);
+		return getFieldValue(field);
 	}
 
 	/**
@@ -568,11 +526,11 @@ public class ClassLoader {
 		return result;
 	}
 
-	public Object getDeclaredFieldValue(String field)
+	public Object getDeclaredFieldValue(String fieldName)
 			throws NoSuchFieldException, SecurityException,
 			IllegalArgumentException, IllegalAccessException {
-		Field f = this.loadClass.getDeclaredField(field);
-		return getFieldValue(f);
+		Field field = this.infoCache.getDeclaredField(fieldName);
+		return getFieldValue(field);
 	}
 
 	/**
@@ -588,14 +546,14 @@ public class ClassLoader {
 	public void setFieldValue(String field, Object value)
 			throws NoSuchFieldException, SecurityException,
 			IllegalArgumentException, IllegalAccessException {
-		Field f = this.loadClass.getDeclaredField(field);
+		Field f = this.infoCache.getDeclaredField(field);
 		setFieldValue(f, value);
 	}
 
 	public void setDeclaredFieldValue(String field, Object value)
 			throws NoSuchFieldException, SecurityException,
 			IllegalArgumentException, IllegalAccessException {
-		Field f = this.loadClass.getDeclaredField(field);
+		Field f = this.infoCache.getDeclaredField(field);
 		setFieldValue(f, value);
 	}
 
@@ -690,7 +648,7 @@ public class ClassLoader {
 			throws NoSuchMethodException, SecurityException,
 			IllegalAccessException, IllegalArgumentException,
 			InvocationTargetException {
-		return invokeMethod(methodName, getParameterTypes(args),args);
+		return invokeMethod(methodName, getParameterBaseType(args),args);
 	}
 
 	/**
@@ -715,36 +673,8 @@ public class ClassLoader {
 			Object... args) throws NoSuchMethodException, SecurityException,
 			IllegalAccessException, IllegalArgumentException,
 			InvocationTargetException {
-		if(aspect)
-			fixedThreadPool.execute(new Runnable() {
-				@Override
-				public void run() {
-					aspectInterfaces = aspectContainer.match(object.getClass().getName()+"."+methodName);
-					if(aspectInterfaces!=null){
-						joinPoint = new JoinPoint();
-						joinPoint.setAspectClass(loadClass);
-						joinPoint.setAspectObject(loadObject);
-						joinPoint.setAspectMethod(methodName);
-						for(AspectInterface aspectInterface : aspectInterfaces)
-							aspectInterface.before(joinPoint);
-					}
-				}
-			});
-		Method method = this.loadClass.getMethod(methodName, parameterType);
-		Object result = method.invoke(object, args);
-		if(aspect)
-			fixedThreadPool.execute(new Runnable() {
-						@Override
-						public void run() {
-							if(aspectInterfaces!=null){
-								joinPoint.setAspectObject(loadObject);
-								joinPoint.setAspectResult(result);
-								for(AspectInterface aspectInterface : aspectInterfaces)
-									aspectInterface.after(joinPoint);
-							}
-						}
-					});
-		return result;
+		Method method = this.infoCache.getMethod(methodName, parameterType);
+		return method.invoke(object, args);
 	}
 	/**
 	 * 调用加载器内加载对象的某个静态方法，传入String方法名，参数所需要的参数（可选）
@@ -780,7 +710,7 @@ public class ClassLoader {
 	 */
 	public Method getDeclaredMethod(String method, Class<?>... parameterType)
 			throws NoSuchMethodException, SecurityException {
-		return this.loadClass.getDeclaredMethod(method, parameterType);
+		return this.infoCache.getDeclaredMethod(method, parameterType);
 	}
 
 	/**
@@ -794,7 +724,7 @@ public class ClassLoader {
 	 */
 	public Method getMethod(String method, Class<?>... parameterType)
 			throws NoSuchMethodException, SecurityException {
-		return this.loadClass.getMethod(method, parameterType);
+		return this.infoCache.getMethod(method, parameterType);
 	}
 
 	/**
@@ -804,9 +734,9 @@ public class ClassLoader {
 	 * @throws NoSuchMethodException
 	 * @throws SecurityException
 	 */
-	public Method[] getMethods() throws NoSuchMethodException,
+	public Collection<Method> getMethods() throws NoSuchMethodException,
 			SecurityException {
-		return this.loadClass.getMethods();
+		return this.infoCache.getMethods();
 	}
 
 	/**
@@ -816,9 +746,9 @@ public class ClassLoader {
 	 * @throws NoSuchMethodException
 	 * @throws SecurityException
 	 */
-	public Method[] getDeclaredMethods() throws NoSuchMethodException,
+	public Collection<Method> getDeclaredMethods() throws NoSuchMethodException,
 			SecurityException {
-		return this.loadClass.getDeclaredMethods();
+		return this.infoCache.getDeclaredMethods();
 	}
 
 	// judge method
@@ -830,13 +760,7 @@ public class ClassLoader {
 	 * @return
 	 */
 	public boolean hasDeclaredMethod(String method, Class<?>... parameterType) {
-		try {
-			this.loadClass.getDeclaredMethod(method, parameterType);
-			return true;
-		} catch (NoSuchMethodException | SecurityException e) {
-			// e.printStackTrace();
-			return false;
-		}
+		return this.infoCache.getDeclaredMethod(method, parameterType)!=null;
 	}
 
 	/**
@@ -847,18 +771,12 @@ public class ClassLoader {
 	 * @return
 	 */
 	public boolean hasMethod(String method, Class<?>... parameterType) {
-		try {
-			this.loadClass.getMethod(method, parameterType);
-			return true;
-		} catch (NoSuchMethodException | SecurityException e) {
-			// e.printStackTrace();
-			return false;
-		}
+		return this.infoCache.getMethod(method, parameterType)!=null;
 	}
 
 	public Field getDeclaredField(String field) throws NoSuchFieldException,
 			SecurityException {
-		return loadClass.getDeclaredField(field);
+		return this.infoCache.getDeclaredField(field);
 	}
 
 	public static boolean clone(Object target, Object source) {
@@ -951,14 +869,7 @@ public class ClassLoader {
 			return boolean.class;
 		return patchType.getClass();
 	}
-
-	public boolean isAspect() {
-		return aspect;
-	}
-
-	public void setAspect(boolean aspect) {
-		this.aspect = aspect;
-	}
+	
 	public static Object castType(Object orgin, Class<?> targetType) {
 		if(orgin==null)return null;
 		// 整形
@@ -977,7 +888,11 @@ public class ClassLoader {
 			return Double.parseDouble((String) orgin);
 		// 日期
 		if (targetType.equals(Date.class))
-			return Date.valueOf((String) orgin);
+			try {
+				return SimpleDateFormat.getInstance().parse((String) orgin);
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
 		// 布尔型
 		if (targetType.equals(boolean.class))
 			return Boolean.parseBoolean((String) orgin);

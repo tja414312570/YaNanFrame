@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.YaNan.frame.core.session.Token;
-import com.YaNan.frame.stringSupport.StringSupport;
+import com.YaNan.frame.stringSupport.StringUtil;
 
 public class TokenEntity {
 	private String namespace;
@@ -110,7 +110,7 @@ public class TokenEntity {
 		Iterator<String> iterator = this.urlMap.keySet().iterator();
 		while(iterator.hasNext()){
 			String url = iterator.next();
-			if(!url.equals("")&&StringSupport.match(requestURL, "*"+url+"*"))
+			if(!url.equals("")&&StringUtil.match(requestURL, "*"+url+"*"))
 				return true;
 		}
 		return false;
@@ -123,14 +123,14 @@ public class TokenEntity {
 		if(this.chain!=null){
 			String[] strs = this.chain.split(",");
 			for(String str : strs){
-				if(!str.contains(".do")&&StringSupport.match(url, "*"+str+"*"))
+				if(!str.contains(".do")&&StringUtil.match(url, "*"+str+"*"))
 						return true;
 			}
 		}
 		Iterator<String> iterator = this.urlMap.keySet().iterator();
 		while(iterator.hasNext()){
 			String u = iterator.next();
-			if(!u.equals("")&&StringSupport.match(url, "*"+u+"*")){
+			if(!u.equals("")&&StringUtil.match(url, "*"+u+"*")){
 				if(this.urlMap.get(u)==null||this.urlMap.get(u).equals(""))
 					return true;
 				String role = this.urlMap.get(u);

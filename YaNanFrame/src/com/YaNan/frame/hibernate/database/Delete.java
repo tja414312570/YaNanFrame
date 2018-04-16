@@ -8,7 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.YaNan.frame.hibernate.database.DBInterface.OperateImplement;
-import com.YaNan.frame.service.Log;
+import com.YaNan.frame.logging.Log;
+import com.YaNan.frame.plugs.PlugsFactory;
 
 /**
  * 该类用于提供给DATab的query一个查询的SQL语句的生成方法 提过一个构造器，传入一个DBTab型的表对象，应为他需要使用DBTab context
@@ -22,6 +23,7 @@ public class Delete extends OperateImplement{
 	private Object object;
 	private Map<String, String> map = new HashMap<String, String>();
 	private List<String> condition = new ArrayList<String>();
+	private final Log log = PlugsFactory.getPlugsInstance(Log.class,Delete.class);
 
 	public List<String> getKey() {
 		return key;
@@ -69,7 +71,7 @@ public class Delete extends OperateImplement{
 		try {
 			this.map.put(dbTab.getDBColumn(field).getName(), condition);
 		} catch (NoSuchFieldException | SecurityException e) {
-			Log.getSystemLog().exception(e);
+			log.error(e);
 		}
 	}
 
@@ -81,32 +83,29 @@ public class Delete extends OperateImplement{
 					(String) f.get(object));
 		} catch (NoSuchFieldException | SecurityException
 				| IllegalArgumentException | IllegalAccessException e) {
-			Log.getSystemLog().exception(e);
+			log.error(e);
 		}
 
 	}
 
 	@Override
 	public String create() {
-		String sql = "DELETE FROM " + this.dbTab.getName();
+		StringBuilder sb = new StringBuilder( "DELETE FROM ").append(this.dbTab.getName());
 		if (this.map.size() != 0) {
-			sql += " WHERE ";
+			sb.append(" WHERE ");
 			Iterator<String> i = this.map.keySet().iterator();
 			while (i.hasNext()) {
 				String s = i.next();
-				sql += s + "='" + this.map.get(s)
-					+ (i.hasNext() ? "' AND " : "'");
+				sb.append( s ).append("='").append(this.map.get(s)).append(i.hasNext() ? "' AND " : "'");
 			}
 		} 
 		if (this.condition.size() != 0) {
-			sql += (this.map.size()==0?" WHERE ":" AND ");
+			sb.append(this.map.size()==0?" WHERE ":" AND ");
 			Iterator<String> i = this.condition.iterator();
-			while (i.hasNext()) {
-				sql += i.next()
-				+ (i.hasNext() ? " AND " : "");
-			}
+			while (i.hasNext())
+				sb.append( i.next()).append(i.hasNext() ? " AND " : "");
 		}
-		return sql;
+		return sb.toString();
 	}
 
 	public int delete() {

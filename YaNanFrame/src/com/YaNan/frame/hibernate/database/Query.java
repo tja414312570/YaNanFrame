@@ -9,8 +9,10 @@ import java.util.List;
 import java.util.Map;
 
 import com.YaNan.frame.hibernate.database.DBInterface.OperateImplement;
-import com.YaNan.frame.service.Log;
-import com.YaNan.frame.stringSupport.StringSupport;
+import com.YaNan.frame.hibernate.database.cache.SqlCache;
+import com.YaNan.frame.logging.Log;
+import com.YaNan.frame.plugs.PlugsFactory;
+import com.YaNan.frame.stringSupport.StringUtil;
 
 /**
  * 该类用于提供给DATab的query一个查询的SQL语句的生成方法 提过一个构造器，传入一个DBTab型的表对象，应为他需要使用DBTab context
@@ -33,17 +35,106 @@ public class Query extends OperateImplement{
 	protected String group=null;
 	private Query subQuery=null;
 	private JoinObject joinObject;
+	private final Log log = PlugsFactory.getPlugsInstance(Log.class,Query.class);
 	public Class<?> getCls() {
 		return cls;
 	}
 	public void setCls(Class<?> cls) {
 		this.cls = cls;
 	}
-public static interface Order{
-	public static final String Desc="desc";
-}
+	public static interface Order{
+		public static final String Desc="desc";
+	}
 	public List<String> getKey() {
 		return key;
+	}
+	public int ident(){
+		
+		return this.identNC()+map.hashCode()+condition.hashCode();
+	}
+	public int identNC(){
+		int hashCode = "Query".hashCode();
+		hashCode+=key.hashCode();
+		hashCode+=queryTab.getName().hashCode();
+		if(unionQuery!=null)
+			hashCode+=unionQuery.hashCode();
+		hashCode+=unionAll==true?0:1;
+		if(object!=null)
+			hashCode+=object.hashCode();
+		if(cls!=null)
+			hashCode+=cls.hashCode();
+		hashCode+=order.hashCode();
+		hashCode+=fieldMap.hashCode();
+		hashCode+=limit.hashCode();
+		if(group!=null)
+			hashCode+=group.hashCode();
+		if(subQuery!=null)
+			hashCode+=subQuery.hashCode();
+		if(joinObject!=null)
+			hashCode+=joinObject.hashCode();
+		return hashCode;
+	}
+	public boolean equals(Query query){
+		//hash code create ;
+		if(!query.key.equals(this.key))
+			return false;
+		if(!query.queryTab.getName().equals(this.queryTab.getName()))
+			return false;
+		if(query.unionQuery!=null){
+			if(this.unionQuery==null)
+				return false;
+			else if (!this.unionQuery.equals(this.unionQuery))
+				return false;
+		}else if(this.unionQuery!=null)
+			return false;
+		if(query.unionAll!=this.unionAll)
+			return false;
+		if(!query.map.equals(this.map))
+			return false;
+		if(!query.condition.equals(this.condition))
+			return false;
+		if(!query.order.equals(this.order))
+			return false;
+		if(!query.fieldMap.equals(this.fieldMap))
+			return false;
+		if(!query.limit.equals(this.limit))
+			return false;
+		if(query.joinObject!=null){
+			if(this.joinObject==null)
+				return false;
+			else if (!this.joinObject.equals(this.joinObject))
+				return false;
+		}else if(this.joinObject!=null)
+			return false;
+		if(query.group!=null){
+			if(this.group==null)
+				return false;
+			else if (!this.group.equals(this.group))
+				return false;
+		}else if(this.group!=null)
+			return false;
+		if(query.subQuery!=null){
+			if(this.subQuery==null)
+				return false;
+			else if (!this.subQuery.equals(this.subQuery))
+				return false;
+		}else if(this.subQuery!=null)
+			return false;
+		if(query.joinObject!=null){
+			if(this.joinObject==null)
+				return false;
+			else if (!this.joinObject.equals(this.joinObject))
+				return false;
+		}else if(this.joinObject!=null)
+			return false;
+		if(query.object!=null){
+			if(this.object==null)
+				return false;
+			else if (!this.object.equals(this.object))
+				return false;
+		}else if(this.object!=null)
+			return false;
+		return true;
 	}
 	public boolean containsField(String str){
 		if(this.key.size()==0)return true;
@@ -74,7 +165,7 @@ public static interface Order{
 						this.fieldMap.putAll(this.queryTab.getFieldMap());
 					}
 				} catch (NoSuchFieldException | SecurityException e) {
-					Log.getSystemLog().exception(e);
+					log.error(e);
 				}
 			}
 		}else{
@@ -95,29 +186,48 @@ public static interface Order{
 		}
 	}
 	public Query(Class<?> cls,String... strings) {
-		this.dbTab = new DBTab(cls);
+		int clsHash = cls.hashCode();
+		this.dbTab = SqlCache.getCache().getAttribute(clsHash);
+		if(this.dbTab==null){
+			this.dbTab = new DBTab(cls);
+			SqlCache.getCache().addAttribute(clsHash, this.dbTab);
+		}
 		this.queryTab = this.dbTab;
 		if (strings.length != 0) {
-			for (String str : strings){
-				this.key.add(str);
-				try {
-				if(str.contains(" AS ")){
-					String fieldName = str.split(" AS ")[1];
-					Field field = this.queryTab.getCls().getDeclaredField(fieldName);
-						this.fieldMap.put(field,null);
-					
-					}else if(!str.trim().equals("*")){
-						Field field = this.queryTab.getCls().getDeclaredField(str);
-						this.fieldMap.put(field,null);
-					}else{
-						this.fieldMap.putAll(this.queryTab.getFieldMap());
+			StringBuilder sb = new StringBuilder();
+			for(String str : strings)
+				sb.append(str);
+			int strHash = cls.hashCode()+sb.toString().hashCode();
+			this.fieldMap = SqlCache.getCache().getAttribute(strHash);
+			if(this.fieldMap==null){
+				this.fieldMap =  new LinkedHashMap<Field, DBColumn>();
+				for (String str : strings){
+					this.key.add(str);
+					try {
+					if(str.contains(" AS ")){
+						String fieldName = str.split(" AS ")[1];
+						Field field = this.queryTab.getCls().getDeclaredField(fieldName);
+							this.fieldMap.put(field,null);
+						}else if(!str.trim().equals("*")){
+							Field field = this.queryTab.getCls().getDeclaredField(str);
+							this.fieldMap.put(field,null);
+						}else{
+							this.fieldMap.putAll(this.queryTab.getFieldMap());
+						}
+					} catch (NoSuchFieldException | SecurityException e) {
+						log.error(e);
 					}
-				} catch (NoSuchFieldException | SecurityException e) {
-					Log.getSystemLog().exception(e);
 				}
+			SqlCache.getCache().addAttribute(strHash, this.fieldMap);
 			}
 		}else{
-			this.fieldMap.putAll(this.queryTab.getFieldMap());
+			int strHash = cls.hashCode() +42804280;
+			this.fieldMap = SqlCache.getCache().getAttribute(strHash);
+			if(this.fieldMap==null){
+				this.fieldMap =  new LinkedHashMap<Field, DBColumn>();
+				this.fieldMap.putAll(this.queryTab.getFieldMap());
+				SqlCache.getCache().addAttribute(strHash, this.fieldMap);
+			}
 		}
 	}
 	public Query(Class<?> cls,boolean trans) {
@@ -161,7 +271,7 @@ public static interface Order{
 						this.fieldMap.putAll(this.queryTab.getFieldMap());
 					}
 				} catch (NoSuchFieldException | SecurityException e) {
-					Log.getSystemLog().exception(e);
+					log.error(e);
 				}
 			}
 		}else{
@@ -188,7 +298,7 @@ public static interface Order{
 					Field field = this.queryTab.getCls().getDeclaredField(fieldName);
 					this.fieldMap.put(field,null);
 				} catch (NoSuchFieldException | SecurityException e) {
-					Log.getSystemLog().exception(e);
+					log.error(e);
 				}
 			}
 		}
@@ -232,17 +342,19 @@ public static interface Order{
 	}
 
 	public void addCondition(Field field, String condition) {
-		this.map.put(dbTab.getName()+"."+dbTab.getDBColumn(field).getName(), condition.toString().replace("'", "\\'"));
+		this.map.put(dbTab.getName()+"."+dbTab.getDBColumn(field).getName(), condition.toString());
 	}
 
 	public void addCondition(String field, Object condition) {
 		try {
-			map.put(dbTab.getName()+"."+dbTab.getDBColumn(field).getName(), condition.toString().replace("'", "\\'"));
+			map.put(dbTab.getName()+"."+dbTab.getDBColumn(field).getName(), condition.toString());
 		} catch (NoSuchFieldException | SecurityException e) {
-			Log.getSystemLog().exception(e);
+			log.error(e);
 		}
 	}
-
+	public void addColumnCondition(String field, Object condition) {
+			map.put(field, condition.toString());
+	}
 	public void addConditionField(String... field) {
 		for(String str : field){
 			try {
@@ -251,7 +363,7 @@ public static interface Order{
 				map.put(dbTab.getName()+"."+dbTab.getDBColumn(str).getName(), f.get(object).toString().replace("'", "\\'"));
 			} catch (NoSuchFieldException | SecurityException
 					| IllegalArgumentException | IllegalAccessException e) {
-				Log.getSystemLog().exception(e);
+				log.error(e);
 			}
 		}
 	}
@@ -263,54 +375,59 @@ public static interface Order{
 
 	@Override
 	public String create() {
-		String sql = "SELECT ";
+		String sql = SqlCache.getCache().getSql(this.ident());
+		if(sql!=null)
+			return sql;
+		StringBuilder sb = new StringBuilder("SELECT ");
 		if (this.key.size() == 0)
-			sql += "* ";
+			sb.append("* ");
 		else {
 			Iterator<String>  s = this.key.iterator();
 			while(s.hasNext())
-				sql += s.next() + (s.hasNext()?",":"");
+				sb.append(s.next()).append(s.hasNext()?",":"");
 		}
-		sql += " FROM " 
-				+ (this.subQuery==null?dbTab.getName():"("+this.subQuery.create()+") AS T"+((int)Math.random()*100));
+		sb.append(" FROM ").append(this.subQuery==null?dbTab.getName():"("+this.subQuery.create()+") AS T"+((int)Math.random()*100));
 		if(this.joinObject!=null){
-			sql +=this.joinObject.isInnerJoin()?" INNER OUTER ":" LEFT "+"JOIN "+this.joinObject.getRight()+" ON ";
+			sb.append(this.joinObject.isInnerJoin()?" INNER OUTER ":" LEFT "+"JOIN "+this.joinObject.getRight()+" ON ");
 			for(int i =0;i<this.joinObject.getConditions().length;i++)
-				sql+=this.joinObject.getConditions()[i]+
-						(i<this.joinObject.getConditions().length-1?" AND ":" ");
+				sb.append(this.joinObject.getConditions()[i]).append(i<this.joinObject.getConditions().length-1?" AND ":" ");
 		}
 		if (map.size() != 0) {
-			sql += " WHERE ";
+			sb.append(" WHERE ");
 			Iterator<String> i = map.keySet().iterator();
 			while (i.hasNext()) {
 				String s = i.next();
-				sql += s + "='" + map.get(s) + "'"
-						+ (i.hasNext() ? " AND " : "");
+				sb.append(s).append ("='").append( map.get(s)).append( "'").append(i.hasNext() ? " AND " : "");
 			}
 		}
 		if (this.condition.size() != 0) {
-			sql += (this.map.size()==0?" WHERE ":" AND ");
+			sb.append(this.map.size()==0?" WHERE ":" AND ");
 			Iterator<String> i = this.condition.iterator();
 			while (i.hasNext()) 
-				sql += i.next() + (i.hasNext() ? " AND " : "");
+				sb.append(i.next()).append(i.hasNext() ? " AND " : "");
 		}
 		if(this.group!=null)
-			sql+= " GROUP BY "+this.group;
+			sb.append(" GROUP BY ").append(this.group);
 		if(this.unionQuery!=null)
-			sql += this.unionAll?" ":" ALL "+this.unionQuery.create();
+			sb.append(this.unionAll?" ":" ALL "+this.unionQuery.create());
 		if(this.order.size()!=0){
 			Iterator<?> oI = this.order.iterator();
-			sql +=" ORDER BY ";
+			sb.append(" ORDER BY ");
 			while(oI.hasNext())
-				sql += oI.next() + (oI.hasNext() ? "," : " ");
+				sb.append(oI.next()).append(oI.hasNext() ? "," : " ");
 		}
-		sql +=" "+(this.limit.equals("")?"":"LIMIT "+this.limit);
-		return sql;
+		sb.append(" ").append(this.limit.equals("")?"":"LIMIT "+this.limit);
+		SqlCache.getCache().addSql(this.ident(),sb.toString());
+		return sb.toString();
 	}
-	public List<?> query() {
+	public <T> List<T> query() {
 			return this.query(true);
 	}
-	public List<?> query(boolean mapping){
+	public <T> T queryOne() {
+		List<T> resultSet = this.query(true);
+		return resultSet.size()>0?resultSet.get(0):null;
+	}
+	public <T> List<T> query(boolean mapping){
 	this.queryTab.setDataBase(this.dbTab.getDataBase());
 	return this.queryTab.query(this,mapping);
 }
@@ -402,7 +519,7 @@ public static interface Order{
 		public void setConditions(String... conditions) {
 			this.conditions = new String[conditions.length];
 			for(int i = 0;i<conditions.length;i++){
-				this.conditions[i]=StringSupport.decodeVar(conditions[i], this);
+				this.conditions[i]=StringUtil.decodeVar(conditions[i], this);
 			}
 		}
 		public boolean isInnerJoin() {
@@ -413,5 +530,6 @@ public static interface Order{
 		}
 		
 	}
+
 	
 }

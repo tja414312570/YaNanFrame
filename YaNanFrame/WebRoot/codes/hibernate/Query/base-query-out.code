@@ -1,0 +1,124 @@
+Mar 22, 2018 3:52:35 PM: INFO:: ================================================================================================================
+
+log write Failed,this message only show in the console
+Mar 22, 2018 3:52:35 PM: ================================================================================================================
+
+Mar 22, 2018 3:52:35 PM: INFO:: the current class：Student
+
+log write Failed,this message only show in the console
+Mar 22, 2018 3:52:35 PM: the current class：Student
+
+Mar 22, 2018 3:52:35 PM: INFO:: contain orthers xml file
+
+log write Failed,this message only show in the console
+Mar 22, 2018 3:52:35 PM: contain orthers xml file
+
+Mar 22, 2018 3:52:35 PM: INFO:: --------------------------------------------------------------------------------------------------
+
+log write Failed,this message only show in the console
+Mar 22, 2018 3:52:35 PM: --------------------------------------------------------------------------------------------------
+
+Mar 22, 2018 3:52:35 PM: INFO:: current field:name
+
+log write Failed,this message only show in the console
+Mar 22, 2018 3:52:35 PM: current field:name
+
+Mar 22, 2018 3:52:35 PM: INFO:: this Field [name] is not annotion,all attribute set default
+
+log write Failed,this message only show in the console
+Mar 22, 2018 3:52:35 PM: this Field [name] is not annotion,all attribute set default
+
+Mar 22, 2018 3:52:35 PM: INFO:: Column INFO:
+ 		Name:name
+ 		Value:
+ 		Type:LONGTEXT
+ 		Length:-1
+ 		Size:-1
+ 		Format:
+ 		Not_Null:false
+ 		Point:false
+ 		Auto_Increment:false
+ 		Primary_Key:false
+ 		Not_Sign:true
+ 		Auto_Fill:false
+ 		Unique:false
+ 		Annotations:
+
+log write Failed,this message only show in the console
+Mar 22, 2018 3:52:35 PM: Column INFO:
+ 		Name:name
+ 		Value:
+ 		Type:LONGTEXT
+ 		Length:-1
+ 		Size:-1
+ 		Format:
+ 		Not_Null:false
+ 		Point:false
+ 		Auto_Increment:false
+ 		Primary_Key:false
+ 		Not_Sign:true
+ 		Auto_Fill:false
+ 		Unique:false
+ 		Annotations:
+
+Mar 22, 2018 3:52:35 PM: INFO:: --------------------------------------------------------------------------------------------------
+
+log write Failed,this message only show in the console
+Mar 22, 2018 3:52:35 PM: --------------------------------------------------------------------------------------------------
+
+Mar 22, 2018 3:52:35 PM: INFO:: current field:age
+
+log write Failed,this message only show in the console
+Mar 22, 2018 3:52:35 PM: current field:age
+
+Mar 22, 2018 3:52:35 PM: INFO:: this Field [age] is not annotion,all attribute set default
+
+log write Failed,this message only show in the console
+Mar 22, 2018 3:52:35 PM: this Field [age] is not annotion,all attribute set default
+
+Mar 22, 2018 3:52:35 PM: INFO:: Column INFO:
+ 		Name:age
+ 		Value:
+ 		Type:LONGTEXT
+ 		Length:-1
+ 		Size:-1
+ 		Format:
+ 		Not_Null:false
+ 		Point:false
+ 		Auto_Increment:false
+ 		Primary_Key:false
+ 		Not_Sign:true
+ 		Auto_Fill:false
+ 		Unique:false
+ 		Annotations:
+
+log write Failed,this message only show in the console
+Mar 22, 2018 3:52:35 PM: Column INFO:
+ 		Name:age
+ 		Value:
+ 		Type:LONGTEXT
+ 		Length:-1
+ 		Size:-1
+ 		Format:
+ 		Not_Null:false
+ 		Point:false
+ 		Auto_Increment:false
+ 		Primary_Key:false
+ 		Not_Sign:true
+ 		Auto_Fill:false
+ 		Unique:false
+ 		Annotations:
+
+Mar 22, 2018 3:52:35 PM: ERROR:: the databaes [YaNan_Demo] is't init ,please try to init database! at class [com.YaNan.Demo.model.Student]
+
+log write Failed,this message only show in the console
+Mar 22, 2018 3:52:35 PM: the databaes [YaNan_Demo] is't init ,please try to init database! at class [com.YaNan.Demo.model.Student]
+
+SELECT *  FROM YaNan_Demo.Student 
+
+com.YaNan.frame.hibernate.database.exception.DataBaseException
+	at com.YaNan.frame.hibernate.database.DBFactory.HasDB(DBFactory.java:163)
+	at com.YaNan.frame.hibernate.database.DBTab.<init>(DBTab.java:116)
+	at com.YaNan.frame.hibernate.database.DBTab.<init>(DBTab.java:49)
+	at com.YaNan.frame.hibernate.database.Query.<init>(Query.java:98)
+	at com.YaNan.Demo.model.Hibernate.main(Hibernate.java:7)

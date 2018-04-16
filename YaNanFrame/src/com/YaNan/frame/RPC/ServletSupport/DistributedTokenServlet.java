@@ -2,14 +2,16 @@ package com.YaNan.frame.RPC.ServletSupport;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collection;
 
-import com.YaNan.frame.service.Log;
 import com.YaNan.frame.RPC.Implements.RequestType;
 import com.YaNan.frame.RPC.TokenSupport.RPCToken;
 import com.YaNan.frame.RPC.customer.RPCService;
 import com.YaNan.frame.core.reflect.ClassLoader;
 import com.YaNan.frame.core.session.annotation.TokenObject;
 import com.YaNan.frame.core.session.servletSupport.TokenServlet;
+import com.YaNan.frame.logging.Log;
+import com.YaNan.frame.plugs.PlugsFactory;
 /**
  * 
  * 
@@ -20,8 +22,9 @@ import com.YaNan.frame.core.session.servletSupport.TokenServlet;
  *
  */
 public abstract class DistributedTokenServlet extends TokenServlet{
+	private final Log log = PlugsFactory.getPlugsInstance(Log.class, DistributedTokenServlet.class);
 	public void doOther(ClassLoader loader){
-		Field[] fields = loader.getDeclaredFields();
+		Collection<Field> fields = loader.getDeclaredFields();
 		for(Field field :fields){
 			if(field.getAnnotation(TokenObject.class)!=null){
 				Class<?> cls = field.getType();
@@ -44,7 +47,7 @@ public abstract class DistributedTokenServlet extends TokenServlet{
 						}
 					} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
 							| NoSuchMethodException | SecurityException e) {
-						Log.getSystemLog().exception(e);
+						log.error(e);
 					}
 				}
 			}

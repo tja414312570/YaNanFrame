@@ -7,7 +7,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.YaNan.frame.service.Log;
+import com.YaNan.frame.logging.Log;
+import com.YaNan.frame.plugs.PlugsFactory;
+
+
 
 /**
  * 该类用于提供给DATab的query一个查询的SQL语句的生成方法 提过一个构造器，传入一个DBTab型的表对象，应为他需要使用DBTab context
@@ -20,6 +23,7 @@ public class Create {
 	private List<String> uniques = new ArrayList<String>();
 	private DBTab tab;
 	private Map<String, String> columns = new LinkedHashMap<String, String>();
+	private Log log = PlugsFactory.getPlugsInstance(Log.class,Create.class);
 	/**
 	 * 数据表的创建对象，传入一个DBTab对象 
 	 * @param tab
@@ -92,7 +96,7 @@ public class Create {
 		}
 		// 主键设置部分
 		if (PrimaryKey==null) {
-			Log.getSystemLog().info("一个表应该至少包含一个主键的字段");
+			log.warn("一个表应该至少包含一个主键的字段");
 		} else {
 			sql += ",\r\nPRIMARY KEY("+this.PrimaryKey+")";
 		}

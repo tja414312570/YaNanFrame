@@ -10,7 +10,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.YaNan.frame.hibernate.database.DBInterface.OperateImplement;
-import com.YaNan.frame.service.Log;
+import com.YaNan.frame.logging.Log;
+import com.YaNan.frame.plugs.PlugsFactory;
 
 /**
  * 该类用于提供给DATab的query一个查询的SQL语句的生成方法 提过一个构造器，传入一个DBTab型的表对象，应为他需要使用DBTab context
@@ -22,6 +23,7 @@ public class Update extends OperateImplement{
 	private Map<String, String> map = new HashMap<String, String>();
 	private List<String> condition = new ArrayList<String>();
 	private Map<String,Object> updateList = new LinkedHashMap<String,Object>();
+	private final Log log = PlugsFactory.getPlugsInstance(Log.class,Query.class);
 	public Update(DBTab dbTab, Object object) {
 		this.setDbTab(dbTab);
 	}
@@ -36,9 +38,9 @@ public class Update extends OperateImplement{
 			Field field = fI.next();
 			try {
 				if(this.dbTab.getLoader().get(field.getName())!=null)
-					this.updateList.put(this.getDbTab().getDBColumn(field).getName(),"'"+this.dbTab.getLoader().get(field.getName()).toString().replace("'", "\\'")+"'");
+					this.updateList.put(this.getDbTab().getDBColumn(field).getName(),this.dbTab.getLoader().get(field.getName()).toString());
 			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
-				Log.getSystemLog().exception(e);
+				log.error(e);
 			}
 		}
 	}
@@ -53,9 +55,9 @@ public class Update extends OperateImplement{
 			Field field = fI.next();
 			try {
 				if(this.dbTab.getLoader().get(field.getName())!=null)
-					this.updateList.put(this.getDbTab().getDBColumn(field).getName(),"'"+this.dbTab.getLoader().get(field.getName()).toString().replace("'", "\\'")+"'");
+					this.updateList.put(this.getDbTab().getDBColumn(field).getName(),this.dbTab.getLoader().get(field.getName()).toString());
 			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
-				Log.getSystemLog().exception(e);
+				log.error(e);
 			}
 		}
 	}	/**
@@ -69,10 +71,10 @@ public class Update extends OperateImplement{
 			for(String strField : fields){
 				Field field =this.getDbTab().getCls().getDeclaredField(strField);
 				if(this.dbTab.getLoader().get(field.getName())!=null)
-					this.updateList.put(this.getDbTab().getDBColumn(field).getName(),"'"+this.dbTab.getLoader().get(field.getName()).toString().replace("'", "\\'")+"'");
+					this.updateList.put(this.getDbTab().getDBColumn(field).getName(),this.dbTab.getLoader().get(field.getName()).toString());
 			}
 		}catch(Exception e){
-			Log.getSystemLog().exception(e);
+			log.error(e);
 		}
 	}
 	/**
@@ -81,6 +83,18 @@ public class Update extends OperateImplement{
 	 */
 	public Update(Class<?> cls) {
 		this.setDbTab(new DBTab(cls));
+	}
+	public Update(Class<?> cls,String...fields){
+		try{
+			this.setDbTab(new DBTab(cls));
+			for(String strField : fields){
+				Field field =this.getDbTab().getCls().getDeclaredField(strField);
+				if(this.dbTab.getLoader().get(field.getName())!=null)
+					this.updateList.put(this.getDbTab().getDBColumn(field).getName(),"'"+this.dbTab.getLoader().get(field.getName()).toString().replace("'", "\\'")+"'");
+			}
+		}catch(Exception e){
+			log.error(e);
+		}
 	}
 	/**
 	 * 设置要更新的数据库字段
@@ -107,7 +121,7 @@ public class Update extends OperateImplement{
 	 */
 	public void setField(String field,Object value) throws NoSuchFieldException, SecurityException{
 		String column = this.getDbTab().getDBColumn(field).getName();
-		this.updateList.put(column,  "'"+value.toString().replace("'", "\\'")+"'");
+		this.updateList.put(column,value.toString());
 	}
 	/**
 	 * 添加要更新的域
@@ -115,7 +129,7 @@ public class Update extends OperateImplement{
 	 * @param value
 	 */
 	public void setColumn(String field,Object value){
-		this.updateList.put(field, "'"+value.toString().replace("'", "\\'")+"'");
+		this.updateList.put(field,value.toString());
 	}
 	/**
 	 * 设置要更新的域
@@ -130,14 +144,17 @@ public class Update extends OperateImplement{
 	}
 
 	public void addCondition(Field field, Object condition) {
-		this.map.put(getDbTab().getDBColumn(field).getName(), condition.toString().replace("'", "\\'") );
+		this.map.put(getDbTab().getDBColumn(field).getName(), condition.toString());
 	}
 
+	public void addColumnCondition(String column, Object condition) {
+		this.map.put(column, condition.toString());
+	}
 	public void addCondition(String field,Object condition) {
 		try {
-			this.map.put(getDbTab().getDBColumn(field).getName(), condition.toString().replace("'", "\\'"));
+			this.map.put(getDbTab().getDBColumn(field).getName(), condition.toString());
 		} catch (NoSuchFieldException | SecurityException e) {
-			Log.getSystemLog().exception(e);
+			log.error(e);
 		}
 	}
 
@@ -146,32 +163,27 @@ public class Update extends OperateImplement{
 	}
 
 	public String create() {
-		String sql = "UPDATE " + this.getDbTab().getName() + " SET ";
+		StringBuilder sb = new StringBuilder("UPDATE ").append(this.getDbTab().getName()).append(" SET ");
 		Iterator<String> iterator = this.updateList.keySet().iterator();
 		while (iterator.hasNext()) {
 			String column = iterator.next();
-				sql += column + "="
-						+ updateList.get(column)
-						+ (iterator.hasNext() ? "," : "");
+				sb.append(column).append( "='").append(updateList.get(column)).append(iterator.hasNext() ? "'," : "'");
 		}
 		if (this.map.size() != 0) {
-			sql += " WHERE ";
+			sb.append(" WHERE ");
 			Iterator<String> i = this.map.keySet().iterator();
 			while (i.hasNext()) {
 				String s = i.next();
-				sql += s + "='" + this.map.get(s)
-					+ (i.hasNext() ? "' AND " : "'");
+				sb.append(s).append("='").append(this.map.get(s)).append(i.hasNext() ? "' AND " : "'");
 			}
 		} 
 		if (this.condition.size() != 0) {
-			sql += (this.map.size()==0?" WHERE ":" AND ");
+			sb.append(this.map.size()==0?" WHERE ":" AND ");
 			Iterator<String> i = this.condition.iterator();
-			while (i.hasNext()) {
-				sql += i.next()
-				+ (i.hasNext() ? " AND " : "");
-			}
+			while (i.hasNext()) 
+				sb.append(i.next()).append(i.hasNext() ? " AND " : "");
 		}
-		return sql;
+		return sb.toString();
 	}
 
 	public int update() {

@@ -8,10 +8,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 
+import com.YaNan.frame.logging.Log;
+import com.YaNan.frame.plugs.PlugsFactory;
+
 public class UrlClassLoader {
 	private Object loadObject;
 	private Class<?> loadClass;
 	private URL[] url = null;
+	private final Log log = PlugsFactory.getPlugsInstance(Log.class,UrlClassLoader.class);
 
 	/*
 	 * static method

@@ -2,9 +2,9 @@ package com.YaNan.Demo.action;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import com.YaNan.frame.RTDT.RTDT;
 import com.YaNan.frame.RTDT.context.ActionManager;
@@ -34,7 +34,7 @@ public class AppContext extends TokenServlet{
 	}
 	@Action(description="获取Servlet数量")
 	public int getServletNum(){
-		return getServletBeanModelList().size();
+		return getServletBeanModelList().length;
 	}
 	@Action(description="获取RTDT数量")
 	public int getRTDTActionNum(){
@@ -74,16 +74,15 @@ public class AppContext extends TokenServlet{
 			list.add(new TablesBeanModel(iterator.next()));
 		return list.size()==0?"{\"code\":4281,\"message\":\"此数据库下无数据表\"}":"{\"code\":4280,\"data\":"+new Gson().toJson(list)+"}";
 	}
-	public List<com.YaNan.Demo.action.AppContext.ServletBeanModel> getServletBeanModelList(){
+	public ServletBeanModel[] getServletBeanModelList(){
 		DefaultServletMapping defaultServletMapping = DefaultServletMapping.getInstance();
-		Map<String, Map<String, ServletBean>> map = defaultServletMapping.getServletMapping();
-		List<ServletBeanModel> list = new ArrayList<ServletBeanModel>();
-		Iterator<String> iterator = map.keySet().iterator();
+		Collection<ServletBean> collects = defaultServletMapping.getServletMapping().values();
+		ServletBeanModel[] list = new ServletBeanModel[collects.size()];
+		Iterator<ServletBean> iterator = collects.iterator();
+		int i = 0;
 		while(iterator.hasNext()){
-			Map<String,ServletBean> cmap = map.get(iterator.next());
-			Iterator<ServletBean> cIterator =cmap.values().iterator();
-			while(cIterator.hasNext())
-				list.add(new ServletBeanModel(cIterator.next()));
+			list[i]  = new ServletBeanModel(iterator.next());
+			i++;
 		}
 		return list;
 	}
@@ -189,8 +188,6 @@ public class AppContext extends TokenServlet{
 		private String description;
 		ServletBeanModel(ServletBean bean){
 			this.className = bean.getClassName().getName();
-			this.namespace = bean.getNameSpace();
-			this.actionName = bean.getActionName();
 			this.method = bean.getMethod().getName();
 			this.type = bean.getType();
 			this.output = bean.hasOutputStream();

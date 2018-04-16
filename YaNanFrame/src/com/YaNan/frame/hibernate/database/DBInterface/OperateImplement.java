@@ -11,5 +11,7 @@ public abstract class OperateImplement {
 	public void setDbTab(DBTab dbTab) {
 		this.dbTab = dbTab;
 	}
-	
+	public String hashString(){
+		return this.hashCode()+"";
+	}
 }

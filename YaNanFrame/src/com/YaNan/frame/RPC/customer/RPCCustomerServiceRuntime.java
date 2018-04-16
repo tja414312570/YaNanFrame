@@ -34,7 +34,6 @@ import com.YaNan.frame.RPC.utils.RegistResult;
 import com.YaNan.frame.RPC.utils.Response;
 import com.YaNan.frame.RPC.utils.ResponseType;
 import com.YaNan.frame.core.reflect.ClassLoader;
-import com.google.gson.Gson;
 
 public class RPCCustomerServiceRuntime implements Runnable{
 	private Socket socket;

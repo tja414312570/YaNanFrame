@@ -6,16 +6,9 @@ import java.sql.Date;
 import com.YaNan.frame.hibernate.database.DBInterface.MySql;
 import com.YaNan.frame.hibernate.database.DBInterface.mySqlInterface;
 import com.YaNan.frame.hibernate.database.annotation.Column;
-import com.YaNan.frame.service.ClassInfo;
-import com.YaNan.frame.service.Log;
+import com.YaNan.frame.logging.Log;
+import com.YaNan.frame.plugs.PlugsFactory;
 
-/**
- * 璇ョ被鐢ㄤ簬璁剧疆鍜屽偍瀛楩ield鐨勪俊鎭互鍙婂缓绔婩ield涓嶤olumn鐨勬槧灏勫叧绯�
- * 
- * @author Administrator
- *
- */
-@ClassInfo(version = 100)
 public class DBColumn implements mySqlInterface {
 	private String name;
 	private Object value;
@@ -33,11 +26,12 @@ public class DBColumn implements mySqlInterface {
 	private String Annotations;
 	private String charset="";
 	private String collate="";
+	private final transient Log log = PlugsFactory.getPlugsInstance(Log.class,DBColumn.class);
 
 	public DBColumn(Field field, Column column) {
 		setAuto_Fill(column.Auto_Fill());
 		setAuto_Increment(column.Auto_Increment());
-		setLength(column.length() > 0 ? column.length() : 16);
+		setLength(column.length() > 0 ? column.length() : 255);
 		setSize(column.size());
 		setFormat(column.format());
 		setName(column.name().equals("") ? field.getName() : column.name());
@@ -51,16 +45,15 @@ public class DBColumn implements mySqlInterface {
 		setAnnotations(column.Annotations());
 		setCharset(column.charset());
 		setCollate(column.collate());
-		Log.getSystemLog().info(columnDesc());
+		log.debug(columnDesc());
 	}
 
 	public DBColumn(Field field) {
-		Log.getSystemLog()
-				.info("this Field [" + field.getName() + "] is not annotion,all attribute set default");
+		log.debug("this Field [" + field.getName() + "] is not annotion,all attribute set default");
 		setAuto_Fill(false);
 		setAuto_Increment(false);
-		setLength(-1);
-		setSize(-1);
+		setLength(255);
+		setSize(11);
 		setFormat("");
 		setName(field.getName());
 		setNot_Null(false);
@@ -71,7 +64,7 @@ public class DBColumn implements mySqlInterface {
 		setType(this.getType(field));
 		setValue("");
 		setAnnotations("");
-		Log.getSystemLog().info(columnDesc());
+		log.debug(columnDesc());
 	}
 
 	public String columnDesc() {
@@ -90,7 +83,6 @@ public class DBColumn implements mySqlInterface {
 	}
 
 	public void setName(String name) {
-		// Log.getSystemLog().info("鏇存敼鏄犲皠锛�"+name);
 		this.name = name;
 	}
 
@@ -99,7 +91,6 @@ public class DBColumn implements mySqlInterface {
 	}
 
 	public void setValue(Object value) {
-		// Log.getSystemLog().info("璁剧疆鏄犲皠鍊硷細"+value);
 		this.value = value;
 	}
 
@@ -108,7 +99,6 @@ public class DBColumn implements mySqlInterface {
 	}
 
 	public void setType(String type) {
-		// Log.getSystemLog().info("杞崲鏁版嵁绫诲瀷锛�"+type);
 		this.type = type;
 	}
 
@@ -117,7 +107,6 @@ public class DBColumn implements mySqlInterface {
 	}
 
 	public void setLength(int length) {
-		// Log.getSystemLog().info("璁剧疆闀垮害锛�"+length);
 		Length = length;
 	}
 
@@ -126,7 +115,6 @@ public class DBColumn implements mySqlInterface {
 	}
 
 	public void setNot_Null(boolean not_Null) {
-		// Log.getSystemLog().info("璁剧疆闈炵┖锛�"+not_Null);
 		Not_Null = not_Null;
 	}
 
@@ -135,7 +123,6 @@ public class DBColumn implements mySqlInterface {
 	}
 
 	public void setPoint(boolean point) {
-		// Log.getSystemLog().info("璁剧疆point锛�"+point);
 		Point = point;
 	}
 
@@ -144,7 +131,6 @@ public class DBColumn implements mySqlInterface {
 	}
 
 	public void setAuto_Increment(boolean auto_Increment) {
-		// Log.getSystemLog().info("璁剧疆鑷锛�"+auto_Increment);
 		Auto_Increment = auto_Increment;
 	}
 
@@ -153,7 +139,6 @@ public class DBColumn implements mySqlInterface {
 	}
 
 	public void setPrimary_Key(boolean primary_Key) {
-		// Log.getSystemLog().info("璁剧疆涓婚敭锛�"+primary_Key);
 		Primary_Key = primary_Key;
 	}
 
@@ -162,7 +147,6 @@ public class DBColumn implements mySqlInterface {
 	}
 
 	public void setNot_Sign(boolean not_Sign) {
-		// Log.getSystemLog().info("璁剧疆鏃犵鍙凤細"+not_Sign);
 		Not_Sign = not_Sign;
 	}
 
@@ -171,7 +155,6 @@ public class DBColumn implements mySqlInterface {
 	}
 
 	public void setAuto_Fill(boolean auto_Fill) {
-		// Log.getSystemLog().info("鑷姩濉厖锛�"+auto_Fill);
 		Auto_Fill = auto_Fill;
 	}
 
@@ -180,7 +163,6 @@ public class DBColumn implements mySqlInterface {
 	}
 
 	public void setAnnotations(String annotations) {
-		// Log.getSystemLog().info("璁剧疆娉ㄩ噴锛�"+annotations);
 		Annotations = annotations;
 	}
 
@@ -242,46 +224,29 @@ public class DBColumn implements mySqlInterface {
 
 	private String getType(Field field) {
 		Class<?> cls = field.getType();
-		// 鏁村舰
-		if (cls.equals(int.class)) {
+		if (cls.equals(int.class)) 
 			return COLUMN_TYPE_INT;
-		}
-		if (cls.equals(Integer.class)) {
+		if (cls.equals(Integer.class))
 			return COLUMN_TYPE_INTEGER;
-		}
-		if (cls.equals(byte.class)) {
+		if (cls.equals(byte.class)) 
 			return COLUMN_TYPE_TINYINT;
-		}
-		if (cls.equals(short.class)) {
+		if (cls.equals(short.class))
 			return COLUMN_TYPE_SMALLINT;
-		}
-		if (cls.equals(long.class)) {
+		if (cls.equals(long.class))
 			return COLUMN_TYPE_BIGINT;
-		}
-		// 娴偣鍨�
-		if (cls.equals(float.class)) {
+		if (cls.equals(float.class))
 			return COLUMN_TYPE_FLOAT;
-		}
-		if (cls.equals(double.class)) {
+		if (cls.equals(double.class))
 			return COLUMN_TYPE_DOUBLE;
-		}
-		// 甯冨皵鍨�
-		if (cls.equals(boolean.class)) {
+		if (cls.equals(boolean.class))
 			return COLUMN_TYPE_TEXT;
-		}
-		// 瀛楃鍨�
-		if (cls.equals(String.class)) {
+		if (cls.equals(String.class))
 			return COLUMN_TYPE_LONGTEXT;
-		}
-		if (cls.equals(char.class)) {
+		if (cls.equals(char.class))
 			return COLUMN_TYPE_TEXT;
-		}
-		// 鏃ユ湡鍨�
-		if (cls.equals(Date.class)) {
+		if (cls.equals(Date.class))
 			return COLUMN_TYPE_DATE;
-		}
 		return COLUMN_TYPE_TEXT;
-
 	}
 
 	public boolean isUnique() {

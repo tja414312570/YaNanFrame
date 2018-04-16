@@ -15,10 +15,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import com.YaNan.frame.core.ApplicationContext;
-import com.YaNan.frame.service.ClassInfo;
 
 @WebFilter(filterName = "SecurityFilter", urlPatterns = "/*")
-@ClassInfo(version = 0)
 public class SecurityFilter extends HttpServlet implements Filter {
 	private static final long serialVersionUID = 1L;
 	@Override

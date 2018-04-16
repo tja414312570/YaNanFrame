@@ -14,8 +14,4 @@
 		Timeout="86400"
 	></Config>
 	<listener namespace="/*" class="com.YaNan.frame.hibernate.configure.defaultServletListener" />
-	<token namespace="/user/" roles="sign" chain="RPCToken.do" class="com.UFO.filter.LoginFilter">
-		<result name="success" command="chain"></result>
-		<result name="failed" command="redirect">login.html</result>
-	</token>
 </Token>

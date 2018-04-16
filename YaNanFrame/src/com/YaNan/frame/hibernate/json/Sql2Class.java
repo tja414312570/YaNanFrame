@@ -4,15 +4,15 @@ import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import com.YaNan.frame.service.Log;
+import com.YaNan.frame.logging.Log;
+import com.YaNan.frame.plugs.PlugsFactory;
 import com.mysql.jdbc.PreparedStatement;
 
 public class Sql2Class {
-	private Log log = Log.getSystemLog();
+	private final Log log = PlugsFactory.getPlugsInstance(Log.class, Sql2Class.class);
 	private Object object;
 
 	public static Object makeNewObject(Object object, PreparedStatement ps) {
-		Log log = Log.getSystemLog();
 		try {
 			ResultSet rs = ps.executeQuery();
 			if (rs.next()) {
@@ -24,14 +24,12 @@ public class Sql2Class {
 			}
 		} catch (SQLException | IllegalArgumentException
 				| IllegalAccessException e) {
-			log.write(e.toString());
 			e.printStackTrace();
 		}
 		return object;
 	}
 
 	public static Object makeNewObject(Object object, ResultSet rs) {
-		Log log = Log.getSystemLog();
 		try {
 			Field[] fields = object.getClass().getFields();
 			for (Field field : fields) {
@@ -40,7 +38,6 @@ public class Sql2Class {
 			}
 		} catch (SQLException | IllegalArgumentException
 				| IllegalAccessException e) {
-			log.write(e.toString());
 			e.printStackTrace();
 		}
 		return object;
@@ -57,7 +54,7 @@ public class Sql2Class {
 			}
 		} catch (SQLException | IllegalArgumentException
 				| IllegalAccessException e) {
-			log.write(e.toString());
+			log.error(e);
 			e.printStackTrace();
 		}
 	}
@@ -73,7 +70,7 @@ public class Sql2Class {
 			}
 		} catch (SQLException | IllegalArgumentException
 				| IllegalAccessException | ClassNotFoundException e) {
-			log.write(e.toString());
+			log.error(e);
 			e.printStackTrace();
 		}
 	}
@@ -84,7 +81,7 @@ public class Sql2Class {
 			field.set(this.object, args);
 		} catch (NoSuchFieldException | SecurityException
 				| IllegalArgumentException | IllegalAccessException e) {
-			log.write(e.toString());
+			log.error(e);
 			e.printStackTrace();
 		}
 	}

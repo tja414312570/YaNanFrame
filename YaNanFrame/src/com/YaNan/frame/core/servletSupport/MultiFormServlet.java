@@ -18,16 +18,18 @@ import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
 import com.YaNan.frame.core.reflect.ClassLoader;
-import com.YaNan.frame.core.servlet.DefaultDispatcher;
+import com.YaNan.frame.core.servlet.ActionDispatcher;
 import com.YaNan.frame.core.servlet.ServletBean;
 import com.YaNan.frame.core.servletSupport.exception.SecretKeyNotExists;
 import com.YaNan.frame.core.servletSupport.exception.UnsupportFileType;
+import com.YaNan.frame.logging.Log;
+import com.YaNan.frame.plugs.PlugsFactory;
 import com.YaNan.frame.security.DH;
-import com.YaNan.frame.service.Log;
-import com.YaNan.frame.stringSupport.StringSupport;
+import com.YaNan.frame.stringSupport.StringUtil;
 
 public class MultiFormServlet extends DefaultServlet {
 	public transient static String uploadDir = "Tmp";
+	private final Log log = PlugsFactory.getPlugsInstance(Log.class, MultiFormServlet.class);
 	public void MultiFormSupport(ClassLoader loader,ServletBean bean){
 		try {
 			if (ServletFileUpload.isMultipartContent(this.RequestContext)) {
@@ -59,7 +61,7 @@ public class MultiFormServlet extends DefaultServlet {
 						FileItem fileItem = (FileItem) iterator.next();
 						if (fileItem.isFormField()) {
 					    //对文本域进行赋值
-					        if(!DefaultDispatcher.valuation(loader, fileItem.getFieldName(),
+					        if(!ActionDispatcher.valuation(loader, fileItem.getFieldName(),
 									fileItem.getString(), ResponseContext))return;
 					     //文件域处理
 					    } else {
@@ -69,13 +71,13 @@ public class MultiFormServlet extends DefaultServlet {
 					}
 			}
 		} catch (Exception e) {
-			Log.getSystemLog().exception(e);
+			log.error(e.getMessage(), e);
 			try {
 				loader.invokeMethod("exception",new Class<?>[]{Exception.class},e);
 			} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
 					| InvocationTargetException e1) {
 				e1.printStackTrace();
-				Log.getSystemLog().exception(e);
+				log.error(e.getMessage(), e);
 			}
 		}
 	}
@@ -127,7 +129,7 @@ public class MultiFormServlet extends DefaultServlet {
 		/**
 		 * 字符串变量赋值
 		 */
-		uploadDir = StringSupport.decodeVar(uploadConf.Path(), loader.getLoadedObject());
+		uploadDir = StringUtil.decodeVar(uploadConf.Path(), loader.getLoadedObject());
 		if(!new File(uploadDir).exists())new File(uploadDir).mkdirs();
 		String fileName = fileItem.getName();
 		File fileTmp = new File(uploadDir,fileName);
@@ -143,7 +145,7 @@ public class MultiFormServlet extends DefaultServlet {
 				}
 			}
 		}
-		String secretKeyStr=StringSupport.decodeVar(uploadConf.secretKey(), loader.getLoadedObject());
+		String secretKeyStr=StringUtil.decodeVar(uploadConf.secretKey(), loader.getLoadedObject());
 		if(secretKeyStr.equals("")){
 			this.doUpload(fileTmp, inputStream);
 		}else{
@@ -188,7 +190,7 @@ public class MultiFormServlet extends DefaultServlet {
 		} catch (NoSuchMethodException | SecurityException
 				| IllegalAccessException | IllegalArgumentException
 				| InvocationTargetException e) {
-			Log.getSystemLog().error(e.toString());
+			log.error(e.getMessage(), e);
 			e.printStackTrace();
 		}
 	}

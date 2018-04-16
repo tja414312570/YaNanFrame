@@ -11,15 +11,16 @@ import java.util.Map;
 
 import com.YaNan.frame.Native.PackageScanner;
 import com.YaNan.frame.Native.PackageScanner.ClassInter;
-import com.YaNan.frame.hibernate.WebPath;
 import com.YaNan.frame.hibernate.beanSupport.BeanFactory;
 import com.YaNan.frame.hibernate.beanSupport.XMLBean;
+import com.YaNan.frame.hibernate.database.cache.Class2TabMappingCache;
 import com.YaNan.frame.hibernate.database.entity.Package;
 import com.YaNan.frame.hibernate.database.entity.Tab;
 import com.YaNan.frame.hibernate.database.entity.Tabs;
 import com.YaNan.frame.hibernate.database.exception.DATABASES_EXCEPTION;
 import com.YaNan.frame.hibernate.database.exception.DataBaseException;
-import com.YaNan.frame.service.Log;
+import com.YaNan.frame.logging.Log;
+import com.YaNan.frame.plugs.PlugsFactory;
 import com.mysql.jdbc.Driver;
 /**
  * v2.0 增加连接池对连接进行管理，重构DBTab和DataBase功能
@@ -29,11 +30,11 @@ import com.mysql.jdbc.Driver;
  */
 public class DBFactory {
 	private static DBFactory dbFactory;
-	static Log log = Log.getSystemLog();
 	private Map<String,DataBase> dbMap = new HashMap<String,DataBase>();
 	private DataBase defaultDB = null;
 	private File xmlFile;//new File("src/hibernate.xml");//
 	private String classPath;
+	private final Log log = PlugsFactory.getPlugsInstance(Log.class,DBFactory.class);
 	public static DBFactory getDBFactory(){
 		if (dbFactory ==null)
 				dbFactory=new DBFactory();
@@ -45,7 +46,7 @@ public class DBFactory {
 	private DBFactory(){};
 	public void init(){
 		if(xmlFile==null)
-			xmlFile = WebPath.getWebPath().get("hibernateXml").toFile();
+			xmlFile =new File(this.getClass().getClassLoader().getResource("").getPath().replace("%20"," "),"Hibernate.xml");
 		XMLBean xmlBean = BeanFactory.getXMLBean();
 		xmlBean.addXMLFile(xmlFile);
 		xmlBean.addElementPath("//Hibernate");
@@ -54,18 +55,9 @@ public class DBFactory {
 		xmlBean.setBeanClass(DataBaseConfigure.class);
 		List<Object> lists = xmlBean.execute();
 		Iterator<Object> iterator = lists.iterator();
-		String defaulted = null;
 		while(iterator.hasNext()){
-			DataBaseConfigure dbi = (DataBaseConfigure) iterator.next();
-			if(defaulted==null)defaulted = dbi.getName();
-			DataBase db = new DataBase(dbi);
-			db.create();
-			db.init();
-			if(dbi.getDefaulted()!=null&&dbi.getDefaulted().equals("default"))
-				this.defaultDB = db;
-		this.addDB(dbi.getName(),db);
+			this.builder((DataBaseConfigure)iterator.next());
 		}
-		if(defaultDB==null)this.defaultDB = this.dbMap.get(defaulted);
 	}
 	public void init(File xmlFile){
 		this.xmlFile = xmlFile;
@@ -88,7 +80,7 @@ public class DBFactory {
 		this.initTabs(classPath);
 	}
 	public void initTabs(String classPath) {
-		log.write("Parse database table!");
+		log.debug("Parse database table!");
 		//初始化包扫描注解
 		XMLBean xmlBean = BeanFactory.getXMLBean();
 		xmlBean.addXMLFile(xmlFile);
@@ -124,7 +116,7 @@ public class DBFactory {
 			@Override
 			public void find(Class<?> cls) {
 				if(cls.getAnnotation(com.YaNan.frame.hibernate.database.annotation.Tab.class)!=null){
-					Log.getSystemLog().info("scan hibernate class:"+cls.getName());
+					log.debug("scan hibernate class:"+cls.getName());
 					new DBTab(cls);
 				}
 			}
@@ -149,9 +141,10 @@ public class DBFactory {
 					dbtab.create(new Create(dbtab));
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
+				log.error(e);
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
+				log.error(e);
 			}
 		}
 	}
@@ -180,11 +173,21 @@ public class DBFactory {
 				DriverManager.deregisterDriver(driver);
 			} catch (SQLException e1) {
 				e1.printStackTrace();
+				log.error(e1);
 			}
 		    }
 		}
 	}
 	public Map<String, DataBase> getDataBases() {
 		return dbMap;
+	}
+	public DataBase builder(DataBaseConfigure dataSource) {
+		DataBase db = new DataBase(dataSource);
+		db.create();
+		db.init();
+		if(defaultDB==null||(dataSource.getDefaulted()!=null&&dataSource.getDefaulted().equals("default")))
+			this.defaultDB = db;
+		this.addDB(dataSource.getName(),db);
+		return db;
 	}
 }

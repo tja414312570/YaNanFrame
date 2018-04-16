@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+	</head>
+	<body>
+		<script type="text/javascript" src="../js/jquery-2.1.4.min.js" ></script>
+		<script>
+			$.ajax({
+				url:"http://localhost:8080/YaNanFrame/getName.do",
+				async:true,
+				success:function(data){
+					console.log(data)
+				}
+			});
+		</script>
+	</body>
+</html>

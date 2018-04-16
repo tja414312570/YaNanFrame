@@ -3,7 +3,9 @@ package com.YaNan.frame.hibernate;
 import java.io.File;
 import java.io.IOException;
 
-import com.YaNan.frame.service.Log;
+import com.YaNan.frame.logging.Log;
+import com.YaNan.frame.plugs.PlugsFactory;
+
 
 /**
  * Path Class,this class was used WebPath Class,it has three filed,path
@@ -17,6 +19,7 @@ public class Path {
 	public String realPath;
 	public String originPath;
 	public File file;
+	private final Log log = PlugsFactory.getPlugsInstance(Log.class, Path.class);
 	private Path rootPath = WebPath.getWebPath().getRoot();
 
 	public void Colone(Path path) {
@@ -82,7 +85,7 @@ public class Path {
 				try {
 					mkPath.createNewFile();
 				} catch (IOException e) {
-					Log.getSystemLog().getBuffer().append(e.toString());
+					log.error(e.getMessage(), e);
 					e.printStackTrace();
 				}
 			}

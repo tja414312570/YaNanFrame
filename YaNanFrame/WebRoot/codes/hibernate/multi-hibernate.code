@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Hibernate>
+	<dataBase name="YaNan_SYSTEM">
+		<driver>com.mysql.jdbc.Driver</driver>
+		<host>localhost</host>
+		<port>3306</port>
+		<username>root</username>
+		<password></password>
+	</dataBase>
+	<dataBase name="YaNan_Demo">
+		<driver>com.mysql.jdbc.Driver</driver>
+		<host>localhost</host>
+		<port>3306</port>
+		<username>root</username>
+		<password></password>
+	</dataBase>
+</Hibernate>

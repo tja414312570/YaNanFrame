@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Action {
 	boolean output() default false;//输出流
-	String namespace() default "*";//命名空间
+	String namespace() default "/";//命名空间
 	String extend() default "servlet-default";//继承包类
 	String value() default "";//action 名称
 	boolean decode() default false;//是否需要解析结果

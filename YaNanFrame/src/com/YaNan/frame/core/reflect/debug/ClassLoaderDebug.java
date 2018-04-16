@@ -16,13 +16,48 @@ public class ClassLoaderDebug {
 			new ClassLoader(Math.class);
 		System.out.println(System.currentTimeMillis()-t2s);
 		long t3s = System.currentTimeMillis();
-		for(int i =0;i<1000000;i++)
+		for(int i =0;i<100000000;i++)
 			Math.add(i,10);
 		System.out.println("excute times:"+(System.currentTimeMillis()-t3s));
 		new ClassLoader(Math.class);
 		long t4s = System.currentTimeMillis();
-		for(int i =0;i<1000000;i++){
-			new ClassLoader(Math.class).invokeMethod("add",i,10);
+		 ClassLoader loader = new ClassLoader(Math.class);
+		for(int i =0;i<100000000;i++){
+			loader.getMethod("add", int.class,int.class);
+		}
+		System.out.println("get method times:"+(System.currentTimeMillis()-t4s));
+		
+		
+		t4s = System.currentTimeMillis();
+		for(int i =0;i<100000000;i++){
+			ClassLoader.createFieldGetMethod("abc");
+		}
+		System.out.println("create set or get times:"+(System.currentTimeMillis()-t4s));
+
+		t4s = System.currentTimeMillis();
+		for(int i =0;i<100000000;i++){
+			Integer.toString(100);
+		}
+		System.out.println("Integer.value:"+(System.currentTimeMillis()-t4s));
+		
+		String str;
+		t4s = System.currentTimeMillis();
+		for(int i =0;i<100000000;i++){
+			str = 100+"";
+		}
+		System.out.println("String ++:"+(System.currentTimeMillis()-t4s));
+		
+		t4s = System.currentTimeMillis();
+		for(int i =0;i<100000000;i++){
+			String.valueOf(100);
+		}
+		System.out.println("String.valueOf:"+(System.currentTimeMillis()-t4s));
+		
+		
+		
+		t4s = System.currentTimeMillis();
+		for(int i =0;i<100000000;i++){
+			loader.invokeMethod("add",i,10);
 //			Method method = ClassInfoCache.getClassInfoCache(Math.class).getMethod("add", parameterTypes);
 //			Object object = method.invoke(null,10,10);
 		}

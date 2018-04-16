@@ -11,7 +11,7 @@ import com.YaNan.frame.Native.PackageScanner.ClassInter;
 import com.YaNan.frame.core.aspect.annotations.Aspect;
 import com.YaNan.frame.core.aspect.interfaces.AspectInterface;
 import com.YaNan.frame.core.reflect.ClassLoader;
-import com.YaNan.frame.stringSupport.StringSupport;
+import com.YaNan.frame.stringSupport.StringUtil;
 
 public class AspectContainer {
 	private File classPath;
@@ -64,7 +64,7 @@ public class AspectContainer {
 	}
 	public List<AspectInterface> match(String string) {
 		for(String point : aspectPools.keySet()){
-			if(StringSupport.match(string,point))return aspectPools.get(point);
+			if(StringUtil.matchAndCache(string,point))return aspectPools.get(point);
 		}
 		return null;
 	}

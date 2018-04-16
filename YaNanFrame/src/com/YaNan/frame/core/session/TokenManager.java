@@ -15,8 +15,9 @@ import com.YaNan.frame.core.session.interfaceSupport.TokenHibernateInterface;
 import com.YaNan.frame.hibernate.WebPath;
 import com.YaNan.frame.hibernate.beanSupport.BeanFactory;
 import com.YaNan.frame.hibernate.beanSupport.XMLBean;
-import com.YaNan.frame.service.Log;
-import com.YaNan.frame.stringSupport.StringSupport;
+import com.YaNan.frame.logging.Log;
+import com.YaNan.frame.plugs.PlugsFactory;
+import com.YaNan.frame.stringSupport.StringUtil;
 
 public class TokenManager {
 	/**
@@ -25,6 +26,7 @@ public class TokenManager {
 	public static String TokenMark = "TUID"; 
 	public static String RoleMark = "ROLES";
 	public static int Timeout=3600;
+	private final Log log = PlugsFactory.getPlugsInstance(Log.class, TokenManager.class);
 	/**
 	 * token 数据持久层接口
 	 */
@@ -84,7 +86,7 @@ public class TokenManager {
 	// index token XML file;
 	private void index() {
 		if(!this.file.exists()){
-			Log.getSystemLog().error("token xml file is not exists path:"+this.file.getAbsoluteFile());
+			log.error("token xml file is not exists path:"+this.file.getAbsoluteFile());
 			return;
 		}
 		XMLBean cmlBean = BeanFactory.getXMLBean();
@@ -106,7 +108,7 @@ public class TokenManager {
 						hibernateInterface=(TokenHibernateInterface) cls.newInstance();
 				} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
 					e.printStackTrace();
-				Log.getSystemLog().exception(e);
+				log.error(e.getMessage(), e);
 				}
 				
 			}
@@ -123,7 +125,7 @@ public class TokenManager {
 		while (i.hasNext()) {
 			TokenEntity tokenBean = (TokenEntity) i.next();
 			manager.addToken(tokenBean.getNamespace(), tokenBean);
-			Log.getSystemLog().write(
+			log.debug(
 					"add token namespace :" + tokenBean.getNamespace() + " ; "
 							+ tokenBean.toString());
 		}
@@ -217,7 +219,7 @@ public class TokenManager {
 		if(manager!=null){
 			Iterator<String> iterator = manager.tokenMap.keySet().iterator();
 			while(iterator.hasNext()){
-				if(StringSupport.match(namespace, iterator.next()))
+				if(StringUtil.match(namespace, iterator.next()))
 					return true;
 			}
 		}
@@ -229,7 +231,7 @@ public class TokenManager {
 		Iterator<String> iterator = manager.tokenMap.keySet().iterator();
 		while(iterator.hasNext()){
 			String nameReg =  iterator.next();
-			if(StringSupport.match(namespace,nameReg))
+			if(StringUtil.match(namespace,nameReg))
 				tl.add(manager.tokenMap.get(nameReg));
 		}
 		return tl;

@@ -1,0 +1,5 @@
+comps.priority=2
+comps.signlton=true
+comps.attribute=.jsp
+comps.declare=javax.servlet.GenericServlet
+comps.register=javax.servlet.Servlet

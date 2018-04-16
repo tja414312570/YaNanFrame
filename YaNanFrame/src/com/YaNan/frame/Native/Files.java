@@ -13,15 +13,6 @@ import java.io.OutputStreamWriter;
 
 /**
  * Files 类
- * <p>
- * 使用该类对你读或取文本文件将有很大的方便
- * <p>
- * 如果你在使用中有任何问题或建议反馈给我们
- * <p>
- * QQ：414312570
- * <p>
- * email：414312570@QQ.COM
- * 
  * @version 1.0.1
  * @since jdk1.7
  * @enCoding UTF-8

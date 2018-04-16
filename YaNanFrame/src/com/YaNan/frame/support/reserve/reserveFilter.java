@@ -12,11 +12,9 @@ import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 
-import com.YaNan.frame.service.ClassInfo;
 import com.YaNan.frame.support.ReserveManager;
 
 @WebFilter(filterName = "reserveFilter", urlPatterns = "/*")
-@ClassInfo(version = 0)
 public class reserveFilter extends HttpServlet implements Filter {
 	/**
 	 * 

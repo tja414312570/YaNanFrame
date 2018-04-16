@@ -2,6 +2,7 @@ package com.YaNan.frame.core.session.servletSupport;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collection;
 
 import org.apache.catalina.connector.RequestFacade;
 import org.apache.catalina.connector.ResponseFacade;
@@ -10,8 +11,9 @@ import com.YaNan.frame.core.reflect.ClassLoader;
 import com.YaNan.frame.core.servletSupport.MultiFormServlet;
 import com.YaNan.frame.core.session.Token;
 import com.YaNan.frame.core.session.annotation.TokenObject;
+import com.YaNan.frame.logging.Log;
+import com.YaNan.frame.plugs.PlugsFactory;
 import com.YaNan.frame.security.XSSRequestWrapper;
-import com.YaNan.frame.service.Log;
 import com.YaNan.frame.support.ignore;
 /**
  * 此抽象类用于普通带Token的servlet处理
@@ -23,6 +25,7 @@ import com.YaNan.frame.support.ignore;
  *
  */
 public abstract class TokenServlet extends MultiFormServlet{
+	private final Log log = PlugsFactory.getPlugsInstance(Log.class, TokenServlet.class);
 	@ignore
 	protected transient Token TokenContext;
 	public Token getTokenContext() {
@@ -63,7 +66,7 @@ public abstract class TokenServlet extends MultiFormServlet{
 		}
 	}
 	public void doOther(ClassLoader loader){
-		Field[] fields = loader.getDeclaredFields();
+		Collection<Field> fields = loader.getDeclaredFields();
 		for(Field field :fields){
 			if(field.getAnnotation(TokenObject.class)!=null){
 				Class<?> cls = field.getType();
@@ -73,7 +76,7 @@ public abstract class TokenServlet extends MultiFormServlet{
 						loader.set(field.getName(),TokenContext.get(cls));
 					} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
 							| NoSuchMethodException | SecurityException e) {
-						Log.getSystemLog().exception(e);
+						log.error(e.getMessage(),e);
 					}
 				}
 			}

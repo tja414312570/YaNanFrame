@@ -31,7 +31,7 @@ import com.YaNan.frame.core.session.entity.TokenEntity;
 import com.YaNan.frame.core.session.interfaceSupport.TokenFilterInterface;
 import com.YaNan.frame.core.session.interfaceSupport.TokenListener;
 import com.YaNan.frame.core.session.interfaceSupport.Token_Command_Type;
-import com.YaNan.frame.stringSupport.StringSupport;
+import com.YaNan.frame.stringSupport.StringUtil;
 /**
  * 优先处理action，然后处理命名空间
  * @author Administrator
@@ -107,11 +107,11 @@ public class TokenFilter extends HttpServlet implements Filter {
 	}
 
 	private boolean dispatcherServlet(ServletRequest request, ServletResponse response, FilterChain chain) {
-		servletName =servletName.replace(".do", "");
+		String requestMapping =servletName.replace(".do", "");
 		DefaultServletMapping servletMap = DefaultServletMapping.getInstance();
-		if (servletMap.isExist(namespace,servletName)) {
+		if (servletMap.includeServlet(requestMapping)) {
 			try {
-				ServletBean servletBean = servletMap.getServlet(namespace,servletName);
+				ServletBean servletBean = servletMap.getServlet(requestMapping);
 				Class<?> cls = servletBean.getClassName();
 				iToken itoken =servletBean.getMethod().getAnnotation(iToken.class);
 				if (itoken == null)
@@ -130,7 +130,7 @@ public class TokenFilter extends HttpServlet implements Filter {
 							for (int i = 0; i < cStr.length; i++) {
 								String[] cPstr = cStr[i].split(",");
 								for (String str : cPstr) {
-									if (StringSupport.match(servletName, str)
+									if (StringUtil.match(servletName, str)
 											&& token.isRole(c.role()[i]
 													.split(","))) {
 										chain.doFilter(request, response);
@@ -280,7 +280,7 @@ public class TokenFilter extends HttpServlet implements Filter {
 		if (tokenEntity.getChain() != null) {
 			String[] str =tokenEntity.getChain().split(",");
 			for (String s : str) {
-				if (StringSupport.match(URLSupport.getRequestFile(request).toString(), s)) {
+				if (StringUtil.match(URLSupport.getRequestFile(request).toString(), s)) {
 					return false;
 				}
 			}
@@ -456,8 +456,8 @@ public class TokenFilter extends HttpServlet implements Filter {
 	}
 	public static String getURL(String contextUrl,String oUrl,Object ti){
 		if(contextUrl!=null)
-			contextUrl = StringSupport.decodeVar(contextUrl, ti);
-		oUrl = StringSupport.decodeVar(oUrl, ti);
+			contextUrl = StringUtil.decodeVar(contextUrl, ti);
+		oUrl = StringUtil.decodeVar(oUrl, ti);
 		return getURL(contextUrl,oUrl);
 	}
 	public static String getURL(String contextUrl,String oUrl){

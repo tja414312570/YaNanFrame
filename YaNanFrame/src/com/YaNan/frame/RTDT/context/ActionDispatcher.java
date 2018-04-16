@@ -11,6 +11,8 @@ import com.YaNan.frame.RTDT.entity.interfacer.ACTION_TYPE;
 import com.YaNan.frame.core.reflect.ClassLoader;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
 
@@ -131,7 +133,11 @@ public class ActionDispatcher {
 			return Double.valueOf(Double.parseDouble((String) orgin));
 		}
 		if (targetType.equals(Date.class)) {
-			return new Date(orgin.toString());
+			try {
+				return SimpleDateFormat.getInstance().parse(orgin.toString());
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
 		}
 		if (targetType.equals(Boolean.TYPE)) {
 			return Boolean.valueOf(Boolean.parseBoolean((String) orgin));
