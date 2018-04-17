@@ -1,9 +1,9 @@
 package com.YaNan.Demo.action;
 
-import com.YaNan.frame.core.servlet.annotations.RequestMapping;
+import com.YaNan.frame.core.servlet.annotations.Action;
 
 public class HelloWord {
-	@RequestMapping
+	@Action
 	public String sayHello(){
 		return "hello";
 	}

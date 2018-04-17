@@ -15,7 +15,6 @@ import com.YaNan.frame.core.servlet.annotations.Action;
 import com.YaNan.frame.core.servlet.annotations.Validate;
 import com.YaNan.frame.core.session.Token;
 import com.YaNan.frame.core.session.TokenManager;
-import com.YaNan.frame.core.session.servletSupport.TokenServlet;
 import com.YaNan.frame.hibernate.database.DBColumn;
 import com.YaNan.frame.hibernate.database.DBFactory;
 import com.YaNan.frame.hibernate.database.DBTab;
@@ -24,17 +23,22 @@ import com.YaNan.frame.hibernate.database.DataBaseConfigure;
 import com.google.gson.Gson;
 
 
-public class AppContext extends TokenServlet{
+public class AppContext{
 	@Validate(isNull="{\"code\":4281,\"message\":\"数据库名称为空\"}")
 	private String databaseName;
+	
+	private ServletBeanModel[] ServletBeanModels;
+	
 	@Action(description="获取所有的Servlet")
+	
 	public String getAllServlet(){
-		this.RequestContext.getServletContext();
 		return "{\"data\":"+new Gson().toJson(getServletBeanModelList())+"}";
 	}
 	@Action(description="获取Servlet数量")
 	public int getServletNum(){
-		return getServletBeanModelList().length;
+		if(ServletBeanModels==null)
+			ServletBeanModels = getServletBeanModelList();
+		return ServletBeanModels.length;
 	}
 	@Action(description="获取RTDT数量")
 	public int getRTDTActionNum(){
@@ -187,7 +191,7 @@ public class AppContext extends TokenServlet{
 		private String[] args={};
 		private String description;
 		ServletBeanModel(ServletBean bean){
-			this.className = bean.getClassName().getName();
+			this.className = bean.getServletClass().getName();
 			this.method = bean.getMethod().getName();
 			this.type = bean.getType();
 			this.output = bean.hasOutputStream();

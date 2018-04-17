@@ -210,7 +210,7 @@ scan_elements:		for (Element s : servletNode) {
 										+className);
 								continue scan_elements;
 							}
-							bean.setClassName(cls);
+							bean.setServletClass(cls);
 							if (outputStream != null
 									&& outputStream.equals("true"))
 								bean.setOutputStream(true);

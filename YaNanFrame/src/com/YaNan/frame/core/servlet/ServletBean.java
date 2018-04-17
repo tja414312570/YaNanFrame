@@ -3,6 +3,7 @@ package com.YaNan.frame.core.servlet;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -19,7 +20,11 @@ public class ServletBean {
 	/**
 	 * 参数缓存 restful风格有效
 	 */
-	private Map<Parameter,Object> parameterMap = new LinkedHashMap<Parameter,Object>();
+	private Map<Parameter,ParameterDescription> parameter = new LinkedHashMap<Parameter,ParameterDescription>();
+	/**
+	 * 路径变量信息记录 restful风格有效
+	 */
+	private Map<Integer,String> pathVariable = new HashMap<Integer,String>();
 	/**
 	 * 接口类
 	 */
@@ -32,10 +37,15 @@ public class ServletBean {
 	 * 接口方法
 	 */
 	private Method method;
+	
 	/**
 	 * 接口返回类型
 	 */
 	private int type;
+	/**
+	 * 接口请求方式  get post put delete ...
+	 */
+	private int requestMethod;
 	/**
 	 * 接口风格
 	 */
@@ -48,7 +58,7 @@ public class ServletBean {
 	 * 接口是否需要转换
 	 */
 	private boolean decode;
-	/**
+	/** 
 	 * 接口是否跨域
 	 */
 	private boolean corssOrgin;
@@ -65,10 +75,10 @@ public class ServletBean {
 	 * @return
 	 */
 	private String pathRegex;
-	public Class<?> getClassName() {
+	public Class<?> getServletClass() {
 		return this.className;
 	}
-	public void setClassName(Class<?> className) {
+	public void setServletClass(Class<?> className) {
 		this.className = className;
 	}
 	public void setOutputStream(boolean output) {
@@ -149,8 +159,8 @@ public class ServletBean {
 	public void setStyle(String style) {
 		this.style = style;
 	}
-	public void addParameter(Parameter parameter,Object annotation){
-		this.parameterMap.put(parameter, annotation);
+	public void addParameter(Parameter parameter,ParameterDescription annotation){
+		this.parameter.put(parameter, annotation);
 	}
 	public String getPathRegex() {
 		return pathRegex;
@@ -158,5 +168,32 @@ public class ServletBean {
 	public void setPathRegex(String pathRegex) {
 		this.pathRegex = pathRegex;
 	}
-	
+	@Override
+	public String toString() {
+		return "ServletBean [result=" + result + ", fieldMap=" + fieldMap + ", parameterMap=" + parameter
+				+ ", className=" + className + ", urlmapping=" + urlmapping + ", method=" + method + ", type=" + type
+				+ ", style=" + style + ", output=" + output + ", decode=" + decode + ", corssOrgin=" + corssOrgin
+				+ ", args=" + Arrays.toString(args) + ", description=" + description + ", pathRegex=" + pathRegex + "]";
+	}
+	public Map<Integer,String> getPathVariable() {
+		return pathVariable;
+	}
+	public void setPathVariable(Map<Integer,String> pathVariable) {
+		this.pathVariable = pathVariable;
+	}
+	public void addPathVariable(Integer index,String paraName) {
+		this.pathVariable.put(index, paraName);
+	}
+	public int getRequestMethod() {
+		return requestMethod;
+	}
+	public void setRequestMethod(int requestMethod) {
+		this.requestMethod = requestMethod;
+	}
+	public Map<Parameter,ParameterDescription> getParameters() {
+		return parameter;
+	}
+	public void setParameter(Map<Parameter,ParameterDescription> parameter) {
+		this.parameter = parameter;
+	}
 }

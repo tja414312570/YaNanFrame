@@ -37,9 +37,13 @@ public class TestPlugs {
 	public String getName(){
 		return "hello"+name;
 	}
-	@RequestMapping(value="/user/{name}")
-	public String name(@PathVariable String name,@PathVariable int id){
-		return "hello"+name;
+	@RequestMapping()
+	public String sayHello(){
+		return "hello";
+	}
+	@RequestMapping("/user/{username}/doc/{filename}")
+	public String say(@PathVariable("filename") String username,@PathVariable("username") String filename){
+		return "hello "+username+",your file is " +filename;
 	}
 	@Action(args="student")
 	public String getStudent(){

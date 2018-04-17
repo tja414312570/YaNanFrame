@@ -37,7 +37,7 @@ import com.YaNan.frame.stringSupport.StringUtil;
  * @author Administrator
  *
  */
-@WebFilter(filterName = "tokenFilter", urlPatterns = "/*")
+//@WebFilter(filterName = "tokenFilter", urlPatterns = "/*")
 public class TokenFilter extends HttpServlet implements Filter {
 	private TokenListener tokenListener = new TokenListener() {
 		@Override
@@ -112,7 +112,7 @@ public class TokenFilter extends HttpServlet implements Filter {
 		if (servletMap.includeServlet(requestMapping)) {
 			try {
 				ServletBean servletBean = servletMap.getServlet(requestMapping);
-				Class<?> cls = servletBean.getClassName();
+				Class<?> cls = servletBean.getServletClass();
 				iToken itoken =servletBean.getMethod().getAnnotation(iToken.class);
 				if (itoken == null)
 					itoken = cls.getAnnotation(iToken.class);

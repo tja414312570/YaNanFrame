@@ -1,0 +1,5 @@
+comps.priority=0
+comps.signlton=true
+comps.attribute=RESTFUL_STYLE
+comps.declare=javax.servlet.GenericServlet
+comps.register=javax.servlet.Servlet

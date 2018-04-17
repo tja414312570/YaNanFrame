@@ -1,15 +1,15 @@
 package com.YaNan.frame.core.reflect.cache;
 
 import java.lang.reflect.Method;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class CacheContainer {
-	private static Map<Class<?>,ClassInfoCache> classCache = new HashMap<Class<?>,ClassInfoCache>();
-	private static Map<String,String> fieldAddMethodCache = new HashMap<String,String>();
-	private static Map<String,String> fieldSetMethodCache = new HashMap<String,String>();
-	private static Map<String,String> fieldGetMethodCache = new HashMap<String,String>();
-	private static Map<String,Class<?>> classMapCache = new HashMap<String,Class<?>>();
+	private static Map<Class<?>,ClassInfoCache> classCache = new LinkedHashMap<Class<?>,ClassInfoCache>();
+	private static Map<String,String> fieldAddMethodCache = new LinkedHashMap<String,String>();
+	private static Map<String,String> fieldSetMethodCache = new LinkedHashMap<String,String>();
+	private static Map<String,String> fieldGetMethodCache = new LinkedHashMap<String,String>();
+	private static Map<String,Class<?>> classMapCache = new LinkedHashMap<String,Class<?>>();
 	public static ClassInfoCache getClassCache(Class<?> clzz){
 		return classCache.get(clzz);
 	}

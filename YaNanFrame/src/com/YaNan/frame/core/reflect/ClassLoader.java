@@ -669,7 +669,7 @@ public class ClassLoader {
 			InvocationTargetException {
 		return invokeMethod(this.loadObject, methodName,parameterType,args);
 	}
-	private Object invokeMethod(Object object,String methodName, Class<?>[] parameterType,
+	public Object invokeMethod(Object object,String methodName, Class<?>[] parameterType,
 			Object... args) throws NoSuchMethodException, SecurityException,
 			IllegalAccessException, IllegalArgumentException,
 			InvocationTargetException {

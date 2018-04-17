@@ -10,7 +10,6 @@
 	 <Config 
 		TokenMark="TUID"
 		RoleMark="ROLES"
-		HibernateInterface="com.YaNan.frame.core.session.defaultConfigure.DefaultHibernateImpl"
 		Timeout="86400"
 	></Config>
 	<listener namespace="/*" class="com.YaNan.frame.hibernate.configure.defaultServletListener" />

@@ -94,7 +94,13 @@ public class CoreDispatcher extends HttpServlet {
 		//获得资源相对路径
 		String path = getRelativePath(req, true);
 		DefaultServletMapping servletMap = DefaultServletMapping.getInstance();
-		ServletBean servletBean = servletMap.getServlet(path);
+		/**
+		 * 通过模糊的方式查询servlet，此种方式目的在与获取Servlet类型，因此有以下缺点
+		 * 1、不能存在同一种URL映射同时存在多种风格
+		 * 2、模糊匹配的Servlet的类型为restful类型时可能通过getServlet()获取并不存在
+		 * 
+		 */
+		ServletBean servletBean = servletMap.getAsServlet(path);
 		String resourceType = "";
 		// 如果ServletBean存在
 		if(servletBean!=null){
@@ -106,6 +112,8 @@ public class CoreDispatcher extends HttpServlet {
 			if(pointIndex>=0)
 				resourceType = name.substring(pointIndex);
 		}
+		log.debug(path);
+		log.debug(resourceType);
 		Servlet servlet = PlugsFactory.getPlugsInstanceByAttribute(Servlet.class, resourceType);
 		log.debug(servlet.toString());
 		servlet.service(req, resp);

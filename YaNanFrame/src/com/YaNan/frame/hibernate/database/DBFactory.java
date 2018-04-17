@@ -46,7 +46,7 @@ public class DBFactory {
 	private DBFactory(){};
 	public void init(){
 		if(xmlFile==null)
-			xmlFile =new File(this.getClass().getClassLoader().getResource("").getPath().replace("%20"," "),"Hibernate.xml");
+			xmlFile =new File(this.getClass().getClassLoader().getResource("").getPath().replace("%20"," "),"hibernate.xml");
 		XMLBean xmlBean = BeanFactory.getXMLBean();
 		xmlBean.addXMLFile(xmlFile);
 		xmlBean.addElementPath("//Hibernate");

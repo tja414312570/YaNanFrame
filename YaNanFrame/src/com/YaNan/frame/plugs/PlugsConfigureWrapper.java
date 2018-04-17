@@ -16,8 +16,8 @@ public class PlugsConfigureWrapper {
 		InputStream in = new BufferedInputStream(new FileInputStream(file));   
 		Properties p = new Properties();   
 		p.load(in);
-		String k = p.getProperty("priority", "0");
-		System.out.println(p);
+//		String k = p.getProperty("priority", "0");
+//		System.out.println(p);
 	}
 
 	

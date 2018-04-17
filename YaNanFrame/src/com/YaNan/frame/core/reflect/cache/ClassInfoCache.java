@@ -81,12 +81,21 @@ public class ClassInfoCache {
 	
 	public static int hash(Class<?>...clzz){
 		int hash = 0;
-		for(Object object:clzz)
-			hash+=object.hashCode();
+		for(Class<?> clz:clzz)
+			hash+=clz.getName().hashCode();
 		return hash;
 	}
 	public static int hash(String name,Class<?>...parameterTypes){
 		return name.hashCode()+hash(parameterTypes);
+	}
+	public static String hashString(String name,Class<?>...parameterTypes){
+		return  new StringBuilder(name).append(hashString(parameterTypes)).toString();
+	}
+	public static String hashString(Class<?>...clzz){
+		StringBuilder sb = new StringBuilder();
+		for(Class<?> clz:clzz)
+			sb.append(clz.getName());
+		return sb.toString();
 	}
 	public Class<?> getCacheClass() {
 		return cacheClass;

@@ -1,9 +1,7 @@
 package com.YaNan.frame.plugs;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.YaNan.frame.stringSupport.StringUtil;
 
@@ -18,22 +16,37 @@ public class Plug {
 	private PlugsDescription description;
 	//默认的实现类，用于提高默认获取组件的效率
 	private RegisterDescription defaultRegisterDescription;
-	//组件的实现类 mark.hash() ==>cls 用于根据标示查询实现类
-	private int currentPriority=0;
-	private Map<String,Class<?>> registermap = new LinkedHashMap<String,Class<?>>();
 	private List<RegisterDescription> registerList = new ArrayList<RegisterDescription>();
 	public Plug(PlugsDescription descrption){
 		this.description = descrption;
 	}
 	public void addRegister(RegisterDescription registerDescription) {
-		//处理优先级
-		if(currentPriority<registerDescription.getPriority()){
-			this.currentPriority = registerDescription.getPriority();
-			this.setDefaultRegisterDescription(registerDescription);
-		}else if(this.defaultRegisterDescription==null){
+		//设置默认注册组件
+		if(this.defaultRegisterDescription==null)
 			this.defaultRegisterDescription = registerDescription;
+		else if(this.defaultRegisterDescription.getPriority()<registerDescription.getPriority())
+			this.setDefaultRegisterDescription(registerDescription);
+		//为了保持与默认注册组件有相同的优先级，采用倒叙对比法进行优先级运算 比如 原始数据 0  0  2  3 现在需要插入 1  则插入后应该为 0 0 1 2 3
+		if(this.registerList.size()==0){
+			this.registerList.add(registerDescription);
+		}else{
+			for(int i=this.registerList.size()-1;i>=0;i--){
+				if(registerDescription.getPriority()>=this.registerList.get(i).getPriority()){
+					this.registerList.add(registerDescription);
+					break;
+				}else{
+					if(i==0){
+						this.registerList.add(0,registerDescription);
+					}else{
+						if(registerDescription.getPriority()>=this.registerList.get(i-1).getPriority()&&
+								registerDescription.getPriority()<this.registerList.get(i).getPriority()){
+							this.registerList.add(i,registerDescription);
+							break;
+						}
+					}
+				}
+			}
 		}
-		this.registerList.add(registerDescription.getPriority()>this.registerList.size()?this.registerList.size():registerDescription.getPriority(), registerDescription);
 	}
 	public RegisterDescription getRegisterDescriptionByAttribute(String attribute) {
 		for(int i = 0;i<registerList.size();i++){
@@ -47,18 +60,6 @@ public class Plug {
 	}
 	public void setDescription(PlugsDescription description) {
 		this.description = description;
-	}
-	public int getCurrentPriority() {
-		return currentPriority;
-	}
-	public void setCurrentPriority(int currentPriority) {
-		this.currentPriority = currentPriority;
-	}
-	public Map<String, Class<?>> getRegistermap() {
-		return registermap;
-	}
-	public void setRegistermap(Map<String, Class<?>> registermap) {
-		this.registermap = registermap;
 	}
 	public List<RegisterDescription> getRegisterList() {
 		return registerList;

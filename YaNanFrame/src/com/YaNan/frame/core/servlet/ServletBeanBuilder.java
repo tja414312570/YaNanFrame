@@ -6,9 +6,13 @@ import java.lang.reflect.Parameter;
 import com.YaNan.frame.core.servlet.annotations.Action;
 import com.YaNan.frame.core.servlet.annotations.ActionResults;
 import com.YaNan.frame.core.servlet.annotations.PathVariable;
+import com.YaNan.frame.core.servlet.annotations.RequestBody;
+import com.YaNan.frame.core.servlet.annotations.RequestHeader;
 import com.YaNan.frame.core.servlet.annotations.ActionResults.Result;
+import com.YaNan.frame.core.servlet.annotations.CookieValue;
 import com.YaNan.frame.core.servlet.annotations.RequestMapping;
 import com.YaNan.frame.core.servlet.annotations.RequestParam;
+import com.YaNan.frame.core.servlet.annotations.SessionAttributes;
 import com.YaNan.frame.logging.DefaultLog;
 import com.YaNan.frame.logging.Log;
 import com.YaNan.frame.plugs.PlugsFactory;
@@ -34,7 +38,7 @@ public class ServletBeanBuilder {
 			bean.setUrlmapping(urlPath);
 			bean.setPathRegex(urlPath);
 			bean.setArgs(action.args());
-			bean.setClassName(method.getDeclaringClass());
+			bean.setServletClass(method.getDeclaringClass());
 			bean.setOutputStream(action.output());
 			bean.setDecode(action.decode());
 			bean.setCorssOrgin(action.CorssOrgin());
@@ -61,13 +65,14 @@ public class ServletBeanBuilder {
 		log.debug(method.toString());
 		ServletBean bean = new ServletBean();
 		bean.setStyle(RESTFUL_STYLE);
+		bean.setRequestMethod(requestMapping.method());
 		/**
 		 * 获取url映射
 		 */
-		String urlPath = requestMapping.value().equals("")?method.getName():requestMapping.value()+"@"+requestMapping.method();;
+		String urlPath = requestMapping.value().trim().equals("")?"/"+method.getName():requestMapping.value().trim();
 		if(parentRequestMaping!=null)
 			urlPath = parentRequestMaping.value()+urlPath;
-		String urlMapping =urlPath;
+		String urlMapping =urlPath+"@"+requestMapping.method();;
 		int varIndex = urlMapping.indexOf("{");
 		while(varIndex>=0){
 			int varEndex = urlMapping.indexOf("}");
@@ -77,31 +82,59 @@ public class ServletBeanBuilder {
 			urlMapping =urlMapping .substring(0,varIndex)+"*"+urlMapping .substring(varEndex+1);
 			log.debug(urlMapping);
 			varIndex = urlMapping.indexOf("{");
-			break;
 		}
 		bean.setUrlmapping(urlMapping);
 		bean.setPathRegex(urlPath);
 		bean.setMethod(method);
-		bean.setClassName(method.getDeclaringClass());
+		bean.setServletClass(method.getDeclaringClass());
 		log.debug(urlPath);
 		/**
-		 * 添加方法的参数
+		 * 添加方法的参数,格式为参数类型，参数注解
 		 */
 		if (method.getParameterCount()!=0) {
 			Parameter[] paras = method.getParameters();
 			for(int i = 0;i<paras.length;i++){
-				Object annotation = null;
-				PathVariable path = paras[i].getAnnotation(PathVariable.class);
-				RequestParam param = paras[i].getAnnotation(RequestParam.class);
-				if(path!=null)
-					annotation=path;
-				if(param!=null)
-					annotation=param;
-				bean.addParameter(paras[i],annotation);
-				log.debug(paras[i].toString());
-				if(annotation!=null)
-				log.debug(annotation.toString());
+				ParameterDescription paraDes = null;
+				PathVariable pava = paras[i].getAnnotation(PathVariable.class);
+				if(pava!=null)
+					paraDes=new ParameterDescription(pava.value(),ParameterDescription.ParameterType.PathVariable,pava.defaultValue());
+				RequestParam repa=paras[i].getAnnotation(RequestParam.class);
+				if(repa!=null)
+					paraDes=new ParameterDescription(repa.value(),ParameterDescription.ParameterType.RequestParam,repa.defaultValue());
+				CookieValue	coka=paras[i].getAnnotation(CookieValue.class);
+				if(coka!=null)
+					paraDes=new ParameterDescription(coka.value(),ParameterDescription.ParameterType.CookieValue,coka.defaultValue());
+				SessionAttributes seat=paras[i].getAnnotation(SessionAttributes.class);
+				if(seat!=null)
+					paraDes=new ParameterDescription(seat.value(),ParameterDescription.ParameterType.SessionAttributes,seat.defaultValue());
+				RequestHeader rehe = paras[i].getAnnotation(RequestHeader.class);
+				if(rehe!=null)
+					paraDes=new ParameterDescription(rehe.value(),ParameterDescription.ParameterType.RequestHeader,rehe.defaultValue());
+				RequestBody	rebo=paras[i].getAnnotation(RequestBody.class);
+				if(rebo!=null)
+					paraDes=new ParameterDescription(rebo.value(),ParameterDescription.ParameterType.RequestBody,rebo.defaultValue());
+				bean.addParameter(paras[i],paraDes);
+				log.debug(paras[i].getName());
 			}
+		}
+		/**
+		 * 添加PathVariable的描述
+		 */
+		int Index = urlPath.indexOf("/");
+		int count = 0;
+		while(Index>=0){
+			count ++;
+			int Endex = urlPath.indexOf("/",Index+1);
+			if(Endex<0){
+				String regTmp = urlPath.substring(Index+1);
+				if(regTmp.indexOf("{")>=0&&regTmp.indexOf("}")>=0)
+					bean.addPathVariable(count, regTmp.substring(1,regTmp.length()-1));
+				break;
+			}
+			String regTmp = urlPath.substring(Index+1,Endex);
+			if(regTmp.indexOf("{")>=0&&regTmp.indexOf("}")>=0)
+				bean.addPathVariable(count, regTmp.substring(1,regTmp.length()-1));
+			Index =Endex;
 		}
 		return bean;
 	}

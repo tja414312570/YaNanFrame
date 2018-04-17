@@ -5,7 +5,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import com.YaNan.frame.core.servlet.RequestMethod;
+import com.YaNan.frame.core.servlet.REQUEST_METHOD;
+
 @Target(ElementType.METHOD )
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RequestMapping {
@@ -16,5 +17,5 @@ public @interface RequestMapping {
 	boolean CorssOrgin() default false;//是否需要跨域
 	String[] args() default {};//所需参数
 	String description() default"";//action 描述
-	RequestMethod method() default RequestMethod.METHOD_GET;
+	int method() default REQUEST_METHOD.GET;
 	}

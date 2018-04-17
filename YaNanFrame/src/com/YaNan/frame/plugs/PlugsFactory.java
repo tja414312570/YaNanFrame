@@ -11,11 +11,9 @@ import com.YaNan.frame.Native.PackageScanner;
 import com.YaNan.frame.Native.Path;
 import com.YaNan.frame.Native.PackageScanner.ClassInter;
 import com.YaNan.frame.Native.Path.PathInter;
-import com.YaNan.frame.logging.DefaultLog;
 import com.YaNan.frame.plugs.annotations.Register;
 import com.YaNan.frame.plugs.annotations.Service;
 import com.YaNan.frame.plugs.proxy.PlugsProxy;
-import com.mysql.jdbc.log.Log;
 
 
 public class PlugsFactory {

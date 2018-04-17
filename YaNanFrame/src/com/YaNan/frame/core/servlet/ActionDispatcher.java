@@ -53,92 +53,88 @@ public class ActionDispatcher extends HttpServlet {
 		String urlMapping = CoreDispatcher.getRelativePath(request, true);
 		DefaultServletMapping servletMap = DefaultServletMapping.getInstance();
 		ServletBean bean = servletMap.getServlet(urlMapping);
-		if(bean==null&&(urlMapping.indexOf(".")>=0))
-				bean = servletMap.getServlet(urlMapping.substring(0, urlMapping.indexOf(".")));
 		// 如果ServletBean存在
 		if (bean!=null) {
+			//判断映射是否跨域
 			if(bean.isCorssOrgin()){
 				response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"));
 				response.setHeader("Access-Control-Allow-Credentials","true");
 			}
-			// if action,s nameSpace is not equals URL nameSpace,stop task
-					try {
-						ClassLoader loader = new ClassLoader(bean.getClassName());
-						try {
-						//init setServletContext method
-						if (loader.hasMethod("setServletContext",
-								RequestFacade.class, ResponseFacade.class)) {
-								loader.invokeMethod("setServletContext", request,
-										response);
+			try {
+				ClassLoader loader = new ClassLoader(bean.getServletClass());
+				try {
+				//判断是否含有setServletContext方法
+				if (loader.hasMethod("setServletContext",
+						RequestFacade.class, ResponseFacade.class)) {
+						loader.invokeMethod("setServletContext", request,
+								response);
+				}
+				//判断是否含有doOther方法
+				if (loader.hasMethod("doOther",
+						ClassLoader.class)) 
+					loader.invokeMethod("doOther", loader);
+				// 非表单处理
+				Enumeration<String> parameters = request
+						.getParameterNames();
+				while (parameters.hasMoreElements()) {
+					String element = parameters.nextElement();
+					String value = request.getParameter(element);
+					if(!valuation(loader, element, value,response))return;
+				}
+				// 表单处理
+				if(loader.hasMethod("MultiFormSupport",ClassLoader.class,ServletBean.class)){
+					loader.invokeMethod("MultiFormSupport",loader,
+							bean);
+				}
+				//字段验证
+				if(bean.getArgs().length!=0){
+					for(String fieldstr : bean.getArgs()){
+						int splInx = fieldstr.indexOf(":");
+						String filedStr = splInx>0?fieldstr.substring(0, splInx):fieldstr;
+						Field field=getField(loader, filedStr);
+						if(field==null){
+							log.error(new ServletException("Action [ "+urlMapping+" ] error,The parameter [ "+filedStr+" ] that needs to be validated does not exist! at class : "+bean.getServletClass().getName()));
+							throw new ServletException("Action [ "+urlMapping+" ] error,The parameter [ "+filedStr+" ] that needs to be validated does not exist! at class : "+bean.getServletClass().getName());
 						}
-						//invoke doOther method
-						if (loader.hasMethod("doOther",
-								ClassLoader.class)) 
-							loader.invokeMethod("doOther", loader);
-						//invoke init method
-						if (loader.hasMethod("init")) 
-							loader.invokeMethod("init");
-						// 非表单处理
-						Enumeration<String> parameters = request
-								.getParameterNames();
-						while (parameters.hasMoreElements()) {
-							String element = parameters.nextElement();
-							String value = request.getParameter(element);
-							if(!valuation(loader, element, value,response))return;
+						log.debug(splInx+"");
+						if(splInx>0){
+							String defaultValue = fieldstr.substring(splInx);
+							setField(field,loader,defaultValue,response);
+							continue;
 						}
-						// 表单处理
-						if(loader.hasMethod("MultiFormSupport",ClassLoader.class,ServletBean.class)){
-							loader.invokeMethod("MultiFormSupport",loader,
-									bean);
+						Validate validate = field.getAnnotation(Validate.class);
+						if(validate == null){
+							log.error(new ServletException("Action [ "+urlMapping+" ] error,The parameter [ "+filedStr+"] that needs to be validated but the validate annotations does not exist! at class : "+bean.getServletClass().getName()));
+							//response.sendError(sc, msg);
+							
+							throw new ServletException("Action [ "+urlMapping+" ] error,The parameter [ "+filedStr+"] that needs to be validated but the validate annotations does not exist! at class : "+bean.getServletClass().getName());
 						}
-						//字段验证
-						if(bean.getArgs().length!=0){
-							for(String fieldstr : bean.getArgs()){
-								int splInx = fieldstr.indexOf(":");
-								String filedStr = splInx>0?fieldstr.substring(0, splInx):fieldstr;
-								Field field=getField(loader, filedStr);
-								if(field==null){
-									log.error(new ServletException("Action [ "+urlMapping+" ] error,The parameter [ "+filedStr+" ] that needs to be validated does not exist! at class : "+bean.getClassName().getName()));
-									throw new ServletException("Action [ "+urlMapping+" ] error,The parameter [ "+filedStr+" ] that needs to be validated does not exist! at class : "+bean.getClassName().getName());
-								}
-								log.debug(splInx+"");
-								if(splInx>0){
-									String defaultValue = fieldstr.substring(splInx);
-									setField(field,loader,defaultValue,response);
-									continue;
-								}
-								Validate validate = field.getAnnotation(Validate.class);
-								if(validate == null){
-									log.error(new ServletException("Action [ "+urlMapping+" ] error,The parameter [ "+filedStr+"] that needs to be validated but the validate annotations does not exist! at class : "+bean.getClassName().getName()));
-									//response.sendError(sc, msg);
-									
-									throw new ServletException("Action [ "+urlMapping+" ] error,The parameter [ "+filedStr+"] that needs to be validated but the validate annotations does not exist! at class : "+bean.getClassName().getName());
-								}
-								Object value = loader.getFieldValue(field);
-								if(value==null){
-									if(validate.isNull().equals(""))
-										valuationFailed(validate, "Action [ "+urlMapping+" ] error,The parameter [ "+filedStr+" ] that needs to be validated but the parameter is null! at class : "+bean.getClassName().getName(), response);
-									else
-										valuationFailed(validate,validate.isNull(), response);
-									return;
-								}else {
-									if(!field.getType().equals(String.class)&&!valuationValue(validate, value, response))return;
-								}
-							}
+						Object value = loader.getFieldValue(field);
+						if(value==null){
+							if(validate.isNull().equals(""))
+								valuationFailed(validate, "Action [ "+urlMapping+" ] error,The parameter [ "+filedStr+" ] that needs to be validated but the parameter is null! at class : "+bean.getServletClass().getName(), response);
+							else
+								valuationFailed(validate,validate.isNull(), response);
+							return;
+						}else {
+							if(!field.getType().equals(String.class)&&!valuationValue(validate, value, response))return;
 						}
-						this.invoke(bean, loader, session,request, response);
-						} catch (Exception e) {
-							log.error("Action error at \"" + urlMapping+"\"",e);
-							response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,"Action error at \"" + urlMapping+"\" , Cause By :"+e.getCause());
-							e.printStackTrace();
-							return ;
-						}
-					} catch (Exception e) {
-						log.error("Action error at \"" + urlMapping+"\"",e);
-						response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,"Action error at \"" + urlMapping+"\" , Cause By :"+e.getCause());
-						e.printStackTrace();
-						return ;
 					}
+				}
+				
+				this.invoke(bean, loader, session,request, response);
+				} catch (Exception e) {
+					log.error("Action error at \"" + urlMapping+"\"",e);
+					response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,"Action error at \"" + urlMapping+"\" , Cause By :"+e.getCause());
+					e.printStackTrace();
+					return ;
+				}
+			} catch (Exception e) {
+				log.error("Action error at \"" + urlMapping+"\"",e);
+				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,"Action error at \"" + urlMapping+"\" , Cause By :"+e.getCause());
+				e.printStackTrace();
+				return ;
+			}
 		} else {
 			Exception exception = new ServletException("Could not find action \"" + urlMapping+"\"");
 			log.error(exception);
@@ -162,18 +158,20 @@ public class ActionDispatcher extends HttpServlet {
 	 * @throws IllegalAccessException
 	 * @throws IllegalArgumentException
 	 * @throws InvocationTargetException
+	 * @throws IOException 
+	 * @throws ServletException 
 	 */
 	private void invoke(ServletBean bean, ClassLoader loader,
-			HttpSession session,HttpServletRequest request , HttpServletResponse response) throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-			String callResult = null;
-				if (bean.hasOutputStream()) {
-					loader.invokeMethod(bean.getMethod().getName());
-				} else {
-					Object callBack = loader.invokeMethod(bean.getMethod().getName());
-					callResult = callBack == null ? "null" : callBack
-							.toString();
-					this.response(bean, callResult,request, response,loader);
-				}
+			HttpSession session,HttpServletRequest request , HttpServletResponse response) throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException, ServletException {
+		String callResult = null;
+		if (bean.hasOutputStream()) {
+			loader.invokeMethod(bean.getMethod().getName());
+		} else {
+			Object callBack = loader.invokeMethod(bean.getMethod().getName());
+			callResult = callBack == null ? "null" : callBack
+					.toString();
+			this.response(bean, callResult,request, response,loader);
+		}
 	}
 
 	/**
@@ -278,10 +276,11 @@ public class ActionDispatcher extends HttpServlet {
 	 * if(bean.hasResult()&&bean.hasResultName(callResult)){
 	 * response.sendRedirect(bean.getResult(callResult)); return; }else{
 	 * out.write(callResult); return; }
+	 * @throws IOException 
+	 * @throws ServletException 
 	 */
 	private void response(ServletBean bean, String callResult,HttpServletRequest request,
-			HttpServletResponse response,ClassLoader loader) {
-		try {	
+			HttpServletResponse response,ClassLoader loader) throws IOException, ServletException {
 			if (!bean.hasOutputStream())
 				if (bean.hasResult() && bean.hasResultName(callResult)) {
 					ServletResult result= bean.getResult(callResult);
@@ -315,15 +314,7 @@ public class ActionDispatcher extends HttpServlet {
 						break;
 					}
 				}
-			//destroy
-			if (loader!=null&&loader.hasMethod("destroy"))
-					loader.invokeMethod("destroy");
-		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
-				| InvocationTargetException | ServletException | IOException e) {
-			e.printStackTrace();
-		}finally{
-			loader=null;
-			System.gc();
-		}
+			bean = null;
+			loader = null;
 	}
 }

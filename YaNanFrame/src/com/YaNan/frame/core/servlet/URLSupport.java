@@ -53,9 +53,9 @@ public class URLSupport{
 		if(cUrl==null){
 			cUrl= request.getRequestURL().toString();
 			int port = request.getServerPort();
-			if(port==80)
+			if(port==80&&cUrl.indexOf(":80")>=0)
 				cUrl = new StringBuilder(cUrl.substring(0,cUrl.indexOf(":80"))).append(cUrl.indexOf(":80")+3).toString();
-			if(port==443)
+			if(port==443&&cUrl.indexOf(":443")>=0)
 				cUrl = new StringBuilder(cUrl.substring(0,cUrl.indexOf(":443"))).append(cUrl.indexOf(":443")+4).toString();
 			ResourceCache.putResource(cUrl,request.getRequestURL().toString(),request.getServerPort()+"");
 		}

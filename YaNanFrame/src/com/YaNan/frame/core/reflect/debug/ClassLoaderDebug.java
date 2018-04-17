@@ -1,8 +1,11 @@
 package com.YaNan.frame.core.reflect.debug;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 import com.YaNan.frame.core.reflect.ClassLoader;
+import com.YaNan.frame.core.reflect.cache.CacheContainer;
+import com.YaNan.frame.core.reflect.cache.ClassInfoCache;
 
 public class ClassLoaderDebug {
 	public static void main(String[] args) throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
@@ -18,52 +21,28 @@ public class ClassLoaderDebug {
 		long t3s = System.currentTimeMillis();
 		for(int i =0;i<100000000;i++)
 			Math.add(i,10);
-		System.out.println("excute times:"+(System.currentTimeMillis()-t3s));
+		System.out.println("native excute times:"+(System.currentTimeMillis()-t3s));
 		new ClassLoader(Math.class);
+		Math math = new Math();
+		ClassLoader loader = new ClassLoader(Math.class);
+		Class<?>[] clss = new Class<?>[]{ int.class,int.class};
+		ClassInfoCache cache = CacheContainer.getClassCache(Math.class);
 		long t4s = System.currentTimeMillis();
-		 ClassLoader loader = new ClassLoader(Math.class);
 		for(int i =0;i<100000000;i++){
-			loader.getMethod("add", int.class,int.class);
+			loader.invokeMethod(math,"add",clss ,i,10);
 		}
-		System.out.println("get method times:"+(System.currentTimeMillis()-t4s));
+		System.out.println("class loader invoke:"+(System.currentTimeMillis()-t4s));
+		System.out.println("class loader QPS:"+100000000/(System.currentTimeMillis()-t4s));
+		//获取对象
 		
-		
+		//获取方法
+		Method method = loader.getMethod("add", int.class,int.class);
 		t4s = System.currentTimeMillis();
 		for(int i =0;i<100000000;i++){
-			ClassLoader.createFieldGetMethod("abc");
+			method.invoke(math, i,10);
 		}
-		System.out.println("create set or get times:"+(System.currentTimeMillis()-t4s));
-
-		t4s = System.currentTimeMillis();
-		for(int i =0;i<100000000;i++){
-			Integer.toString(100);
-		}
-		System.out.println("Integer.value:"+(System.currentTimeMillis()-t4s));
+		System.out.println("reflect invoke:"+(System.currentTimeMillis()-t4s));
 		
-		String str;
-		t4s = System.currentTimeMillis();
-		for(int i =0;i<100000000;i++){
-			str = 100+"";
-		}
-		System.out.println("String ++:"+(System.currentTimeMillis()-t4s));
-		
-		t4s = System.currentTimeMillis();
-		for(int i =0;i<100000000;i++){
-			String.valueOf(100);
-		}
-		System.out.println("String.valueOf:"+(System.currentTimeMillis()-t4s));
-		
-		
-		
-		t4s = System.currentTimeMillis();
-		for(int i =0;i<100000000;i++){
-			loader.invokeMethod("add",i,10);
-//			Method method = ClassInfoCache.getClassInfoCache(Math.class).getMethod("add", parameterTypes);
-//			Object object = method.invoke(null,10,10);
-		}
-		
-		//	
-		System.out.println("excute times:"+(System.currentTimeMillis()-t4s));
 	}
 	public static class Math{
 		String str;

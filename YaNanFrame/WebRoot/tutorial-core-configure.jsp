@@ -53,7 +53,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 		
 	</div>
 
-  <script src="http://www.jq22.com/jquery/jquery-1.10.2.js"></script>
+  <script type="text/javascript" src="js/jquery-2.1.4.min.js" ></script>
   <script type="text/javascript" src="js/app.js" ></script>
     <script type="text/javascript" src="js/jquery.gritter/js/jquery.gritter.js"></script>
 

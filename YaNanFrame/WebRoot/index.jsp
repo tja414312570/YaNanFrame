@@ -26,6 +26,8 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 	<link rel="stylesheet" type="text/css" href="js/jquery.select2/select2.css" />
 	<link rel="stylesheet" type="text/css" href="js/bootstrap.slider/css/slider.css" />
 	<link rel="stylesheet" type="text/css" href="js/intro.js/introjs.css" />
+	<link rel="stylesheet" href="js/highlightjs/default.css">
+	<script src="js/highlightjs/highlight.site.pack.js"></script>
   <!-- Custom styles for this template -->
   <link href="css/style.css" rel="stylesheet" />
 </head>
@@ -81,13 +83,38 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 		              </div>
 		          </div>
 		        </div>
+		        <div class="col-sm-12 col-md-12">
+		          <div class="block-flat">
+		              <div class="header">							
+		                <h3>并发测试</h3>
+		              </div>
+		              <div class="content">
+		                  <p>同样的返回数据，不注入任何参数的get方式</p>
+		                  <p>测试环境 </p>
+		                  <ol>
+		                  	<li>JDK:1.8</li>
+		                  	<li>TOMCAT:8.0</li>
+		                  	<li>OS:High Sirrea</li>
+		                  	<li>Spring MVC:5.0.2</li>
+		                  	<li>YaNan MVC:2.1</li>
+		                  </ol>
+	                 	  <h4><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">测试结果</font></font></h4>
+						  <pre><code class="hljs java" bind-url="codes/comp/S-Y-C.code"  bind-success="hljs.initHighlightingOnLoad();"></code></pre>
+						  
+						  <h4><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">YaNan测试代码</font></font></h4>
+						  <pre><code class="hljs java" bind-url="codes/comp/Y-HELLO.code"  bind-success="hljs.initHighlightingOnLoad();"></code></pre>
+						  <h4><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">SpringMVC测试代码</font></font></h4>
+						  <pre><code class="hljs java" bind-url="codes/comp/S-HELLO.code"  bind-success="hljs.initHighlightingOnLoad();"></code></pre>
+		              </div>
+		          </div>
+		        </div>
 		      </div>
 		  </div>
 		</div> 
 		
 	</div>
 
-  <script src="http://www.jq22.com/jquery/jquery-1.10.2.js"></script>
+  <script type="text/javascript" src="js/jquery-2.1.4.min.js" ></script>
   <script type="text/javascript" src="js/app.js" ></script>
     <script type="text/javascript" src="js/jquery.gritter/js/jquery.gritter.js"></script>
 
