@@ -10,11 +10,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.YaNan.frame.Native.Path;
-import com.YaNan.frame.Native.Path.PathInter;
-import com.YaNan.frame.Native.PathScanner;
-
-import sun.reflect.generics.scope.ClassScope;
+import com.YaNan.frame.path.Path;
+import com.YaNan.frame.path.Path.PathInter;
 
 import java.util.Properties;
 

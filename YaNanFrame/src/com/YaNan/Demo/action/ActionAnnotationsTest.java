@@ -2,10 +2,10 @@ package com.YaNan.Demo.action;
 
 import java.io.IOException;
 
-import com.YaNan.frame.core.servlet.annotations.Action;
-import com.YaNan.frame.core.servlet.annotations.RESPONSE_METHOD;
-import com.YaNan.frame.core.servlet.annotations.Validate;
-import com.YaNan.frame.core.servletSupport.DefaultServlet;
+import com.YaNan.frame.servlets.annotations.Action;
+import com.YaNan.frame.servlets.annotations.RESPONSE_METHOD;
+import com.YaNan.frame.servlets.annotations.Validate;
+import com.YaNan.frame.servlets.servletSupport.DefaultServlet;
 /**
  * 如果需要获取  HttpServletRequest HttpServletRespone等，请继承自各对应Servlet扩展类
  * 对应对象的命名  HttpServletRequest RequestContext，HttpServletResponse ResponseContext ，oken tokenContext

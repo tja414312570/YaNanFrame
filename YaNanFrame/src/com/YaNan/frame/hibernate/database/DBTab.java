@@ -11,15 +11,15 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.YaNan.frame.core.reflect.ClassLoader;
 import com.YaNan.frame.hibernate.database.DBInterface.mySqlInterface;
 import com.YaNan.frame.hibernate.database.annotation.Column;
 import com.YaNan.frame.hibernate.database.annotation.Tab;
 import com.YaNan.frame.hibernate.database.cache.Class2TabMappingCache;
 import com.YaNan.frame.hibernate.database.cache.QueryCache;
 import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugs.PlugsFactory;
-import com.YaNan.frame.stringSupport.StringUtil;
+import com.YaNan.frame.plugin.PlugsFactory;
+import com.YaNan.frame.reflect.ClassLoader;
+import com.YaNan.frame.util.StringUtil;
 import com.mysql.jdbc.Connection;
 import com.mysql.jdbc.PreparedStatement;
 

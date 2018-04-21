@@ -5,7 +5,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugs.PlugsFactory;
+import com.YaNan.frame.plugin.PlugsFactory;
 
 
 /**

@@ -18,8 +18,8 @@ import com.YaNan.frame.RPC.utils.RPCConfigure;
 import com.YaNan.frame.RPC.utils.RPCRequest;
 import com.YaNan.frame.hibernate.WebPath;
 import com.YaNan.frame.hibernate.beanSupport.XMLBean;
-import com.YaNan.frame.core.reflect.ClassLoader;
-import com.YaNan.frame.core.session.Token;
+import com.YaNan.frame.reflect.ClassLoader;
+import com.YaNan.frame.servlets.session.Token;
 
 public class RPCService {
 	private static RPCService manager;

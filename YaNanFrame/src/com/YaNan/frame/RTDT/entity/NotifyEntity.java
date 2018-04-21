@@ -1,6 +1,6 @@
 package com.YaNan.frame.RTDT.entity;
 
-import com.YaNan.frame.core.session.Token;
+import com.YaNan.frame.servlets.session.Token;
 
 public class NotifyEntity {
 	private String name;

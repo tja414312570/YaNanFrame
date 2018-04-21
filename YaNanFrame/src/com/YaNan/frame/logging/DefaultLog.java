@@ -3,7 +3,7 @@ package com.YaNan.frame.logging;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import com.YaNan.frame.plugs.annotations.Register;
+import com.YaNan.frame.plugin.annotations.Register;
 
 @Register
 public class DefaultLog implements Log{

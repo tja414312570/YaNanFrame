@@ -1,6 +1,6 @@
 package com.YaNan.frame.logging;
 
-import com.YaNan.frame.plugs.annotations.Service;
+import com.YaNan.frame.plugin.annotations.Service;
 
 @Service
 public interface Log {

@@ -9,8 +9,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.YaNan.frame.Native.PackageScanner;
-import com.YaNan.frame.Native.PackageScanner.ClassInter;
 import com.YaNan.frame.hibernate.beanSupport.BeanFactory;
 import com.YaNan.frame.hibernate.beanSupport.XMLBean;
 import com.YaNan.frame.hibernate.database.cache.Class2TabMappingCache;
@@ -20,7 +18,9 @@ import com.YaNan.frame.hibernate.database.entity.Tabs;
 import com.YaNan.frame.hibernate.database.exception.DATABASES_EXCEPTION;
 import com.YaNan.frame.hibernate.database.exception.DataBaseException;
 import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugs.PlugsFactory;
+import com.YaNan.frame.path.PackageScanner;
+import com.YaNan.frame.path.PackageScanner.ClassInter;
+import com.YaNan.frame.plugin.PlugsFactory;
 import com.mysql.jdbc.Driver;
 /**
  * v2.0 增加连接池对连接进行管理，重构DBTab和DataBase功能

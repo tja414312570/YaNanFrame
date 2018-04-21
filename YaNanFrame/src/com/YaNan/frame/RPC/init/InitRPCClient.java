@@ -5,7 +5,6 @@ import java.io.IOException;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
-import javax.servlet.annotation.WebListener;
 
 import com.YaNan.frame.RPC.customer.RPCService;
 import com.YaNan.frame.RPC.exception.ServiceInitException;
@@ -13,9 +12,8 @@ import com.YaNan.frame.RPC.exception.ServiceIsRunning;
 import com.YaNan.frame.RPC.exception.customer.ServiceNotInit;
 import com.YaNan.frame.RPC.exception.customer.ServiceNotRunningException;
 import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugs.PlugsFactory;
+import com.YaNan.frame.plugin.PlugsFactory;
 
-@WebListener
 public class InitRPCClient implements ServletContextListener {
 	RPCService manager = RPCService.getManager();
 	Thread thread = null;

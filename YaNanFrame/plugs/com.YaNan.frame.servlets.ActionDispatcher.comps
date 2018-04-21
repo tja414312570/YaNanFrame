@@ -1,0 +1,5 @@
+comps.priority=0
+comps.signlton=true
+comps.attribute=ACTION_STYLE
+comps.register=javax.servlet.Servlet,*
+comps.description=组件描述

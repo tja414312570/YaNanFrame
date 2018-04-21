@@ -14,8 +14,7 @@ import com.YaNan.frame.RPC.exception.customer.ServiceNotInit;
 import com.YaNan.frame.RPC.exception.customer.ServiceNotRegistException;
 import com.YaNan.frame.RPC.exception.customer.ServiceNotRunningException;
 import com.YaNan.frame.RPC.utils.RPCRequest;
-import com.YaNan.frame.core.session.Token;
-import com.google.gson.Gson;
+import com.YaNan.frame.servlets.session.Token;
 
 public class RPCToken {
 	private String serviceName;
@@ -86,7 +85,7 @@ public class RPCToken {
 	public Object request(){
 		if(!this.ready)return null;
 		try {
-			return new Gson().fromJson((String) this.rpcRequest.request(serviceName,RPCTokenDispatcher.class.getName(),this.requestMethod,this.tokenId,this.beanClass),this.beanType);
+			return this.rpcRequest.request(serviceName,RPCTokenDispatcher.class.getName(),this.requestMethod,this.tokenId,this.beanClass);
 		} catch (ServiceClosed | ServiceNoFound | ServiceNoResponse | UnKnowException | InvoketionException
 				| ClassNotFoundException | InstantiationException | IllegalAccessException | ServiceNotRunningException
 				| ServiceNotRegistException | ServiceNotInit | TimeoutException | InterruptedException

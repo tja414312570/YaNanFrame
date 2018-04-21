@@ -10,7 +10,7 @@ import java.util.Map;
 
 import com.YaNan.frame.hibernate.beanSupport.DecodeBean;
 import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugs.PlugsFactory;
+import com.YaNan.frame.plugin.PlugsFactory;
 import com.mysql.jdbc.Connection;
 import com.mysql.jdbc.PreparedStatement;
 
@@ -28,6 +28,7 @@ public class DataBase {
 	private int initialConnections = 2; 
 	private int incrementalConnections = 2;
 	private int maxConnections = 6; 
+	private boolean available=false;
 	private final String SUFFIX = "autoReconnect=true&failOverReadOnly=false";
 	private ConnectionPools connectionPools;
 	private final Log log = PlugsFactory.getPlugsInstance(Log.class,DataBase.class);
@@ -61,7 +62,8 @@ public class DataBase {
 		this.maxConnections = dbConf.getMaxNum();
 	}
 	public void init(){
-		this.connectionPools =ConnectionPools.getConnectionPools(this);
+		if(this.available)
+			this.connectionPools =ConnectionPools.getConnectionPools(this);
 	}
 	public Map<String, DBTab> getTabMapping() {
 		return tabMapping;
@@ -82,10 +84,8 @@ public class DataBase {
 			String sql = "SHOW DATABASES";
 			PreparedStatement ps = (PreparedStatement) connect
 					.prepareStatement(sql);
-			// 鑾峰緱ResultSet
 			ResultSet rs = ps.executeQuery();
 			this.releaseConnection(connect);
-			// 瀵圭粨鏋滆繘琛屽垎鏋愬苟鎻愬彇鏁版嵁
 			while (rs.next()) {
 				dbs.add(rs.getString(1));
 			}
@@ -118,7 +118,8 @@ public class DataBase {
 			String sql = "CREATE DATABASE IF NOT EXISTS " + databaseName+" DEFAULT CHARACTER SET "+dbConfigure.getCharset()+" COLLATE "+dbConfigure.getCollate();
 			PreparedStatement ps = (PreparedStatement) connect
 					.prepareStatement(sql);
-			return ps.execute();
+			this.available =ps.execute();
+			return this.available ;
 		} catch (SQLException | ClassNotFoundException e) {
 			e.printStackTrace();
 			log.error(e);
@@ -253,5 +254,9 @@ public class DataBase {
 				e.printStackTrace();
 			}
 			return null;
+	}
+
+	public boolean isAvailable() {
+		return available;
 	}
 }

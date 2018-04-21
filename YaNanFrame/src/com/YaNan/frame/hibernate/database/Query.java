@@ -11,8 +11,8 @@ import java.util.Map;
 import com.YaNan.frame.hibernate.database.DBInterface.OperateImplement;
 import com.YaNan.frame.hibernate.database.cache.SqlCache;
 import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugs.PlugsFactory;
-import com.YaNan.frame.stringSupport.StringUtil;
+import com.YaNan.frame.plugin.PlugsFactory;
+import com.YaNan.frame.util.StringUtil;
 
 /**
  * 该类用于提供给DATab的query一个查询的SQL语句的生成方法 提过一个构造器，传入一个DBTab型的表对象，应为他需要使用DBTab context

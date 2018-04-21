@@ -33,7 +33,7 @@ import com.YaNan.frame.RPC.utils.RPCServiceInfo;
 import com.YaNan.frame.RPC.utils.RegistResult;
 import com.YaNan.frame.RPC.utils.Response;
 import com.YaNan.frame.RPC.utils.ResponseType;
-import com.YaNan.frame.core.reflect.ClassLoader;
+import com.YaNan.frame.reflect.ClassLoader;
 
 public class RPCCustomerServiceRuntime implements Runnable{
 	private Socket socket;

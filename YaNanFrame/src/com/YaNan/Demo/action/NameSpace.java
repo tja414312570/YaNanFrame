@@ -2,7 +2,7 @@ package com.YaNan.Demo.action;
 
 
 import com.YaNan.Demo.model.Student;
-import com.YaNan.frame.core.servlet.annotations.Action;
+import com.YaNan.frame.servlets.annotations.Action;
 public class NameSpace {
 	
 	private Student student;

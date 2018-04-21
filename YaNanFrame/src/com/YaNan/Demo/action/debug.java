@@ -7,7 +7,7 @@ import javax.servlet.Servlet;
 import org.junit.Test;
 
 import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugs.PlugsFactory;
+import com.YaNan.frame.plugin.PlugsFactory;
 
 public class debug {
 	@Test

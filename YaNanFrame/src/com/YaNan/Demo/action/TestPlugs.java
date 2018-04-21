@@ -1,15 +1,29 @@
 package com.YaNan.Demo.action;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.Writer;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.Locale;
+
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.junit.Test;
 
 import com.YaNan.Demo.model.Student;
-import com.YaNan.frame.core.servlet.annotations.Action;
-import com.YaNan.frame.core.servlet.annotations.PathVariable;
-import com.YaNan.frame.core.servlet.annotations.RequestMapping;
 import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugs.PlugsFactory;
+import com.YaNan.frame.plugin.PlugsFactory;
+import com.YaNan.frame.servlets.ParameterDescription;
+import com.YaNan.frame.servlets.ParameterDescription.ParameterType;
+import com.YaNan.frame.servlets.annotations.Action;
+import com.YaNan.frame.servlets.annotations.PathVariable;
+import com.YaNan.frame.servlets.annotations.RequestMapping;
 
 public class TestPlugs {
 	private Student student;
@@ -41,9 +55,10 @@ public class TestPlugs {
 	public String sayHello(){
 		return "hello";
 	}
-	@RequestMapping("/user/{username}/doc/{filename}")
-	public String say(@PathVariable("filename") String username,@PathVariable("username") String filename){
-		return "hello "+username+",your file is " +filename;
+	@RequestMapping("/user/{username}/doc/{id}")
+	public String say( String username,int id,Writer writer) throws IOException{
+		writer.write("<h1>hello Restful-MVC</h1>");
+		return "hello "+username+",your id is " +id;
 	}
 	@Action(args="student")
 	public String getStudent(){
@@ -56,3 +71,5 @@ public class TestPlugs {
 		this.name = name;
 	}
 }
+
+

@@ -3,11 +3,12 @@
 import com.YaNan.frame.RTDT.entity.ActionEntity;
  import com.YaNan.frame.RTDT.entity.RequestAction;
 import com.YaNan.frame.RTDT.entity.ResponseAction;
-import com.YaNan.frame.core.reflect.ClassLoader;
- import com.YaNan.frame.core.session.Token;
 import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugs.PlugsFactory;
- import java.lang.reflect.Field;
+import com.YaNan.frame.plugin.PlugsFactory;
+import com.YaNan.frame.reflect.ClassLoader;
+import com.YaNan.frame.servlets.session.Token;
+
+import java.lang.reflect.Field;
  import java.lang.reflect.InvocationTargetException;
  
  public class TokenAction implements RTDTActionInterface
@@ -26,7 +27,7 @@ import com.YaNan.frame.plugs.PlugsFactory;
      this.ResponseContext = response;
      Field[] fields = (Field[]) loader.getDeclaredFields().toArray();
      Field[] arrayOfField1; int j = (arrayOfField1 = fields).length; for (int i = 0; i < j; i++) { Field field = arrayOfField1[i];
-       if (field.getAnnotation(com.YaNan.frame.core.session.annotation.TokenObject.class) != null) {
+       if (field.getAnnotation(com.YaNan.frame.servlets.session.annotation.TokenObject.class) != null) {
          Class<?> cls = field.getType();
          String method = ClassLoader.createFieldSetMethod(field);
          if ((loader.hasMethod(method, new Class[] { cls })) && (this.TokenContext.get(cls) != null)) {

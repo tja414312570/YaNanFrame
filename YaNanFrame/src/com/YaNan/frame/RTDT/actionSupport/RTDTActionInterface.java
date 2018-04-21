@@ -2,7 +2,7 @@ package com.YaNan.frame.RTDT.actionSupport;
 
 import com.YaNan.frame.RTDT.entity.RequestAction;
 import com.YaNan.frame.RTDT.entity.ResponseAction;
-import com.YaNan.frame.core.reflect.ClassLoader;
+import com.YaNan.frame.reflect.ClassLoader;
 
 public interface RTDTActionInterface
 {

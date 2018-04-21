@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugs.PlugsFactory;
+import com.YaNan.frame.plugin.PlugsFactory;
 
 
 /**

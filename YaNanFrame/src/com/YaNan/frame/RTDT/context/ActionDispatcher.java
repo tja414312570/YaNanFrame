@@ -1,5 +1,6 @@
 package com.YaNan.frame.RTDT.context;
 
+import com.YaNan.frame.RTDT.WebSocketServer;
 import com.YaNan.frame.RTDT.requestListener;
 import com.YaNan.frame.RTDT.actionSupport.RTDTNotification;
 import com.YaNan.frame.RTDT.entity.ActionEntity;
@@ -8,7 +9,8 @@ import com.YaNan.frame.RTDT.entity.NotifyEntity;
 import com.YaNan.frame.RTDT.entity.RequestAction;
 import com.YaNan.frame.RTDT.entity.ResponseAction;
 import com.YaNan.frame.RTDT.entity.interfacer.ACTION_TYPE;
-import com.YaNan.frame.core.reflect.ClassLoader;
+import com.YaNan.frame.reflect.ClassLoader;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.text.ParseException;
@@ -17,7 +19,7 @@ import java.util.Date;
 import java.util.Iterator;
 
 public class ActionDispatcher {
-	public void doDipatcher(RequestAction request, requestListener client) throws Exception {
+	public void doDipatcher(RequestAction request, WebSocketServer client) throws Exception {
 		ResponseAction responseAction = new ResponseAction();
 		responseAction.setAUID(request.getAUID());
 		responseAction.setType(4280);

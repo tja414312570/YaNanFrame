@@ -1,8 +1,8 @@
 package com.YaNan.Demo.action;
 
-import com.YaNan.frame.core.servlet.annotations.Action;
-import com.YaNan.frame.core.servlet.annotations.ActionResults.Result;
-import com.YaNan.frame.core.servlet.annotations.RESPONSE_METHOD;
+import com.YaNan.frame.servlets.annotations.Action;
+import com.YaNan.frame.servlets.annotations.RESPONSE_METHOD;
+import com.YaNan.frame.servlets.annotations.ActionResults.Result;
 
 /**
  * TokenServlet简单案例

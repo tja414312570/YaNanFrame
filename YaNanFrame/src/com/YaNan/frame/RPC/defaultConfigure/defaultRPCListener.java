@@ -5,7 +5,7 @@ import com.YaNan.frame.RPC.customer.RPCCustomerServiceRuntime;
 import com.YaNan.frame.RPC.customer.RPCService;
 import com.YaNan.frame.RPC.customer.Reconnection;
 import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugs.PlugsFactory;
+import com.YaNan.frame.plugin.PlugsFactory;
 
 public class defaultRPCListener implements RPCListener{
 	private final Log log = PlugsFactory.getPlugsInstance(Log.class, defaultRPCListener.class);

@@ -1,10 +1,10 @@
 package com.YaNan.frame.RTDT.entity;
 
-import com.YaNan.frame.core.session.Token;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
+import com.YaNan.frame.servlets.session.Token;
 
 public class RequestAction {
 	private String action;

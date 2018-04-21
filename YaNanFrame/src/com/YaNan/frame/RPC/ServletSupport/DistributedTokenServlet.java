@@ -7,11 +7,11 @@ import java.util.Collection;
 import com.YaNan.frame.RPC.Implements.RequestType;
 import com.YaNan.frame.RPC.TokenSupport.RPCToken;
 import com.YaNan.frame.RPC.customer.RPCService;
-import com.YaNan.frame.core.reflect.ClassLoader;
-import com.YaNan.frame.core.session.annotation.TokenObject;
-import com.YaNan.frame.core.session.servletSupport.TokenServlet;
 import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugs.PlugsFactory;
+import com.YaNan.frame.plugin.PlugsFactory;
+import com.YaNan.frame.reflect.ClassLoader;
+import com.YaNan.frame.servlets.session.annotation.TokenObject;
+import com.YaNan.frame.servlets.session.servletSupport.TokenServlet;
 /**
  * 
  * 
@@ -39,7 +39,6 @@ public abstract class DistributedTokenServlet extends TokenServlet{
 							int soaType = tokenObj.Type();
 							RPCToken request = RPCService.getRPCToken(TokenContext,serviceName,cls,soaType,RequestType.GET);
 							Object rpcResult = request.request();
-							System.out.println("rpc :"+rpcResult);
 							if(rpcResult==null)
 								continue;
 							TokenContext.set(cls, rpcResult);

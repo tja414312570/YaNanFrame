@@ -8,18 +8,18 @@ import java.util.List;
 
 import com.YaNan.frame.RTDT.RTDT;
 import com.YaNan.frame.RTDT.context.ActionManager;
-import com.YaNan.frame.core.servlet.DefaultServletMapping;
-import com.YaNan.frame.core.servlet.ServletBean;
-import com.YaNan.frame.core.servlet.ServletResult;
-import com.YaNan.frame.core.servlet.annotations.Action;
-import com.YaNan.frame.core.servlet.annotations.Validate;
-import com.YaNan.frame.core.session.Token;
-import com.YaNan.frame.core.session.TokenManager;
 import com.YaNan.frame.hibernate.database.DBColumn;
 import com.YaNan.frame.hibernate.database.DBFactory;
 import com.YaNan.frame.hibernate.database.DBTab;
 import com.YaNan.frame.hibernate.database.DataBase;
 import com.YaNan.frame.hibernate.database.DataBaseConfigure;
+import com.YaNan.frame.servlets.ServletMapping;
+import com.YaNan.frame.servlets.ServletBean;
+import com.YaNan.frame.servlets.ServletResult;
+import com.YaNan.frame.servlets.annotations.Action;
+import com.YaNan.frame.servlets.annotations.Validate;
+import com.YaNan.frame.servlets.session.Token;
+import com.YaNan.frame.servlets.session.TokenManager;
 import com.google.gson.Gson;
 
 
@@ -79,7 +79,7 @@ public class AppContext{
 		return list.size()==0?"{\"code\":4281,\"message\":\"此数据库下无数据表\"}":"{\"code\":4280,\"data\":"+new Gson().toJson(list)+"}";
 	}
 	public ServletBeanModel[] getServletBeanModelList(){
-		DefaultServletMapping defaultServletMapping = DefaultServletMapping.getInstance();
+		ServletMapping defaultServletMapping = ServletMapping.getInstance();
 		Collection<ServletBean> collects = defaultServletMapping.getServletMapping().values();
 		ServletBeanModel[] list = new ServletBeanModel[collects.size()];
 		Iterator<ServletBean> iterator = collects.iterator();

@@ -1,11 +1,11 @@
 package com.YaNan.frame.RTDT.entity;
 
-import com.YaNan.frame.RTDT.requestListener;
+import com.YaNan.frame.RTDT.WebSocketServer;
 import com.YaNan.frame.RTDT.actionSupport.RTDTNotification;
-import com.YaNan.frame.core.session.Token;
+import com.YaNan.frame.servlets.session.Token;
 
 public class Notification {
-	private requestListener client;
+	private WebSocketServer client;
 	private NotifyEntity action;
 	private String name;
 	private boolean bind = true;
@@ -16,7 +16,7 @@ public class Notification {
 	private Token token;
 	private RequestAction requestAction;
 
-	public Notification(requestListener client, NotifyEntity action) {
+	public Notification(WebSocketServer client, NotifyEntity action) {
 		this.client = client;
 		this.action = action;
 		setName(action.getName());
@@ -25,7 +25,7 @@ public class Notification {
 		setToken(action.getToken());
 	}
 
-	public Notification(requestListener client, RequestAction request, NotifyEntity notifyEntity,
+	public Notification(WebSocketServer client, RequestAction request, NotifyEntity notifyEntity,
 			RTDTNotification notifyImp) {
 		this.client = client;
 		this.action = notifyEntity;
@@ -106,7 +106,7 @@ public class Notification {
 		this.mark = mark;
 	}
 
-	public void setClient(requestListener client) {
+	public void setClient(WebSocketServer client) {
 		this.client = client;
 	}
 

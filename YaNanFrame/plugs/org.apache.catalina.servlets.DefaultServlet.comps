@@ -1,5 +1,4 @@
 comps.priority=1
 comps.signlton=true
 comps.attribute=*
-comps.declare=javax.servlet.GenericServlet
 comps.register=javax.servlet.Servlet

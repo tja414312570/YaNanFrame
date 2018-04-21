@@ -1,13 +1,13 @@
 package com.YaNan.frame.RTDT.entity;
 
-import com.YaNan.frame.RTDT.requestListener;
+import com.YaNan.frame.RTDT.WebSocketServer;
 
 public class ResponseAction {
 	private String AUID;
 	private int status;
 	private String data;
 	private int type;
-	private transient requestListener client;
+	private transient WebSocketServer client;
 
 	public String getAUID() {
 		return this.AUID;
@@ -41,11 +41,11 @@ public class ResponseAction {
 		this.type = type;
 	}
 
-	public requestListener getClient() {
+	public WebSocketServer getClient() {
 		return client;
 	}
 
-	public void setClient(requestListener client) {
+	public void setClient(WebSocketServer client) {
 		this.client = client;
 	}
 
