@@ -6,7 +6,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
 import java.util.Date;
 
 import com.YaNan.frame.reflect.cache.CacheContainer;
@@ -53,7 +52,7 @@ public class ClassLoader {
 	 * @param className
 	 * @return
 	 */
-	public static Collection<Field> getFields(String className) {
+	public static Field[] getFields(String className) {
 		try {
 			return CacheContainer.getClassInfoCache(CacheContainer.classForName(className)).getFields();
 		} catch (ClassNotFoundException e) {
@@ -68,7 +67,7 @@ public class ClassLoader {
 	 * @param className
 	 * @return
 	 */
-	public static Collection<Field> getAllFields(String className) {
+	public static Field[] getAllFields(String className) {
 			try {
 				return CacheContainer.getClassInfoCache(CacheContainer.classForName(className)).getDeclaredFields();
 			} catch (ClassNotFoundException e) {
@@ -459,7 +458,7 @@ public class ClassLoader {
 	 * 
 	 * @return
 	 */
-	public Collection<Field> getFields() {
+	public Field[] getFields() {
 		return this.infoCache.getFields();
 	}
 	
@@ -469,7 +468,7 @@ public class ClassLoader {
 	 * 
 	 * @return
 	 */
-	public Collection<Field> getDeclaredFields() {
+	public Field[] getDeclaredFields() {
 		return this.infoCache.getDeclaredFields();
 	}
 
@@ -734,8 +733,7 @@ public class ClassLoader {
 	 * @throws NoSuchMethodException
 	 * @throws SecurityException
 	 */
-	public Collection<Method> getMethods() throws NoSuchMethodException,
-			SecurityException {
+	public Method[] getMethods(){
 		return this.infoCache.getMethods();
 	}
 
@@ -746,8 +744,7 @@ public class ClassLoader {
 	 * @throws NoSuchMethodException
 	 * @throws SecurityException
 	 */
-	public Collection<Method> getDeclaredMethods() throws NoSuchMethodException,
-			SecurityException {
+	public Method[] getDeclaredMethods(){
 		return this.infoCache.getDeclaredMethods();
 	}
 
@@ -774,8 +771,7 @@ public class ClassLoader {
 		return this.infoCache.getMethod(method, parameterType)!=null;
 	}
 
-	public Field getDeclaredField(String field) throws NoSuchFieldException,
-			SecurityException {
+	public Field getDeclaredField(String field){
 		return this.infoCache.getDeclaredField(field);
 	}
 

@@ -11,7 +11,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.YaNan.frame.logging.Log;
 import com.YaNan.frame.plugin.PlugsFactory;
 
 /**
@@ -29,7 +28,6 @@ public class CoreDispatcher extends HttpServlet{
 	 */
 	private static final long serialVersionUID = -1089658849875241044L;
 	// 日志类，用于输出日志
-	private final Log log = PlugsFactory.getPlugsInstance(Log.class, CoreDispatcher.class);
 	protected boolean showServerInfo = true;
 	protected Servlet servlet;
 	
@@ -90,10 +88,7 @@ public class CoreDispatcher extends HttpServlet{
 			if(pointIndex>=0)
 				resourceType = path.substring(pointIndex);
 		}
-		log.debug(path);
-		log.debug(resourceType);
 		Servlet servlet = PlugsFactory.getPlugsInstanceByAttribute(Servlet.class, resourceType);
-		log.debug(servlet.toString());
 		servlet.service(req, resp);
 	    }
 	/**

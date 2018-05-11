@@ -7,18 +7,22 @@ import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.YaNan.frame.plugin.PlugsFactory;                                                                                                                                                                           
+import com.YaNan.frame.logging.DefaultLog;
+import com.YaNan.frame.logging.Log;
+import com.YaNan.frame.plugin.PlugsFactory;
+import com.YaNan.frame.plugin.interfacer.PlugsListener;                                                                                                                                                                           
 
 /**
  * 组件实例处理器，用于对代理对象的处理，采用jdk方式                                                                                                                                                                                                     
  * @author yanan
  *
  */
-public class PlugsHandler  implements InvocationHandler{    
+public class PlugsHandler  implements InvocationHandler,PlugsListener{    
 	private Object proxyObject;
 	private Class<?> proxyClass;
 	private Class<?> interfaceClass;
 	private Map<Method,InvokeHandler> handlerMapping;
+	private static Log log = PlugsFactory.getPlugsInstanceWithDefault(Log.class,DefaultLog.class,PlugsHandler.class);
 	public Object getProxyObject() {
 		return proxyObject;
 	}
@@ -78,7 +82,7 @@ public class PlugsHandler  implements InvocationHandler{
 			if(mh!=null){
 				return handler.error(mh,e);
 			}else
-				e.printStackTrace();
+				log.error(e);
 			return null;
 		}     
     }                                                                                                
@@ -94,5 +98,9 @@ public class PlugsHandler  implements InvocationHandler{
 	}
 	public void setRequestParameter(Object[] args) {
 		this.args = args;
+	}
+	@Override
+	public void excute(PlugsFactory plugsFactory) {
+		log = PlugsFactory.getPlugsInstanceWithDefault(Log.class,DefaultLog.class,PlugsHandler.class);
 	}                                                                                                                                                                                                   
 }                                                                                                                                                                                                         

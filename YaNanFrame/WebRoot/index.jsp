@@ -40,27 +40,27 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 		  <div class="cl-mcont">
 			<div class="stats_bar">
 				<div class="butpro butstyle" data-step="2" data-intro="<strong>Beautiful Elements</strong> <br/> If you are looking for a different UI, this is for you!.">
-					<div class="sub"><h2>Action数量</h2><span class="html" bind-url="getServletNum.do" id="total_clientes">0</span></div>
+					<div class="sub"><h2>Action数量</h2><span class="html" bind-url="DashBoard/ServletNum" id="total_clientes">0</span></div>
 					<div class="stat"><span class="spk1"><canvas style="display: inline-block; width: 74px; height: 16px; vertical-align: top;" width="74" height="16"></canvas></span></div>
 				</div>
 				<div class="butpro butstyle">
-					<div class="sub"><h2>RTDT数量</h2><span bind-url="getRTDTActionNum.do">0</span></div>
+					<div class="sub"><h2>RTDT数量</h2><span bind-url="DashBoard/RTDTActionNum">0</span></div>
 					<div class="stat"><span class="spk3"></span></div>
 				</div>	
 				<div class="butpro butstyle">
-					<div class="sub"><h2>Token数量</h2><span bind-url="getTokenNum.do">0</span></div>
+					<div class="sub"><h2>Token数量</h2><span bind-url="DashBoard/TokenNum">0</span></div>
 					<div class="stat"><span class="up"> 0%</span></div>
 				</div>
 				<div class="butpro butstyle">
-					<div class="sub"><h2>TokenEntity</h2><span bind-url="getTokenFilterNum.do">0</span></div>
+					<div class="sub"><h2>TokenEntity</h2><span bind-url="DashBoard/TokenFilterNum">0</span></div>
 					<div class="stat"><span class="down"> 0%</span></div>
 				</div>	
 				<div class="butpro butstyle">
-					<div class="sub"><h2>数据库</h2><span bind-url="getDataBaseNum.do">0</span></div>
+					<div class="sub"><h2>数据库</h2><span bind-url="DashBoard/DataBaseNum">0</span></div>
 					<div class="stat"><span class="equal"> 0%</span></div>
 				</div>	
 				<div class="butpro butstyle">
-					<div class="sub"><h2>数据表</h2><span bind-url="getDataTablesNum.do"> 0%</span></div>
+					<div class="sub"><h2>数据表</h2><span bind-url="DashBoard/DataTablesNum"> 0%</span></div>
 					<div class="stat"><span class="spk2"></span></div>
 				</div>
 			</div>
@@ -71,7 +71,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 		                <h3>框架说明</h3>
 		              </div>
 		              <div class="content">
-		                  <p>此框架为M-C模式框架，提供持久层和交互层的实现。使用注解方式配置，支持多种交互方式，对象化的数据库层操作，我们的理念为，程序员只关心核心业务逻辑，除此之外，全都交给框架吧。</p>
+		                  <p>PLUGIN M-V-C模式框架，提供持久层和交互层的实现。使用注解方式配置，支持多种交互方式，对象化的数据库层操作，我们的理念为，程序员只关心核心业务逻辑，除此之外，全都交给框架吧。</p>
 		                  <p>此框架包含组件</p>
 		                  <ol>
 		                  	<li>前后台交互组件(servlet)</li>

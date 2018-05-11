@@ -15,7 +15,39 @@ import com.YaNan.frame.servlets.REQUEST_METHOD;
 import com.YaNan.frame.util.StringUtil;
 
 public class PerformanceTest {
+	private static int i;
 	@Test
+	public void testArrayWithMap(){
+		System.out.println(i);
+		int[] str = new int[100000000];
+		Map<Integer,Integer> sm = new HashMap<Integer,Integer>();
+		for(int i = 0;i<str.length;i++){
+			str[i]=i;
+		}
+		long t = System.currentTimeMillis();
+		for(int i = 0;i<str.length;i++){
+			
+		}
+		System.out.println("array :"+(System.currentTimeMillis()-t));
+		t = System.currentTimeMillis();
+		Iterator<Integer> iterator = sm.values().iterator();
+		while(iterator.hasNext()){
+			iterator.next();
+		}
+		System.out.println("map :"+(System.currentTimeMillis()-t));
+		String ss;
+		t = System.currentTimeMillis();
+		for(int i = 0;i<str.length;i++){
+			ss=i+"[]";
+		}
+		System.out.println("str++ :"+(System.currentTimeMillis()-t));
+		t = System.currentTimeMillis();
+		for(int i = 0;i<str.length;i++){
+			ss=new StringBuilder(i).append("[]").toString();
+		}
+		System.out.println("buff :"+(System.currentTimeMillis()-t));
+	}
+//	@Test
 	public void testMatch(){
 		Map<String,Object> map = new LinkedHashMap<String, Object>();
 		for(int i = 0;i<10000;i++)

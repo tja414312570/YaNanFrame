@@ -3,80 +3,86 @@ package com.YaNan.frame.reflect.cache;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 public class ClassInfoCache {
 	private Class<?> cacheClass;
-	private Map<Integer,Method> methods=new HashMap<Integer,Method>();//方法缓存
-	private Map<Integer,Method> declaredMethods=new HashMap<Integer,Method>();//方法缓存
-	private Map<String,Field> fields=new HashMap<String,Field>();//域缓存
-	private Map<String,Field> declaredFields=new HashMap<String,Field>();//域缓存
-	private Map<Integer,Constructor<?>> declaredConstructors = new HashMap<Integer,Constructor<?>>();
-	private Map<Integer,Constructor<?>> constructors = new HashMap<Integer,Constructor<?>>();
-	private Map<Class<?>,Annotation> declaredAnnotations = new HashMap<Class<?>,Annotation>();
-	private Map<Class<?>,Annotation> annotations = new HashMap<Class<?>,Annotation>();
+	private Map<Integer,Method> methodMap=new HashMap<Integer,Method>();//方法缓存
+	private Map<Integer,Method> declaredMethodMap=new HashMap<Integer,Method>();//方法缓存
+	private Map<String,Field> fieldMap=new HashMap<String,Field>();//域缓存
+	private Map<String,Field> declaredFieldMap=new HashMap<String,Field>();//域缓存
+	private Map<Integer,Constructor<?>> declaredConstructorMap = new HashMap<Integer,Constructor<?>>();
+	private Map<Integer,Constructor<?>> constructorMap = new HashMap<Integer,Constructor<?>>();
+	private Map<Class<?>,Annotation> declaredAnnotationMap = new HashMap<Class<?>,Annotation>();
+	private Map<Class<?>,Annotation> annotationMap = new HashMap<Class<?>,Annotation>();
+	private Method[] methods;
+	private Method[] declaredMethods;
+	private Field[] fields;//域缓存
+	private Field[] declaredFields;//域缓存
+	private Constructor<?>[] declaredConstructors;
+	private Constructor<?>[] constructors ;
+	private Annotation[] declaredAnnotations;
+	private Annotation[] annotations;
 	public ClassInfoCache(Class<?> cls){
 		this.setCacheClass(cls);
 		//DeclaredMethod
-		Method[] declaredMethods = cls.getDeclaredMethods();
+		declaredMethods = cls.getDeclaredMethods();
 		for(Method method : declaredMethods)
-			this.declaredMethods.put(hash(method.getName(),method.getParameterTypes()), method);
+			this.declaredMethodMap.put(hash(method.getName(),method.getParameterTypes()), method);
 		//Method
-		Method[] methods = cls.getMethods();
+		methods = cls.getMethods();
 		for(Method method : methods)
-			this.methods.put(hash(method.getName(),method.getParameterTypes()), method);
+			this.methodMap.put(hash(method.getName(),method.getParameterTypes()), method);
 		//DeclaredField
-		Field[] declaredFields = cls.getDeclaredFields();
+		declaredFields = cls.getDeclaredFields();
 		for(Field field : declaredFields)
-			this.declaredFields.put(field.getName(), field);
-		//fields
-		Field[] fields = cls.getFields();
+			this.declaredFieldMap.put(field.getName(), field);
+		//fieldMap
+		fields = cls.getFields();
 		for(Field field : fields)
-			this.fields.put(field.getName(), field);
+			this.fieldMap.put(field.getName(), field);
 		//declaredConstructor
-		Constructor<?>[] declaredConstructors = cls.getDeclaredConstructors();
+		declaredConstructors = cls.getDeclaredConstructors();
 		for(Constructor<?> constructor : declaredConstructors)
-			this.declaredConstructors.put(hash(constructor.getParameterTypes()), constructor);
+			this.declaredConstructorMap.put(hash(constructor.getParameterTypes()), constructor);
 		//constructor
-		Constructor<?>[] constructors = cls.getConstructors();
+		constructors = cls.getConstructors();
 		for(Constructor<?> constructor : constructors)
-			this.constructors.put(hash(constructor.getParameterTypes()), constructor);
-		//declaredAnnotations
-		Annotation[] declaredAnnotations= cls.getDeclaredAnnotations();
+			this.constructorMap.put(hash(constructor.getParameterTypes()), constructor);
+		//declaredAnnotationMap
+		declaredAnnotations= cls.getDeclaredAnnotations();
 		for(Annotation annotation : declaredAnnotations)
-			this.declaredAnnotations.put(annotation.getClass(), annotation);
-		//annotations
-		Annotation[] annotations=cls.getAnnotations();
+			this.declaredAnnotationMap.put(annotation.getClass(), annotation);
+		//annotationMap
+		annotations=cls.getAnnotations();
 		for(Annotation annotation : annotations)
-			this.annotations.put(annotation.getClass(), annotation);
+			this.annotationMap.put(annotation.getClass(), annotation);
 	}
 	public Annotation getAnnotation(Class<?> cls){
-		return this.annotations.get(cls);
+		return this.annotationMap.get(cls);
 	}
 	public Annotation getDeclaredAnnotation(Class<?> cls){
-		return this.declaredAnnotations.get(cls);
+		return this.declaredAnnotationMap.get(cls);
 	}
 	public Method getMethod(String name,Class<?>...parameterTypes){
-		return this.methods.get(hash(name,parameterTypes));
+		return this.methodMap.get(hash(name,parameterTypes));
 	}
 	public Method getDeclaredMethod(String name,Class<?>...parameterTypes){
-		return this.declaredMethods.get(hash(name,parameterTypes));
+		return this.declaredMethodMap.get(hash(name,parameterTypes));
 	}
 	public Field getField(String fieldName){
-		return this.fields.get(fieldName);
+		return this.fieldMap.get(fieldName);
 	}
 	public Field getDeclaredField(String fieldName){
-		return this.declaredFields.get(fieldName);
+		return this.declaredFieldMap.get(fieldName);
 	}
 	public Constructor<?> getConstructor(Class<?>...parameterTypes){
-		return this.constructors.get(hash(parameterTypes));
+		return this.constructorMap.get(hash(parameterTypes));
 	}
 	public Constructor<?> getDedlaredConstructor(Class<?>...parameterTypes){
-		return this.declaredConstructors.get(hash(parameterTypes));
+		return this.declaredConstructorMap.get(hash(parameterTypes));
 	}
 	
 	public static int hash(Class<?>...clzz){
@@ -103,16 +109,16 @@ public class ClassInfoCache {
 	public void setCacheClass(Class<?> cacheClass) {
 		this.cacheClass = cacheClass;
 	}
-	public Collection<Method> getMethods() {
-		return this.methods.values();
+	public Method[] getMethods() {
+		return this.methods;
 	}
-	public Collection<Method> getDeclaredMethods() {
-		return this.declaredMethods.values();
+	public Method[] getDeclaredMethods() {
+		return this.declaredMethods;
 	}
-	public Collection<Field> getFields() {
-		return this.fields.values();
+	public Field[] getFields() {
+		return this.fields;
 	}
-	public Collection<Field> getDeclaredFields() {
-		return this.declaredFields.values();
+	public Field[] getDeclaredFields() {
+		return this.declaredFields;
 	}
 }

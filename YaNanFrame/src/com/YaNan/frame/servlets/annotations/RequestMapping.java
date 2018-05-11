@@ -5,9 +5,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import com.YaNan.frame.servlet.view.ViewSolver;
 import com.YaNan.frame.servlets.REQUEST_METHOD;
 
-@Target(ElementType.METHOD )
+@Target({ElementType.METHOD,ElementType.TYPE} )
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RequestMapping {
 	boolean output() default false;//输出流
@@ -19,4 +20,5 @@ public @interface RequestMapping {
 	String description() default"";//action 描述
 	int[] method() default REQUEST_METHOD.GET;
 	String attribute() default "*";//用于扩展
+	Class<? extends ViewSolver> viewSolver() default ViewSolver.class;
 	}

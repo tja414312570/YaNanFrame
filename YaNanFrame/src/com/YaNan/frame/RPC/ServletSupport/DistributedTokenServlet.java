@@ -2,7 +2,6 @@ package com.YaNan.frame.RPC.ServletSupport;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Collection;
 
 import com.YaNan.frame.RPC.Implements.RequestType;
 import com.YaNan.frame.RPC.TokenSupport.RPCToken;
@@ -24,7 +23,7 @@ import com.YaNan.frame.servlets.session.servletSupport.TokenServlet;
 public abstract class DistributedTokenServlet extends TokenServlet{
 	private final Log log = PlugsFactory.getPlugsInstance(Log.class, DistributedTokenServlet.class);
 	public void doOther(ClassLoader loader){
-		Collection<Field> fields = loader.getDeclaredFields();
+		Field[] fields = loader.getDeclaredFields();
 		for(Field field :fields){
 			if(field.getAnnotation(TokenObject.class)!=null){
 				Class<?> cls = field.getType();

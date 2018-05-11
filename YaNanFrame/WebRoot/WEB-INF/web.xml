@@ -776,10 +776,10 @@ standard deployment descriptor.
   <distributable/>
   <error-page>
     <error-code>404</error-code>
-    <location>/pages-404.html</location>
+    <location>/html/pages-404.html</location>
   </error-page>
   <error-page>
     <error-code>500</error-code>
-    <location>/pages-500.html</location>
+    <location>/html/pages-500.html</location>
   </error-page>
 </web-app>

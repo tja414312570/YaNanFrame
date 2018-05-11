@@ -80,6 +80,12 @@ public class Plug {
 	public List<RegisterDescription> getRegisterDescriptionList() {
 		return this.registerList;
 	}
+	public RegisterDescription getRegisterDescriptionByInsClass(Class<?> insClass) {
+		for(RegisterDescription rd :registerList)
+			if(rd.getRegisterClass().equals(insClass))
+				return rd;
+		return null;
+	}
 	
 	
 }

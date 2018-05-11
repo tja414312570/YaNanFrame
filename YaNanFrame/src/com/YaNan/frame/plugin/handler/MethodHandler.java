@@ -79,7 +79,13 @@ public class MethodHandler {
 	public void setFootResult(Object footResult) {
 		this.footResult = footResult;
 	}
-
+	/**
+	 * 重新执行目标方法，可以传入之前的参数或新的参数
+	 * @param parmeters
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 * @throws InvocationTargetException
+	 */
 	public void chain(Object... parmeters) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		this.headerResult = this.method.invoke(this.plugsProxy.getProxyObject(), parmeters);
 	}

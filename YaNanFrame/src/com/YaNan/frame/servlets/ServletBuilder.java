@@ -104,7 +104,6 @@ public class ServletBuilder{
 				for(Method method :methods){
 						List<ServletDispatcher> sds = PlugsFactory.getPlugsInstanceList(ServletDispatcher.class);
 						for(ServletDispatcher sd : sds){
-							method.getAnnotations();
 							Class<? extends Annotation>[] annosType = sd.getDispatcherAnnotation();
 							for(Class<?  extends Annotation> annoType :annosType){
 								method.getAnnotation(annoType);

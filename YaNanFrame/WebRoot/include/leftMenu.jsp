@@ -18,22 +18,22 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 				</div>
 				<ul class="cl-vnavigation">
 					<li >
-						<a href="index.jsp"><i class="fa fa-home"></i><span>首页</span></a>
+						<a href="."><i class="fa fa-home"></i><span>首页</span></a>
 					</li>
 					<!--<li>
 						<a href="#"><i class="fa  fa-user"></i><span>账号管理</span></a>
 						<ul class="sub-menu">
 							<li>
-								<a href="account-my.jsp">个人信息</a>
+								<a href="account-my">个人信息</a>
 							</li>
 							<li>
-								<a href="account.jsp">账号信息</a>
+								<a href="account">账号信息</a>
 							</li>
 							<li>
-								<a href="account-manager.jsp">账号管理</a>
+								<a href="account-manager">账号管理</a>
 							</li>
 							<li>
-								<a href="account-devices.jsp">账号下设备管理</a>
+								<a href="account-devices">账号下设备管理</a>
 							</li>
 						</ul>
 					</li>-->
@@ -41,16 +41,16 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 						<a href="#"><i class="fa  fa-user"></i><span>Demo</span></a>
 						<ul class="sub-menu">
 							<li>
-								<a href="demo-servlet.jsp">查看Servlet</a>
+								<a href="demo-servlet">查看Servlet</a>
 							</li>
 							<li>
-								<a href="demo-database.jsp">查看数据库</a>
+								<a href="demo-database">查看数据库</a>
 							</li>
 							<li>
-								<a href="demo-tabels.jsp">查看数据表</a>
+								<a href="demo-tabels">查看数据表</a>
 							</li>
 							<li>
-								<a href="demo-RTDT.jsp">RTDT测试</a>
+								<a href="demo-RTDT">RTDT测试</a>
 							</li>
 						</ul>
 					</li>
@@ -58,13 +58,13 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 						<a href="#"><i class="fa  fa-user"></i><span>开发文档</span></a>
 						<ul class="sub-menu">
 							<li>
-								<a href="tutorial-core-configure.jsp">核心配置</a>
+								<a href="tutorial-core-configure">核心配置</a>
 							</li>
 							<li>
-								<a href="tutorial-framework.jsp">框架结构</a>
+								<a href="tutorial-framework">框架结构</a>
 							</li>
 							<li>
-								<a href="tutorial-servlet.jsp">servlet</a>
+								<a href="tutorial-servlet">servlet</a>
 							</li>
 						</ul>
 					</li>
@@ -72,18 +72,18 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 						<a href="#"><i class="fa  fa-user"></i><span>Hibernate</span></a>
 						<ul class="sub-menu">
 							<li>
-								<a href="tutorial-hibernate-noun.jsp">名词解释</a>
+								<a href="tutorial-hibernate-noun">名词解释</a>
 							</li>
 							<li>
-								<a href="tutorial-hibernate.jsp">数据库配置</a>
+								<a href="tutorial-hibernate">数据库配置</a>
 							</li>
 							<li>
-								<a href="tutorial-hibernate-use.jsp">数据库的使用</a>
+								<a href="tutorial-hibernate-use">数据库的使用</a>
 							</li>
 						</ul>
 					</li>
 					<li>
-						<a href="consume.jsp"><i class="fa fa-credit-card"></i><span>消费管理</span></a>
+						<a href="consume"><i class="fa fa-credit-card"></i><span>消费管理</span></a>
 					</li>
 				</ul>
 			</div>
@@ -101,26 +101,10 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 			$(this).removeClass("active");
 		});
 		var menu = location.pathname.substr(location.pathname.lastIndexOf("/")+1);
+		if(menu.trim()=="")menu=".";
 		$(".cl-vnavigation a[href='"+menu+"']").parent().addClass("active");
 		if($(".cl-vnavigation a[href='"+menu+"']").parents(".sub-menu").length!=0){
 			$(".cl-vnavigation a[href='"+menu+"']").parents(".sub-menu").css("display","block");
 		}
-	//加载账号数据
-		$.ajax({
-			type:"get",
-			url:"getMyInfo.do",
-			async:true,
-			dataType:"json",
-			success:function(data){
-				if(data.code==4280){
-					$(".account").html(data.data.account);
-					$(".status").html(data.data.status==4280?"正常":"其它状态");
-					$(".roles").html(data.data.roles);
-				}
-			},
-			error:function(err){
-				console.log(err);
-			}
-		});
 	};
 	</script>

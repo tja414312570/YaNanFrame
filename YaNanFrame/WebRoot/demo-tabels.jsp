@@ -153,6 +153,12 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 		 </div>
 	</div>
   <script src="js/jquery-2.1.4.min.js"></script>
+  <script>
+  	$("#pcont").css("max-width",($(window).width()-$('.menu-space .content').width())+"px")
+  	$(window).resize(function(e){
+  		$("#pcont").css("max-width",($(window).width()-$('.menu-space .content').width())+"px");
+  	});
+  </script>
   <script type="text/javascript" src="js/jquery.gritter/js/jquery.gritter.js"></script>
   <script type="text/javascript" src="js/jquery.nanoscroller/jquery.nanoscroller.js"></script>
   <script type="text/javascript" src="js/behaviour/general.js"></script>
@@ -175,7 +181,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
     		function getDatabase(){
 	       	 $.ajax({
 		        	type:"get",
-		        	url:"getDataBase.do",
+		        	url:"DashBoard/DataBase",
 		        	async:true,
 		        	dataType:"json",
 		        	success:function(data){
@@ -194,7 +200,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
     		function getDataTabels(databaseName){
 	       	 $.ajax({
 		        	type:"get",
-		        	url:"getDataTabels.do?databaseName="+databaseName,
+		        	url:"DashBoard/DataBase/"+databaseName,
 		        	async:true,
 		        	dataType:"json",
 		        	success:function(data){
@@ -269,10 +275,8 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 	    					$(".deviceStatus").html(getDeviceStatus(data[0].deviceStatus))
 	    				//	if(data[0].deviceStatus==4282)
 	    						$(".test-btn").removeAttr("disabled");
-	    					console.log("http://39.104.96.185/YLROBOT/app/?deviceName="+data[0].deviceName)
 	    					$(".qrcode").html("");
 	    					$(".qrcode").each(function(index){
-	    						console.log("http://39.104.96.185/YLROBOT/app/?deviceName="+data[0].deviceName+"&passageway="+(index+1));
 	    						$(this).qrcode({
 								width: 120, //宽度
 								height:120, //高度

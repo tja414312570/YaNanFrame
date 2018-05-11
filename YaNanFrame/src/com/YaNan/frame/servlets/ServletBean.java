@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import com.YaNan.frame.servlet.view.ViewSolver;
 public class ServletBean {
 	/**
 	 * 返回类型
@@ -75,6 +77,10 @@ public class ServletBean {
 	 * @return
 	 */
 	private String pathRegex;
+	/**
+	 * 视图解析器类
+	 */
+	private Class<? extends ViewSolver> viewSolver;
 	public Class<?> getServletClass() {
 		return this.className;
 	}
@@ -195,5 +201,11 @@ public class ServletBean {
 	}
 	public void setParameter(Map<Parameter,ParameterDescription> parameter) {
 		this.parameter = parameter;
+	}
+	public Class<? extends ViewSolver> getViewSolver() {
+		return viewSolver;
+	}
+	public void setViewSolver(Class<? extends ViewSolver> viewSolver) {
+		this.viewSolver = viewSolver;
 	}
 }

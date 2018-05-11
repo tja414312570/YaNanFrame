@@ -10,6 +10,7 @@
 	<classpathentry kind="lib" path="WebRoot/WEB-INF/lib/cglib-3.2.6.jar"/>
 	<classpathentry kind="lib" path="WebRoot/WEB-INF/lib/commons-fileupload-1.2.2.jar"/>
 	<classpathentry kind="lib" path="WebRoot/WEB-INF/lib/websocket-api.jar"/>
+	<classpathentry kind="lib" path="WebRoot/WEB-INF/lib/gson-2.5.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="con" path="com.genuitec.runtime.library/com.genuitec.jstl_1.2.2">
 		<attributes>

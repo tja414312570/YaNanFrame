@@ -5,13 +5,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import com.YaNan.frame.plugin.annotations.Register;
+import com.YaNan.frame.plugin.handler.PlugsHandler;
 import com.YaNan.frame.reflect.ClassLoader;
 import com.YaNan.frame.reflect.cache.CacheContainer;
 
@@ -22,7 +22,7 @@ import com.YaNan.frame.reflect.cache.CacheContainer;
  *
  */
 public class RegisterDescription {
-	private static Map<Integer,Object> instanceContainer = new HashMap<Integer,Object>();
+	private Map<Integer,Object> proxyContainer = new HashMap<Integer,Object>();
 	/**
 	 * 组件类
 	 */
@@ -181,25 +181,37 @@ public class RegisterDescription {
 	public void setSignlton(boolean signton) {
 		this.signlton = signton;
 	}
-
-	public Object getRegisterInstance(Object... args) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		Object object;
+	
+	@SuppressWarnings("unchecked")
+	public <T> T getRegisterInstance(Class<T> plug,Object... args) throws Exception {
+		Object proxy;
 		if(args.length==0){
 			if(this.signlton){
-				object = instanceContainer.get(hash(this.clzz,args));
-				if(object==null){
-					object = this.clzz.newInstance();
-					instanceContainer.put(hash(this.clzz,args), object);
+				proxy = proxyContainer.get(hash(plug,args));
+				if(proxy==null){
+					Object obj = this.clzz.newInstance();
+					proxy = PlugsHandler.newMapperProxy(plug,obj);
+					proxyContainer.put(hash(plug,args), proxy);
 				}
 			}else{
-				object = this.clzz.newInstance();
+				Object obj = this.clzz.newInstance();
+				proxy = PlugsHandler.newMapperProxy(plug,obj);
 			}
 		}else{
 			Class<?>[] parameterTypes = com.YaNan.frame.reflect.ClassLoader.getParameterTypes(args);
 			Constructor<?> constructor =CacheContainer.getClassInfoCache(this.clzz).getConstructor(parameterTypes);//this.cl.getConstructor(parameterTypes);
-			object = constructor.newInstance(args);
+			if(constructor==null){
+				StringBuilder sb = new StringBuilder();
+				for(int i = 0;i<parameterTypes.length;i++){
+					sb.append(parameterTypes[i].getName()).append(i<parameterTypes.length-1?",":"");
+				}
+				throw new Exception("constructor "+this.clzz.getSimpleName()+"("+sb.toString()+") is not exist at "+this.clzz.getName());
+			}
+				
+			Object obj = constructor.newInstance(args);
+			proxy = PlugsHandler.newMapperProxy(plug,obj);
 		}
-		return object;
+		return (T) proxy;
 	}
 	public static int hash(Class<?> clzz,Object...objects){
 		return clzz.hashCode()+hash(objects);

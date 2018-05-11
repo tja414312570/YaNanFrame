@@ -37,7 +37,10 @@ public class ActionDispatcher extends HttpServlet implements ServletDispatcher,S
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 51985794581364731L;
+	private static final long serialVersionUID = 1L;
+	/**
+	 * 
+	 */
 	// 日志类，用于输出日志
 	private final Log log = PlugsFactory.getPlugsInstance(Log.class, ActionDispatcher.class);
 	protected boolean showServerInfo = true;
@@ -123,7 +126,6 @@ public class ActionDispatcher extends HttpServlet implements ServletDispatcher,S
 						}
 					}
 				}
-				
 				this.invoke(bean, loader, session,request, response);
 				} catch (Exception e) {
 					log.error("Action error at \"" + urlMapping+"\"",e);
@@ -202,7 +204,7 @@ public class ActionDispatcher extends HttpServlet implements ServletDispatcher,S
 						return setField(f,loader,value,response);
 					}
 				}
-			} catch (NoSuchFieldException | SecurityException e) {
+			} catch (SecurityException e) {
 				e.printStackTrace();
 			}
 			return true;
@@ -219,8 +221,6 @@ public class ActionDispatcher extends HttpServlet implements ServletDispatcher,S
 					return f;
 				}
 			}
-		} catch (NoSuchFieldException e) {
-			e.printStackTrace();
 		} catch (SecurityException e) {
 			e.printStackTrace();
 		}

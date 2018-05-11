@@ -78,6 +78,12 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 	</div>
 
   <script src="js/jquery-2.1.4.min.js"></script>
+  <script>
+  	$("#pcont").css("max-width",($(window).width()-$('.menu-space .content').width())+"px")
+  	$(window).resize(function(e){
+  		$("#pcont").css("max-width",($(window).width()-$('.menu-space .content').width())+"px");
+  	});
+  </script>
     <script type="text/javascript" src="js/jquery.gritter/js/jquery.gritter.js"></script>
   <script type="text/javascript" src="js/jquery.nanoscroller/jquery.nanoscroller.js"></script>
 	<script type="text/javascript" src="js/behaviour/general.js"></script>

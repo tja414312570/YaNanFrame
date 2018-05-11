@@ -1,19 +1,13 @@
 import java.io.BufferedReader;  
 import java.io.IOException;  
 import java.io.InputStreamReader;  
-import java.io.PrintWriter;   
 import java.net.HttpURLConnection;   
 import java.net.URL;   
 import java.net.URLConnection;  
-import java.util.Map;   
-import java.util.Random;  
-import java.util.TreeMap;  
 import java.util.concurrent.ConcurrentHashMap;  
 import java.util.concurrent.CountDownLatch;  
 import java.util.concurrent.ExecutorService;   
 import java.util.concurrent.Executors;   
-import java.util.concurrent.ThreadPoolExecutor;  
-  
   
 public class MultiThreadProxyHubApiTest {  
     static int count = 0;  
@@ -131,11 +125,11 @@ public class MultiThreadProxyHubApiTest {
         for(int j=500; j<600; j+= 100){  
             for(int i=10; i<100; i+=10){  
                 //要测试的URL  
-                String url= "http://localhost:8080/YaNanFrame/sayHello";   
-                new MultiThreadProxyHubApiTest(i, j, url, "","YaNan").run();  
-                url= "http://localhost:8080/SpringMVCH/hello";   
+//                String url= "http://localhost:8080/YaNanFrame/sayHello";   
+//                new MultiThreadProxyHubApiTest(i, j, url, "","YaNan").run();  
+                String url= "http://localhost:8080/SpringMVCH/hello";   
                 new MultiThreadProxyHubApiTest(i, j, url,"", "Spring").run();  
-                System.out.println("*************************************");
+                System.out.println("********************************************************************");
             }  
         }  
        

@@ -118,12 +118,11 @@ public class DataBase {
 			String sql = "CREATE DATABASE IF NOT EXISTS " + databaseName+" DEFAULT CHARACTER SET "+dbConfigure.getCharset()+" COLLATE "+dbConfigure.getCollate();
 			PreparedStatement ps = (PreparedStatement) connect
 					.prepareStatement(sql);
-			this.available =ps.execute();
-			return this.available ;
+			 ps.execute();
+			 this.available =true;
 		} catch (SQLException | ClassNotFoundException e) {
 			e.printStackTrace();
 			log.error(e);
-			return false;
 		}finally{
 			if(connect!=null)
 				try {
@@ -133,6 +132,7 @@ public class DataBase {
 					log.error(e);
 				}
 		}
+		return this.available ;
 	}
 
 	public Connection createConnection() throws ClassNotFoundException,

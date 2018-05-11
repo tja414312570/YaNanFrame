@@ -1,6 +1,5 @@
  package com.YaNan.frame.RTDT.context.init;
  
- import com.YaNan.frame.RTDT.WebSocketServer;
 import com.YaNan.frame.RTDT.context.ActionManager;
 import com.YaNan.frame.RTDT.context.NotifyManager;
 import com.YaNan.frame.RTDT.context.SocketConfigurator;
@@ -42,25 +41,6 @@ import javax.websocket.WebSocketContainer;
    public void contextInitialized(ServletContextEvent servletContextEvent)
    {
      try {
-    	 WebSocketContainer wsContainer = ContainerProvider.getWebSocketContainer();
-    	 System.out.println(servletContextEvent.getServletContext().getContextPath());
- 		System.out.println(wsContainer);
- 		new Thread(new Runnable() {
-			
-			@Override
-			public void run() {
-				String uri = "ws://localhost:80//YaNanFrame";
-		 		try {
-		 			WebSocketServer wsServer = new WebSocketServer();
-		 			SocketConfigurator sc = new SocketConfigurator();
-		 			Session session = wsContainer.connectToServer(WebSocketServer.class, new URI(uri));
-		 			session.addMessageHandler(wsServer);
-		 		} catch (DeploymentException | IOException | URISyntaxException e) {
-		 			e.printStackTrace();
-		 		}
-			}
-		}).start();
- 		
        System.out.println("application inited,try init RTDT");
        this.manager.init();
        Map<String, ActionEntity> map = this.manager.getActionPools();

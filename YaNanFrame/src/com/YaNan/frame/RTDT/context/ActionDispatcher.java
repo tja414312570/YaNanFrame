@@ -1,7 +1,6 @@
 package com.YaNan.frame.RTDT.context;
 
-import com.YaNan.frame.RTDT.WebSocketServer;
-import com.YaNan.frame.RTDT.requestListener;
+import com.YaNan.frame.RTDT.WebSocketListener;
 import com.YaNan.frame.RTDT.actionSupport.RTDTNotification;
 import com.YaNan.frame.RTDT.entity.ActionEntity;
 import com.YaNan.frame.RTDT.entity.Notification;
@@ -19,11 +18,11 @@ import java.util.Date;
 import java.util.Iterator;
 
 public class ActionDispatcher {
-	public void doDipatcher(RequestAction request, WebSocketServer client) throws Exception {
+	public void doDipatcher(RequestAction request, WebSocketListener webSocketListener) throws Exception {
 		ResponseAction responseAction = new ResponseAction();
 		responseAction.setAUID(request.getAUID());
 		responseAction.setType(4280);
-		responseAction.setClient(client);
+		responseAction.setClient(webSocketListener);
 		if (request.getType() == ACTION_TYPE.ACTION) {
 			ActionManager manager = ActionManager.getActionManager();
 			if (manager.hasAction(request.getAction())) {
@@ -37,18 +36,18 @@ public class ActionDispatcher {
 					String parameterName = (String) parametersIterator.next();
 					valuation(loader, parameterName, request.getParameter(parameterName));
 				}
-				invoke(action, responseAction, loader, client);
+				invoke(action, responseAction, loader, webSocketListener);
 			} else {
 				responseAction.setStatus(4282);
 				responseAction.setData("RTDT action " + request.getAction() + " is not exists!");
-				client.write(responseAction);
+				webSocketListener.write(responseAction);
 			}
 		} else {
 				NotifyEntity notifyEntity = NotifyManager.getManager().getEntity(request.getAction());
 				if(notifyEntity==null){
 					responseAction.setStatus(4282);
 					responseAction.setData("RTDT notify " + request.getAction() + " is not exists!");
-					client.write(responseAction);
+					webSocketListener.write(responseAction);
 					return;
 				}
 				notifyEntity.setRequestAction(request);
@@ -56,7 +55,7 @@ public class ActionDispatcher {
 				ClassLoader loader = new ClassLoader(notifyImp);
 				if (loader.hasMethod("doContext", RequestAction.class,ResponseAction.class, ClassLoader.class ))
 					loader.invokeMethod("doContext",request,responseAction, loader);
-				Notification notify = new Notification(client, request, notifyEntity,notifyImp);
+				Notification notify = new Notification(webSocketListener, request, notifyEntity,notifyImp);
 				notify.setAction(notifyEntity);
 				notify.setToken(request.getToken());
 				request.setNotification(notify);
@@ -95,7 +94,7 @@ public class ActionDispatcher {
 		}
 	}
 
-	private void invoke(ActionEntity action, ResponseAction response, ClassLoader loader, requestListener client) {
+	private void invoke(ActionEntity action, ResponseAction response, ClassLoader loader, WebSocketListener client) {
 		try {
 			if (loader.hasMethod(action.getMethod().getName())) {
 				Object callBack = loader.invokeMethod(action.getMethod().getName());

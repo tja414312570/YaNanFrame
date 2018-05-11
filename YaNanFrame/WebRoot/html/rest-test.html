@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+	</head>
+	<body>
+		<ol>
+			
+		</ol>
+		<script type="text/javascript" src="js/jquery-2.1.4.min.js" ></script>
+		<script>
+			$.ajax({
+				type:"post",
+				url:"http://localhost:8080/YaNanFrame/testPost?type=get",
+				data:{type:"post"},
+				async:true,
+				success:function(data){
+					$("ol").append("<li>"+data+"</li>")
+				}
+			});
+			$.ajax({
+				type:"post",
+				url:"http://localhost:8080/YaNanFrame/testArray?type=post",
+				data:{types:["post","get","delete","put"],net:["http","https"]},
+				async:true,
+				success:function(data){
+					$("ol").append("<li>"+data+"</li>")
+				}
+			});
+			$.ajax({
+				type:"post",
+				url:"http://localhost:8080/YaNanFrame/testPojoAnno?type=post",
+				data:{array:{types:["post","get","delete","put"],net:["http","https"]}},
+				async:true,
+				success:function(data){
+					$("ol").append("<li>"+data+"</li>")
+				}
+			});
+			$.ajax({
+				type:"post",
+				url:"http://localhost:8080/YaNanFrame/testPojo?type=post",
+				data:{types:["post","get","delete","put"],net:["http","https"]},
+				async:true,
+				success:function(data){
+					$("ol").append("<li>"+data+"</li>")
+				}
+			});
+			$.ajax({
+				type:"post",
+				url:"http://localhost:8080/YaNanFrame/testPojouser?type=post",
+				data:{user:{id:1,name:"user",array:[{types:["post","get","delete","put"],net:["http","https"]},{types:["post","get","delete","put"],net:["http","https"]}]}},
+				async:true,
+				success:function(data){
+					$("ol").append("<li>"+data+"</li>")
+				}
+			});
+		</script>
+	</body>
+</html>

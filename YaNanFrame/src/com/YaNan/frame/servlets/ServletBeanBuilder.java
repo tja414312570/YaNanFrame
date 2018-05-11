@@ -7,6 +7,7 @@ import java.lang.reflect.Parameter;
 import com.YaNan.frame.logging.DefaultLog;
 import com.YaNan.frame.logging.Log;
 import com.YaNan.frame.plugin.PlugsFactory;
+import com.YaNan.frame.servlet.view.ViewSolver;
 import com.YaNan.frame.servlets.annotations.Action;
 import com.YaNan.frame.servlets.annotations.ActionResults;
 import com.YaNan.frame.servlets.annotations.CookieValue;
@@ -32,8 +33,14 @@ public class ServletBeanBuilder implements ServletMappingBuilder{
 			bean.setMethod(method);
 			bean.setStyle(ACTION_STYLE);
 			String urlPath = action.namespace();
-			if(parentRequestMaping!=null)
-				urlPath = parentRequestMaping.value()+urlPath;
+			if(parentRequestMaping!=null){
+				String namespace = parentRequestMaping.value().trim();
+				if(namespace.equals(""))
+					namespace = "/"+method.getDeclaringClass().getSimpleName();
+				else if(namespace.equals("/"))
+					namespace="";
+				urlPath = namespace+urlPath;
+			}
 			String actionName = action.value().equals("")?method.getName():action.value();
 			urlPath =urlPath+actionName+".do";
 			bean.setUrlmapping(urlPath);
@@ -82,8 +89,17 @@ public class ServletBeanBuilder implements ServletMappingBuilder{
 		 * 获取url映射
 		 */
 		String urlPath = requestMapping.value().trim().equals("")?"/"+method.getName():requestMapping.value().trim();
-		if(parentRequestMaping!=null)
-			urlPath = parentRequestMaping.value()+urlPath;
+		bean.setViewSolver(requestMapping.viewSolver());
+		if(parentRequestMaping!=null){
+			String namespace = parentRequestMaping.value().trim();
+			if(namespace.equals(""))//如果父类命名空间为空时，父类命名空间为当前类名
+				namespace = "/"+method.getDeclaringClass().getSimpleName();
+			else if(namespace.equals("/"))//如果父类命名空间为/时，设置命名空间为空，因为子命名空间可能包含了/
+				namespace="";
+			urlPath = namespace+urlPath;
+			if(!parentRequestMaping.viewSolver().equals(ViewSolver.class)&&bean.getViewSolver().equals(ViewSolver.class))//如果父类有实例的视图解析器
+				bean.setViewSolver(parentRequestMaping.viewSolver());
+		}
 		String urlMapping =urlPath+"@"+type;
 		int varIndex = urlMapping.indexOf("{");
 		while(varIndex>=0){
@@ -123,6 +139,8 @@ public class ServletBeanBuilder implements ServletMappingBuilder{
 				RequestBody	rebo=paras[i].getAnnotation(RequestBody.class);
 				if(rebo!=null)
 					paraDes=new ParameterDescription(rebo.value(),ParameterDescription.ParameterType.RequestBody,rebo.defaultValue());
+				if(paras[i].getType().isArray()&&paraDes!=null&&paraDes.getName().length()>0&&paraDes.getName().indexOf("[]")<0)
+					paraDes.setName(paraDes.getName()+"[]");
 				bean.addParameter(paras[i],paraDes);
 			}
 		}

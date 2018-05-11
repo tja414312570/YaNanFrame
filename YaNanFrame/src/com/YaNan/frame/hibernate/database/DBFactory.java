@@ -44,9 +44,10 @@ public class DBFactory {
 		return Class2TabMappingCache.getDBTabelsMap();
 	}
 	private DBFactory(){};
-	public void init(){
+	public void init() throws Exception{
 		if(xmlFile==null)
 			xmlFile =new File(this.getClass().getClassLoader().getResource("").getPath().replace("%20"," "),"hibernate.xml");
+		if(!xmlFile.exists())throw new Exception("hibernate.xml is not exist!");
 		XMLBean xmlBean = BeanFactory.getXMLBean();
 		xmlBean.addXMLFile(xmlFile);
 		xmlBean.addElementPath("//Hibernate");
@@ -61,7 +62,11 @@ public class DBFactory {
 	}
 	public void init(File xmlFile){
 		this.xmlFile = xmlFile;
-		this.init();
+		try {
+			this.init();
+		} catch (Exception e) {
+			log.error(e);
+		}
 	}
 	private void addDB(String id, DataBase dbi) {
 		this.dbMap.put(id,dbi);

@@ -47,7 +47,7 @@ public abstract class TokenServlet extends MultiFormServlet{
 		}
 	}
 	public void doOther(ClassLoader loader){
-		Collection<Field> fields = loader.getDeclaredFields();
+		Field[] fields = loader.getDeclaredFields();
 		for(Field field :fields){
 			if(field.getAnnotation(TokenObject.class)!=null){
 				Class<?> cls = field.getType();

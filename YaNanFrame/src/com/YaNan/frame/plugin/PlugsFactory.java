@@ -7,6 +7,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.YaNan.frame.logging.DefaultLog;
+import com.YaNan.frame.logging.Log;
 import com.YaNan.frame.path.PackageScanner;
 import com.YaNan.frame.path.Path;
 import com.YaNan.frame.path.PackageScanner.ClassInter;
@@ -14,15 +16,17 @@ import com.YaNan.frame.path.Path.PathInter;
 import com.YaNan.frame.plugin.annotations.Register;
 import com.YaNan.frame.plugin.annotations.Service;
 import com.YaNan.frame.plugin.handler.PlugsHandler;
+import com.YaNan.frame.plugin.interfacer.PlugsListener;
 
 /**
  * 组件工厂类，用于初始化所有组件注册，管理，以及提供组件获取
  * @author yanan
  *
  */
-public class PlugsFactory {
+public class PlugsFactory implements PlugsListener{
 	private static PlugsFactory instance;
 	private boolean available=false;
+	private static Log log = PlugsFactory.getPlugsInstanceWithDefault(Log.class,DefaultLog.class,PlugsFactory.class);
 	/**
 	 * 组件的容器
 	 */
@@ -37,6 +41,20 @@ public class PlugsFactory {
 			instance = new PlugsFactory();
 		instance.init();
 	}
+	/**
+	 * 获取所有注册器
+	 * @return
+	 */
+	public  Map<Class<?>,RegisterDescription> getAllRegister(){
+		return RegisterContatiner;
+	}
+	/**
+	 * 获取所有组件
+	 * @return
+	 */
+	public Map<Class<?>,Plug> getAllPlugs(){
+		return plugsList;
+	}
 	public static PlugsFactory getInstance(){
 		return instance;
 	}
@@ -44,6 +62,7 @@ public class PlugsFactory {
 	 * 初始化组件，当所有的组件扫描完成之后，需要使用{@link #associate()}完成组件的关联
 	 */
 	public void init(){
+		this.addPlugsByDefault(PlugsListener.class);
 		PackageScanner scanner = new PackageScanner();
 		scanner.doScanner(new ClassInter(){
 			@Override
@@ -61,6 +80,12 @@ public class PlugsFactory {
 		});
 		this.associate();
 		available=true;
+		this.inited();
+	}
+	private void inited() {
+		List<PlugsListener> listeners = PlugsFactory.getPlugsInstanceList(PlugsListener.class);
+		for(PlugsListener listen : listeners)
+			listen.excute(this);
 	}
 	/**
 	 * 建立个组件和注册器之间的关联
@@ -110,7 +135,7 @@ public class PlugsFactory {
 				RegisterContatiner.put(registerDescription.getRegisterClass(),registerDescription);
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error(e);
 		}
 	}
 	/**
@@ -145,6 +170,7 @@ public class PlugsFactory {
 	}
 	/**
 	 * 获取组件实例，当组件不存在时返回传入的组件实现类的简单组件服务
+	 * 如果获取组件时服务未完全初始化，则不会对其进行拦截
 	 * @param impl 组件接口类
 	 * @param defaultClass 默认实现类
 	 * @param args 组件参数
@@ -153,23 +179,19 @@ public class PlugsFactory {
 	public static <T> T getPlugsInstanceWithDefault(Class<T> impl,Class<? extends T> defaultClass,Object...args){
 			try {
 				if(instance==null)
-					throw new Exception("YaNan.plugs service not initd");
+					return (T) defaultClass.newInstance(); 
 				if(!instance.isAvailable())
-					return (T) PlugsHandler.newMapperProxy(impl,defaultClass.newInstance()); 
+					return (T) defaultClass.newInstance(); 
 				Plug plug = instance.getPlug(impl);
 				if(plug==null)
 					return (T) PlugsHandler.newMapperProxy(impl,defaultClass.newInstance()); 
 				RegisterDescription registerDescription = plug.getDefaultRegisterDescription();
 				if(registerDescription==null)
 					return (T) PlugsHandler.newMapperProxy(impl,defaultClass.newInstance()); 
-				Object object = registerDescription.getRegisterInstance(args);//instance.getRegisterInstance(impl,registerDescription,args);
-				return (T) PlugsHandler.newMapperProxy(impl,object); 
-			} catch (InstantiationException e) {
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				e.printStackTrace();
+				return registerDescription.getRegisterInstance(impl,args);//instance.getRegisterInstance(impl,registerDescription,args);
 			} catch (Exception e) {
 				e.printStackTrace();
+				log.error(e);
 			}
 			return null;
 	}
@@ -187,21 +209,44 @@ public class PlugsFactory {
 			if(instance==null)
 				throw new Exception("YaNan.plugs service not initd");
 			if(!instance.isAvailable())
-				throw new Exception("this error may arise because a static field uses the PlugsFactory's proxy");
+				throw new Exception("plugs unavailable ! this error may arise because a static field uses the PlugsFactory's proxy");
 			Plug plug = instance.getPlug(impl);
 			if(plug==null)
 				throw new Exception("service interface "+impl.getName() +" could not found or not be regist");
 			RegisterDescription registerDescription = plug.getDefaultRegisterDescription();
 			if(registerDescription==null)
 				throw new Exception("service interface "+impl.getName() +" could not found any registrar");
-			Object object = registerDescription.getRegisterInstance(args);//instance.getRegisterInstance(impl,registerDescription,args);
+			Object object = registerDescription.getRegisterInstance(impl,args);//instance.getRegisterInstance(impl,registerDescription,args);
 			return (T) PlugsHandler.newMapperProxy(impl,object); 
-		} catch (InstantiationException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error(e);
+		}
+		return null;
+	}
+	/**
+	 * 获取组件实例，当组件中有多个组件实现实例时，返回一个默认组件
+	 * 具体选择某个组件实例作为默认组件实例依赖其优先级(priority)，当所有优先级相同时选第一个
+	 * 优先级数值越低，优先级越高
+	 * @param impl
+	 * @param args
+	 * @return
+	 */
+	public static <T> T getPlugsInstanceByInsClass(Class<T> impl,Class<? extends T> insClass,Object...args) {
+		try {
+			if(instance==null)
+				throw new Exception("YaNan.plugs service not initd");
+			if(!instance.isAvailable())
+				throw new Exception("plugs unavailable ! this error may arise because a static field uses the PlugsFactory's proxy");
+			Plug plug = instance.getPlug(impl);
+			if(plug==null)
+				throw new Exception("service interface "+impl.getName() +" could not found or not be regist");
+			RegisterDescription registerDescription = plug.getRegisterDescriptionByInsClass(insClass);
+			if(registerDescription==null)
+				throw new Exception("service interface "+impl.getName() +" could not found any registrar");
+			Object object = registerDescription.getRegisterInstance(impl,args);//instance.getRegisterInstance(impl,registerDescription,args);
+			return (T) PlugsHandler.newMapperProxy(impl,object); 
+		} catch (Exception e) {
+			log.error(e);
 		}
 		return null;
 	}
@@ -220,21 +265,16 @@ public class PlugsFactory {
 			if(instance==null)
 				throw new Exception("YaNan.plugs service not initd");
 			if(!instance.isAvailable())
-				throw new Exception("this error may arise because a static field uses the PlugsFactory's proxy");
+				throw new Exception("plugs unavailable ! this error may arise because a static field uses the PlugsFactory's proxy");
 			Plug plug = instance.getPlug(impl);
 			if(plug==null)
 				throw new Exception("service interface "+impl.getName() +" could not found or not be regist");
 			RegisterDescription registerDescription = plug.getRegisterDescriptionByAttribute(attribute);
 			if(registerDescription==null)
 				throw new Exception("service interface "+impl.getName() +" could not found any registrar");
-			Object object = registerDescription.getRegisterInstance(args);//instance.getRegisterInstance(impl,registerDescription,args);
-			return (T) PlugsHandler.newMapperProxy(impl,object); 
-		} catch (InstantiationException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
+			return registerDescription.getRegisterInstance(impl,args);//instance.getRegisterInstance(impl,registerDescription,args);
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error(e);
 		}
 		return null;
 	}
@@ -253,21 +293,15 @@ public class PlugsFactory {
 			if(instance==null)
 				throw new Exception("YaNan.plugs service not initd");
 			if(!instance.isAvailable())
-				throw new Exception("this error may arise because a static field uses the PlugsFactory's proxy");
+				throw new Exception("plugs unavailable ! this error may arise because a static field uses the PlugsFactory's proxy");
 			Plug plug = instance.getPlug(impl);
 			if(plug==null)
 				throw new Exception("service interface "+impl.getName() +" could not found or not be regist");
 			RegisterDescription registerDescription = plug.getRegisterDescriptionByAttributeStrict(attribute);
-			if(registerDescription!=null){
-				Object object = registerDescription.getRegisterInstance(args);//instance.getRegisterInstance(impl,registerDescription,args);
-				return (T) PlugsHandler.newMapperProxy(impl,object); 
-			}
-		} catch (InstantiationException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
+			if(registerDescription!=null)
+				return registerDescription.getRegisterInstance(impl,args);//instance.getRegisterInstance(impl,registerDescription,args);
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error(e);
 		}
 		return null;
 	}
@@ -284,26 +318,18 @@ public class PlugsFactory {
 			if(instance==null)
 				throw new Exception("YaNan.plugs service not initd");
 			if(!instance.isAvailable())
-				throw new Exception("this error may arise because a static field uses the PlugsFactory's proxy");
+				throw new Exception("plugs unavailable ! this error may arise because a static field uses the PlugsFactory's proxy");
 			Plug plug = instance.getPlug(impl);
 			if(plug==null)
 				throw new Exception("service interface "+impl.getName() +" could not found or not be regist");
 			List<T> objectList = new ArrayList<T>();
 			List<RegisterDescription> registerDescriptionList = plug.getRegisterDescriptionList();
-			if(registerDescriptionList.size()==0)
-				throw new Exception("service interface "+impl.getName() +" could not found any registrar");
 			Iterator<RegisterDescription> iterator = registerDescriptionList.iterator();
-			while(iterator.hasNext()){
-				Object object = iterator.next().getRegisterInstance(args);
-				objectList.add(PlugsHandler.newMapperProxy(impl,object));
-			}
+			while(iterator.hasNext())
+				objectList.add(iterator.next().getRegisterInstance(impl,args));
 			return objectList;
-		} catch (InstantiationException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error(e);
 		}
 		return null;
 	}
@@ -325,8 +351,8 @@ public class PlugsFactory {
 	public void setAvailable(boolean available) {
 		this.available = available;
 	}
-	
-	
-	
-	
+	@Override
+	public void excute(PlugsFactory plugsFactory) {
+		log = PlugsFactory.getPlugsInstanceWithDefault(Log.class,DefaultLog.class,PlugsFactory.class);
+	}
 }

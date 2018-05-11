@@ -1,0 +1,16 @@
+package com.YaNan.frame.servlet.exception;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.YaNan.frame.plugin.annotations.Register;
+
+@Register
+public class ExceptionHandler implements ServletExceptionHandler{
+
+	@Override
+	public void exception(Exception e, HttpServletRequest request, HttpServletResponse response) {
+		
+	}
+	
+}

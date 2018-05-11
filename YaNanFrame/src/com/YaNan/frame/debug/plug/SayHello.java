@@ -1,7 +1,7 @@
 package com.YaNan.frame.debug.plug;
 
+import com.YaNan.frame.debug.plugs.service.Say;
 import com.YaNan.frame.plugin.annotations.Register;
-import com.YaNan.frame.plugs.debug.service.Say;
 
 @Register
 public class SayHello implements Say{

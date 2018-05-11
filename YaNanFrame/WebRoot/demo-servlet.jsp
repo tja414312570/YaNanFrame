@@ -89,6 +89,12 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 		</div> 
 	</div>
   <script src="js/jquery-2.1.4.min.js"></script>
+  <script>
+  	$("#pcont").css("max-width",($(window).width()-$('.menu-space .content').width())+"px")
+  	$(window).resize(function(e){
+  		$("#pcont").css("max-width",($(window).width()-$('.menu-space .content').width())+"px");
+  	});
+  </script>
   <script type="text/javascript" src="js/jquery.gritter/js/jquery.gritter.js"></script>
   <script type="text/javascript" src="js/jquery.nanoscroller/jquery.nanoscroller.js"></script>
   <script type="text/javascript" src="js/behaviour/general.js"></script>
@@ -143,7 +149,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 			            "sSearch":"搜索"  
 			        },
 			        "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
-			        "ajax": "getAllServlet.do",
+			        "ajax": "DashBoard/AllServlet",
 			        "sAjaxDataProp": "data",
 			        "columns": [
 			            { "data": "actionName" },

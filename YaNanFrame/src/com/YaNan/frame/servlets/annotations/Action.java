@@ -14,6 +14,6 @@ public @interface Action {
 	boolean decode() default false;//是否需要解析结果
 	boolean CorssOrgin() default false;//是否需要跨域
 	String[] args() default {};//所需参数
-	int method() default RESPONSE_METHOD.OUTPUT;
+	int method() default RESPONSE_METHOD.OUTPUT;//输出方式
 	String description() default"";//action 描述
 	}

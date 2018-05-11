@@ -52,5 +52,6 @@ public class DefaultLog implements Log{
 	@Override
 	public void error(Throwable e) {
 		System.out.println(sdf.format(new Date()) +" Error" +className+ ":\r\ncause by:"+e);
+		e.printStackTrace();
 	}
 }

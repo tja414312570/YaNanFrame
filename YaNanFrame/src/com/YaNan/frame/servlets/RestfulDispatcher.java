@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Parameter;
 import java.text.ParseException;
@@ -33,7 +34,12 @@ import javax.servlet.http.HttpSession;
 
 import com.YaNan.frame.logging.Log;
 import com.YaNan.frame.plugin.PlugsFactory;
-import com.YaNan.frame.servlets.ParameterDescription.ParameterType;;
+import com.YaNan.frame.servlets.ParameterDescription.ParameterType;
+import com.YaNan.frame.reflect.ClassLoader;
+import com.YaNan.frame.servlet.exception.ServletExceptionHandler;
+import com.YaNan.frame.servlet.view.DefaultView;
+import com.YaNan.frame.servlet.view.View;
+import com.YaNan.frame.servlet.view.ViewSolver;
 
 /**
  * 	Restful 核心调配器
@@ -44,7 +50,10 @@ import com.YaNan.frame.servlets.ParameterDescription.ParameterType;;
  *
  */
 public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,ServletContextListener{
-	private static final long serialVersionUID = -1089658849875241044L;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	public static final String DEFAULT_METHOD_PARAM = "_method";
 	private static final String ActionStyle = "RESTFUL_STYLE";
 	// 日志类，用于输出日志
@@ -97,7 +106,6 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 			urlMapping = new StringBuilder(urlMapping).append("@").append(REQUEST_METHOD.GET).toString();
 		}else if(method.equals("POST")){
 			method = request.getParameter(DEFAULT_METHOD_PARAM);
-			log.debug(method);
 			if(method==null){
 				urlMapping = new StringBuilder(urlMapping).append("@").append(REQUEST_METHOD.POST).toString();
 			}else if(method.toUpperCase().equals("DELETE")){
@@ -130,8 +138,6 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 			response.sendError(HttpServletResponse.SC_NOT_FOUND);
 			return;
 		}
-		log.debug(method);
-		log.debug(urlMapping);
 		//获取ServletBean映射实例以及获取ServletBean
 		ServletBean servletBean = ServletMapping.getInstance().getServlet(ActionStyle,urlMapping);
 		//判断ServletBean是否存在  
@@ -141,17 +147,16 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 			return;
 			}
 		//如果ServletBean中没有参数  直接执行方法并返回数据
+		Object handlerResult = null;
 		if(servletBean.getParameters().size()==0){
 			try {
 				Object servletObject = servletBean.getServletClass().newInstance();
-				Object result = servletBean.getMethod().invoke(servletObject);
-				response.getWriter().write(result.toString());
+				handlerResult = servletBean.getMethod().invoke(servletObject);
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
 					| InvocationTargetException e) {
 				e.printStackTrace();
 				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,e.getMessage());
 			}
-			return;
 		}
 		//获取PathVariable对应的参数
 		Map<String, String> pathParameter =  new LinkedHashMap<String, String>();
@@ -159,18 +164,19 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 			pathParameter= this.getPathValues(servletBean.getPathVariable(), path);
 		//判断ServletBean的类型并分发给对应的处理方式  此处之所以没有独立出来是因为 switch(int)效率非常高   可以达到1000W*50/s的转换率
 		try {
+			Map<String,?> model = null;
 			switch(servletBean.getRequestMethod()){
 			  	case REQUEST_METHOD.DELETE:
-			    	doDelete(request, response, servletBean,pathParameter);
+			  		handlerResult=doPost(request, response, servletBean,pathParameter,model);
 			    	break;
 			    case REQUEST_METHOD.GET:
-			    	doGet(request, response, servletBean,pathParameter);
+			    	handlerResult=doGet(request, response, servletBean,pathParameter,model);
 			    	break;
 			    case REQUEST_METHOD.POST:
-			    	doPost(request, response, servletBean,pathParameter);
+			    	handlerResult=doPost(request, response, servletBean,pathParameter,model);
 			    	break;
 			    case REQUEST_METHOD.PUT:
-			    	doPut(request, response, servletBean,pathParameter);
+			    	handlerResult=doPost(request, response, servletBean,pathParameter,model);
 			    	break;
 				case REQUEST_METHOD.HEAD:
 					doHead(request, response);
@@ -185,11 +191,59 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 					response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 				break;
 				}
+			if(!response.isCommitted()){
+				//判断是否需要定义固定视图解析器 
+				if(servletBean.getViewSolver().equals(ViewSolver.class)){//ViewSolver.class是接口，表明不强制使用视图解析器
+					if(handlerResult!=null){
+						View view;//视图和解析器分离，用以屏蔽render方法
+						if(ClassLoader.implementsOf(handlerResult.getClass(), View.class)){//如果返回的是View的实现类
+							view = (View) handlerResult;
+							ViewSolver viewSolver= PlugsFactory.getPlugsInstanceByAttributeStrict(ViewSolver.class, handlerResult.getClass().toString());
+							if(viewSolver==null)
+								throw new ServletException("Could not found suite view solver to process view class:"+view.getClass().getName());
+							view.setModel(model);
+							viewSolver.render(request, response, view, servletBean);
+						}else{//没有视图时，直接处理数据输出//检查是否指定视图解析类
+							response.getWriter().write(handlerResult.toString());
+							response.getWriter().flush();
+							response.getWriter().close();
+						}
+					}
+				}else{//如果不为ViewSolver类，则说明需要强制使用视图解析器
+					//判断返回结果是否为试图类
+					View view;//视图和解析器分离，用以屏蔽render方法
+					if(handlerResult!=null){//判断返回类型是否为视图类
+						if(ClassLoader.implementsOf(handlerResult.getClass(), View.class))//如果返回的是view的实现类
+							view =  (View)handlerResult;
+						else{//返回结果不是视图类，则新建一个默认视图，设置视图名称为返回值
+							view = new DefaultView();
+							view.setViewName(handlerResult.toString());
+						}
+					}else//如果返回为null,则新建一个默认视图
+						view = new DefaultView();
+					view.setModel(model);//为视图添加model
+					ViewSolver viewSolver= PlugsFactory.getPlugsInstanceByInsClass(ViewSolver.class,servletBean.getViewSolver());//获取视图组件
+					if(viewSolver==null)
+						throw new ServletException("Could not found view solver class:"+servletBean.getViewSolver().getName());
+					viewSolver.render(request, response, view, servletBean);//调用视图处理器渲染视图
+				}
+				 
+			}
 		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
-				| ParseException e) {
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,e.getCause().getMessage());
+				| ParseException | NoSuchFieldException | SecurityException e) {
+			e.printStackTrace();
+			ServletExceptionHandler servletExceptionHandler = PlugsFactory.getPlugsInstance(ServletExceptionHandler.class);
+			servletExceptionHandler.exception(e,request,response);
+			log.error(e);
+			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		}finally{
+			if(!response.isCommitted()){//最后检查是否已经关闭数据
+				response.getWriter().close();
+				response.getOutputStream().close();
+				servletBean=null;
+			}
 		}
-	    }
+	   }
 	/**
      * Return the relative path associated with this servlet.
      *
@@ -248,18 +302,49 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 		}
 		return pathValues;
     }
+    protected Object pojoParameterBind(Class<?> pojoClass,String path,HttpServletRequest request, HttpServletResponse response,ServletBean servletBean,Map<String, String> pathParameter) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, ParseException{
+		//对pojo类进行ClassLoader的包装，ClassLoader会在内部产生一个pojo类的实例
+    	ClassLoader loader  = new ClassLoader(pojoClass);
+    	//获取所有的field
+		Field[] fields = loader.getDeclaredFields();
+		for(Field field : fields){
+			String key = field.getName();
+			if(path!=null)
+				key = new StringBuilder(path).append("[").append(key).append("]").toString();
+			//判断field是不是基础类型
+			if(isBaseType(field.getType())){
+				//判断值是不是数组
+				if(field.getType().isArray())
+					loader.setFieldValue(field,parseBaseType(field.getType(),request.getParameterValues(new StringBuilder(key).append("[]").toString()),null));
+				else
+					loader.setFieldValue(field,parseBaseType(field.getType(),request.getParameter(key),null));
+			}else{
+				if(field.getType().isArray()){
+					System.out.println("嵌套pojo");
+				}else{
+					loader.setFieldValue(field, this.pojoParameterBind(field.getType(), key, request, response, servletBean, pathParameter));
+				}
+			}
+		}
+		return loader.getLoadedObject();
+    }
     /**
      * 此方法用于提取 get、post(content type:application/x-www-form-urlencoded)的数据
      * @param request
      * @param response
      * @param servletBean
      * @param pathParameter
+     * @param model 
      * @return
      * @throws ParseException
      * @throws IOException
+     * @throws IllegalAccessException 
+     * @throws IllegalArgumentException 
+     * @throws SecurityException 
+     * @throws NoSuchFieldException 
      */
-    protected List<Object> urlencodedParameterBind(HttpServletRequest request, HttpServletResponse response,ServletBean servletBean,Map<String, String> pathParameter) throws ParseException, IOException{
-    	//获得servletBean中的参数  该集合类型为  参数 ==》参数注解
+    protected List<Object> urlencodedParameterBind(HttpServletRequest request, HttpServletResponse response,ServletBean servletBean,Map<String, String> pathParameter, Map<String, ?> model) throws ParseException, IOException, NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException{
+    			//获得servletBean中的参数  该集合类型为  参数 ==》参数注解
     			Map<Parameter, ParameterDescription> parameterDescription = servletBean.getParameters();
     			//分析参数
     			Iterator<Entry<Parameter, ParameterDescription>> paramIterator = parameterDescription.entrySet().iterator();
@@ -276,7 +361,6 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
     			//获取请求参数的值得迭代器  封装调用参数
     				while(paramIterator.hasNext()){ 
     					Entry<Parameter, ParameterDescription> paramEntry =paramIterator.next(); 
-    					log.debug(isBaseType(paramEntry.getKey().getType())+"");
     					//判断参数是否为基本类型
     					if(isBaseType(paramEntry.getKey().getType())){
     						//处理基本类型
@@ -291,7 +375,7 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
     							continue;
     						}else{
     							//如果参数名为空
-    							if(paramEntry.getValue().getName()==null){
+    							if(paramEntry.getValue().getName().length()==0){
     								//判断参数取值类型
     								switch(paramEntry.getValue().getType()){
     									case ParameterType.CookieValue:
@@ -350,8 +434,8 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
     								case ParameterType.RequestParam:
     									if(request.getParameter(paramEntry.getValue().getName())!=null)
     										parameters.add(paramEntry.getKey().getType().isArray()?
-    												parseBaseType(paramEntry.getKey().getType(),request.getParameter(paramEntry.getValue().getName()),null):
-    													parseBaseType(paramEntry.getKey().getType(),request.getParameterValues(paramEntry.getValue().getName()),null));
+        											parseBaseType(paramEntry.getKey().getType(),request.getParameterValues(paramEntry.getValue().getName()),null):
+        												parseBaseType(paramEntry.getKey().getType(),request.getParameter(paramEntry.getValue().getName()),null));
     									else
     										parameters.add(parseBaseType(paramEntry.getKey().getType(),paramEntry.getValue().getValue(),null));
     									break;
@@ -385,8 +469,15 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
     							parameters.add(request.getCookies());
     						else if(paramEntry.getKey().getType().equals(Locale.class))//Locale
     							parameters.add(request.getLocale());
+    						else if(ClassLoader.implementsOf(paramEntry.getKey().getType(),  Map.class)){
+    							parameters.add(model);
+    						}
     						else{
-    							
+    							//判断是否拥有注解
+    							if(paramEntry.getValue()==null)
+    								parameters.add(this.pojoParameterBind(paramEntry.getKey().getType(),null, request, response, servletBean, pathParameter));
+    							else
+    								parameters.add(this.pojoParameterBind(paramEntry.getKey().getType(),paramEntry.getValue().getName(), request, response, servletBean, pathParameter));
     						}
     					}
     				}
@@ -395,24 +486,24 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 	/**
 	* Servlet get方法
 	* 支持注解 PathVariable RequestParam赋值
+	 * @param model 
+	 * @return 
 	 * @throws IOException 
 	 * @throws ParseException 
 	 * @throws IllegalAccessException 
 	 * @throws InstantiationException 
 	 * @throws InvocationTargetException 
 	 * @throws IllegalArgumentException 
+	 * @throws SecurityException 
+	 * @throws NoSuchFieldException 
 	*/
-	protected void doGet(HttpServletRequest request, HttpServletResponse response,ServletBean servletBean,Map<String, String> pathParameter) throws ParseException, IOException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException{
-		   
-		   List<Object> parameters = this.urlencodedParameterBind(request, response, servletBean, pathParameter);
+	protected Object doGet(HttpServletRequest request, HttpServletResponse response,ServletBean servletBean,Map<String, String> pathParameter, Map<String, ?> model) throws ParseException, IOException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchFieldException, SecurityException{
+		   List<Object> parameters = this.urlencodedParameterBind(request, response, servletBean, pathParameter, model);
 			//判断需要的参数是否与获得的参数匹配
 			if(servletBean.getParameters().size()!=parameters.size()){
-				log.debug(servletBean.getParameters().toString());
-				log.debug(parameters.toString());
 				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,"Request url "+pathParameter+" method GET parameter not match");
-				return;
+				return null;
 			}
-			log.debug(parameters.toString());
 			//重组准备参数 需要准备参数类型数组和参数数组
 			Object[] parameter = new Object[parameters.size()];
 			int i = 0;
@@ -423,19 +514,21 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 			}
 			Object servletObject = servletBean.getServletClass().newInstance();
 			Object result = servletBean.getMethod().invoke(servletObject, parameter);
-			response.getWriter().write(result.toString());
+			return result;
 	}
 	
-	protected void doPost(HttpServletRequest request, HttpServletResponse response,ServletBean servletBean,Map<String, String> pathParameter)throws ServletException, IOException, ParseException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		List<Object> parameters = this.urlencodedParameterBind(request, response, servletBean, pathParameter);
-		//判断需要的参数是否与获得的参数匹配
-		if(servletBean.getParameters().size()!=parameters.size()){
-			log.debug(servletBean.getParameters().toString());
-			log.debug(parameters.toString());
+	protected Object doPost(HttpServletRequest request, HttpServletResponse response,ServletBean servletBean,Map<String, String> pathParameter, Map<String, ?> model)throws ServletException, IOException, ParseException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchFieldException, SecurityException {
+		List<Object> parameters = null;
+		if(request.getContentType().indexOf("application/x-www-form-urlencoded")>=0){
+			//判断需要的参数是否与获得的参数匹配
+			parameters =this.urlencodedParameterBind(request, response, servletBean, pathParameter,model);
+		}//当表单类型为multipart /form-data时应该换其他参数处理器
+		Iterator<Parameter> iterator = servletBean.getParameters().keySet().iterator();
+		
+		if(servletBean.getParameters().size()>0&&parameters!=null&&servletBean.getParameters().size()!=parameters.size()){
 			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,"Request url "+pathParameter+" method GET parameter not match");
-			return;
+			return null;
 		}
-		log.debug(parameters.toString());
 		//重组准备参数 需要准备参数类型数组和参数数组
 		Object[] parameter = new Object[parameters.size()];
 		int i = 0;
@@ -446,13 +539,13 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 		}
 		Object servletObject = servletBean.getServletClass().newInstance();
 		Object result = servletBean.getMethod().invoke(servletObject, parameter);
-		response.getWriter().write(result.toString());
+		return result;
 	}
-	protected void doPut(HttpServletRequest request, HttpServletResponse response,ServletBean servletBean,Map<String, String> pathParameter)throws ServletException, IOException {
-	    
+	protected Object doPut(HttpServletRequest request, HttpServletResponse response,ServletBean servletBean,Map<String, String> pathParameter)throws ServletException, IOException {
+		return null;
 	}
-	protected void doDelete(HttpServletRequest request, HttpServletResponse response,ServletBean servletBean,Map<String, String> pathParameter)throws ServletException, IOException {
-	    
+	protected Object doDelete(HttpServletRequest request, HttpServletResponse response,ServletBean servletBean,Map<String, String> pathParameter)throws ServletException, IOException {
+	    return null;
 	}
 	
 	/**
@@ -681,8 +774,14 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 			log.debug("---------------------------------------------------------");
 			log.debug("url mapping:" + key.getKey() + ",servlet method:" + servletBean.getMethod()
 					+ ",servlet type:" +servletBean.getType());
-			log.debug("---------------------------------------------------------");
-
+			Iterator<Entry<Parameter, ParameterDescription>> iterator1 = servletBean.getParameters().entrySet().iterator();
+			while(iterator1.hasNext()){
+				Entry<Parameter, ParameterDescription> e = iterator1.next();
+				log.debug(e.getKey().toString());
+				log.debug(e.getValue()+"");
+			}
+			
+			log.debug("------------------------------------------------");
 		}
 	}
 }

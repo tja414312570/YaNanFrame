@@ -25,7 +25,7 @@ import java.lang.reflect.Field;
      this.TokenContext = request.getToken();
      this.ActionContext = request.getActionEntity();
      this.ResponseContext = response;
-     Field[] fields = (Field[]) loader.getDeclaredFields().toArray();
+     Field[] fields = loader.getDeclaredFields();
      Field[] arrayOfField1; int j = (arrayOfField1 = fields).length; for (int i = 0; i < j; i++) { Field field = arrayOfField1[i];
        if (field.getAnnotation(com.YaNan.frame.servlets.session.annotation.TokenObject.class) != null) {
          Class<?> cls = field.getType();

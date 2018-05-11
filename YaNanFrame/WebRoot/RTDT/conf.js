@@ -13,7 +13,7 @@
  * by:YaNan 2017-06-22
  */
 var RTDTConf ={
-	url:"ws://localhost:8080/YaNanFrame/yanan/RTDT",//"+window.location.hostname+"
+	url:"ws://localhost:8080/YaNanFrame/RTDT",//"+window.location.hostname+"
 	timeout:3000,
 	refresh:500,
 }
