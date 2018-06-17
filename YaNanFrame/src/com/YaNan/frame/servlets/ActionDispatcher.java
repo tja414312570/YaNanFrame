@@ -22,7 +22,7 @@ import com.YaNan.frame.logging.Log;
 import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.reflect.ClassLoader;
 import com.YaNan.frame.servlets.annotations.RESPONSE_METHOD;
-import com.YaNan.frame.servlets.annotations.Validate;
+import com.YaNan.frame.servlets.validator.annotations.Validate;
 import com.YaNan.frame.util.StringUtil;
 
 /**
@@ -59,8 +59,8 @@ public class ActionDispatcher extends HttpServlet implements ServletDispatcher,S
 		// 设置响应属性
 		HttpSession session = request.getSession();
 		// 获取url相对路径
-		String urlMapping = CoreDispatcher.getRelativePath(request, true);
-		ServletBean bean = ServletMapping.getInstance().getServlet(ActionStyle,urlMapping);;
+		String urlMapping = URLSupport.getRelativePath(request);
+		ServletBean bean =this.getServletBean(request); 
 		// 如果ServletBean存在
 		if (bean!=null) {
 			//判断映射是否跨域
@@ -339,6 +339,10 @@ public class ActionDispatcher extends HttpServlet implements ServletDispatcher,S
 		ServletMapping servletManager = ServletMapping
 				.getInstance();
 		Map<String, ServletBean> servletMapping = servletManager.getServletMappingByStype("ACTION_STYLE");
+		if(servletMapping==null){
+			log.debug("RESTFUL Servlet num:0");
+			return;
+		}
 		log.debug("Action Servlet num:"+servletMapping.size());
 		Iterator<Entry<String, ServletBean>> iterator = servletMapping.entrySet().iterator();
 		log.debug("==============Traverse the servlet collection===========");
@@ -352,4 +356,9 @@ public class ActionDispatcher extends HttpServlet implements ServletDispatcher,S
 
 		}
 	}
+	@Override
+	public ServletBean getServletBean(HttpServletRequest request) throws ServletException {
+		return ServletMapping.getInstance().getServlet(ActionStyle,URLSupport.getRelativePath(request));
+	}
+	
 }

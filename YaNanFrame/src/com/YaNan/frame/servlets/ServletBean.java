@@ -1,15 +1,20 @@
 package com.YaNan.frame.servlets;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
-import com.YaNan.frame.servlet.view.ViewSolver;
+import com.YaNan.frame.plugin.PlugsFactory;
+import com.YaNan.frame.servlets.parameter.ParameterAnnotationType;
+import com.YaNan.frame.servlets.response.MethodAnnotationType;
 public class ServletBean {
 	/**
 	 * 返回类型
@@ -20,9 +25,9 @@ public class ServletBean {
 	 */
 	private Map<String,Field> fieldMap = new HashMap<String,Field>();
 	/**
-	 * 参数缓存 restful风格有效
+	 * 参数缓存 restful风格有效  存储类型为  参数  ==》<Array>注解
 	 */
-	private Map<Parameter,ParameterDescription> parameter = new LinkedHashMap<Parameter,ParameterDescription>();
+	private Map<Parameter,Map<Class<Annotation>,List<Annotation>>> parameter = new LinkedHashMap<Parameter,Map<Class<Annotation>,List<Annotation>>>();
 	/**
 	 * 路径变量信息记录 restful风格有效
 	 */
@@ -39,7 +44,10 @@ public class ServletBean {
 	 * 接口方法
 	 */
 	private Method method;
-	
+	/**
+	 * 方法的注解
+	 */
+	private Map<Class<Annotation>,List<Annotation>> methodAnnotation = new HashMap<Class<Annotation>, List<Annotation>>();
 	/**
 	 * 接口返回类型
 	 */
@@ -77,10 +85,6 @@ public class ServletBean {
 	 * @return
 	 */
 	private String pathRegex;
-	/**
-	 * 视图解析器类
-	 */
-	private Class<? extends ViewSolver> viewSolver;
 	public Class<?> getServletClass() {
 		return this.className;
 	}
@@ -98,6 +102,14 @@ public class ServletBean {
 	}
 	public void setMethod(Method method) {
 		this.method = method;
+		List<MethodAnnotationType> phs = PlugsFactory.getPlugsInstanceList(MethodAnnotationType.class);
+		List<Class<Annotation>> annos = new ArrayList<Class<Annotation>>();
+		for(MethodAnnotationType responseType : phs){
+			for(Class<Annotation> anno : responseType.getSupportAnnotationType())
+				annos.add(anno);
+		}
+		//获取所有支持的组件的集合
+		this.methodAnnotation = PlugsFactory.getAnnotationGroup(method,annos);
 	}
 	public Map<String, ServletResult> getResultMap() {
 		return this.result;
@@ -165,8 +177,20 @@ public class ServletBean {
 	public void setStyle(String style) {
 		this.style = style;
 	}
-	public void addParameter(Parameter parameter,ParameterDescription annotation){
-		this.parameter.put(parameter, annotation);
+	public void addParameter(Parameter parameter){
+		//获取所有的注解
+		//从组件工厂查询当前servlet解析所支持的注解类型，，可能该注解并不需要用到
+		List<ParameterAnnotationType> phs = PlugsFactory.getPlugsInstanceList(ParameterAnnotationType.class);
+		List<Class<Annotation>> annos = new ArrayList<Class<Annotation>>();
+		for(ParameterAnnotationType parameterAnnotation : phs){
+			for(Class<Annotation> anno : parameterAnnotation.getSupportAnnotationType())
+				annos.add(anno);
+		}
+		//获取所有支持的组件的集合
+		Map<Class<Annotation>,List<Annotation>> maps = PlugsFactory.getAnnotationGroup(parameter,annos);
+		//获取参数类型
+		//将参数信息添加到参数集合中
+		this.parameter.put(parameter, maps);
 	}
 	public String getPathRegex() {
 		return pathRegex;
@@ -196,16 +220,21 @@ public class ServletBean {
 	public void setRequestMethod(int requestMethod) {
 		this.requestMethod = requestMethod;
 	}
-	public Map<Parameter,ParameterDescription> getParameters() {
+	public Map<Parameter, Map<Class<Annotation>, List<Annotation>>> getParameters() {
 		return parameter;
 	}
-	public void setParameter(Map<Parameter,ParameterDescription> parameter) {
+	public void setParameter(Map<Parameter, Map<Class<Annotation>, List<Annotation>>> parameter) {
 		this.parameter = parameter;
 	}
-	public Class<? extends ViewSolver> getViewSolver() {
-		return viewSolver;
+	public  List<Annotation> getParameterAnnotation(Parameter param ,Class<? extends Annotation> annoType) {
+		Map<Class<Annotation>,List<Annotation>> annoMap = this.parameter.get(param);
+		if(annoMap==null)
+			return null;
+		return annoMap.get(annoType);
 	}
-	public void setViewSolver(Class<? extends ViewSolver> viewSolver) {
-		this.viewSolver = viewSolver;
+	public List<Annotation> getMethodAnnotation(Class<? extends Annotation> annoType) {
+		if(this.methodAnnotation==null)
+			return null;
+		return this.methodAnnotation.get(annoType);
 	}
 }

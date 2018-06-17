@@ -1,13 +1,17 @@
 package com.YaNan.frame.plugin.handler;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.YaNan.frame.plugin.handler.PlugsHandler.ProxyType;
+
+import net.sf.cglib.proxy.MethodProxy;
+
 public class MethodHandler {
 	private PlugsHandler plugsProxy; 
 	private Method method;
+	private MethodProxy methodProxy;
 	private Object[] parameters;
 	private boolean chain=false;
 	private Object originResult;
@@ -20,7 +24,11 @@ public class MethodHandler {
 		this.method = method;
 		this.parameters = args;
 	}
-
+	public MethodHandler(PlugsHandler plugsProxy, MethodProxy methodProxy, Object[] args) {
+		this.plugsProxy = plugsProxy;
+		this.methodProxy = methodProxy;
+		this.parameters = args;
+	}
 	public PlugsHandler getPlugsProxy() {
 		return plugsProxy;
 	}
@@ -82,12 +90,12 @@ public class MethodHandler {
 	/**
 	 * 重新执行目标方法，可以传入之前的参数或新的参数
 	 * @param parmeters
-	 * @throws IllegalAccessException
-	 * @throws IllegalArgumentException
-	 * @throws InvocationTargetException
+	 * @throws Throwable 
 	 */
-	public void chain(Object... parmeters) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		this.headerResult = this.method.invoke(this.plugsProxy.getProxyObject(), parmeters);
+	public void chain(Object... parmeters) throws Throwable {
+		this.headerResult = this.plugsProxy.getProxyType().equals(ProxyType.JDK)
+				?this.method.invoke(this.plugsProxy.getProxyObject(), parmeters)
+						:methodProxy.invokeSuper(this.plugsProxy.getProxyObject(), parameters);
 	}
 
 	@SuppressWarnings("unchecked")

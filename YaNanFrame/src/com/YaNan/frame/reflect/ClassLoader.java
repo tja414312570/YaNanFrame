@@ -673,6 +673,14 @@ public class ClassLoader {
 			IllegalAccessException, IllegalArgumentException,
 			InvocationTargetException {
 		Method method = this.infoCache.getMethod(methodName, parameterType);
+		if(method==null){
+			StringBuilder ptStr = new StringBuilder(this.loadClass.getName()).append(".").append(methodName).append("(");
+			for(int i = 0 ;i<parameterType.length;i++){
+				ptStr.append(parameterType[i].getName());
+				if(i<parameterType.length-1)ptStr.append(".");
+			}
+			throw new NoSuchMethodException(ptStr.append(")").toString());
+		}
 		return method.invoke(object, args);
 	}
 	/**
@@ -694,6 +702,44 @@ public class ClassLoader {
 		return invokeMethod(null, methodName,getParameterTypes(args),args);
 	}
 
+	/**
+	 * 调用加载器内加载对象的某个静态方法，传入String方法名，参数所需要的参数（可选）
+	 * 
+	 * @param methodName
+	 * @param args
+	 * @return
+	 * @throws NoSuchMethodException
+	 * @throws SecurityException
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 * @throws InvocationTargetException
+	 */
+	public static Object invokeStaticMethod(Class<?> clzz,String methodName, Object... args)
+			throws NoSuchMethodException, SecurityException,
+			IllegalAccessException, IllegalArgumentException,
+			InvocationTargetException {
+		Method method = CacheContainer.getClassInfoCache(clzz).getMethod(methodName,getParameterBaseType(args));
+		return method.invoke(null,args);
+	}
+	/**
+	 * 调用加载器内加载对象的某个静态方法，传入String方法名，参数所需要的参数（可选）
+	 * 
+	 * @param methodName
+	 * @param args
+	 * @return
+	 * @throws NoSuchMethodException
+	 * @throws SecurityException
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 * @throws InvocationTargetException
+	 */
+	public static Object invokeStaticMethod(Class<?> clzz,String methodName,Class<?>[] parameterTypes, Object... args)
+			throws NoSuchMethodException, SecurityException,
+			IllegalAccessException, IllegalArgumentException,
+			InvocationTargetException {
+		Method method = CacheContainer.getClassInfoCache(clzz).getMethod(methodName, parameterTypes);
+		return method.invoke(null,args);
+	}
 	/*
 	 * Method
 	 */

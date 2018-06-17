@@ -110,7 +110,7 @@ public class TokenEntity {
 		Iterator<String> iterator = this.urlMap.keySet().iterator();
 		while(iterator.hasNext()){
 			String url = iterator.next();
-			if(!url.equals("")&&StringUtil.match(requestURL, "*"+url+"*"))
+			if(!url.equals("")&&StringUtil.matchURI(requestURL,url))
 				return true;
 		}
 		return false;
@@ -123,14 +123,14 @@ public class TokenEntity {
 		if(this.chain!=null){
 			String[] strs = this.chain.split(",");
 			for(String str : strs){
-				if(!str.contains(".do")&&StringUtil.match(url, "*"+str+"*"))
+				if(!str.contains(".do")&&StringUtil.matchURI(url, str))
 						return true;
 			}
 		}
 		Iterator<String> iterator = this.urlMap.keySet().iterator();
 		while(iterator.hasNext()){
 			String u = iterator.next();
-			if(!u.equals("")&&StringUtil.match(url, "*"+u+"*")){
+			if(!u.equals("")&&StringUtil.matchURI(url,u)){
 				if(this.urlMap.get(u)==null||this.urlMap.get(u).equals(""))
 					return true;
 				String role = this.urlMap.get(u);

@@ -12,8 +12,8 @@ public class StringUtil {
 	public static int maxTimes = 10;
 	private static Map<Integer,Boolean> resourceCache = new HashMap<Integer,Boolean>();
 	public static String decodeVar(String str, Object obj) {
-		Pattern var = Pattern.compile("\\$\\{(\\w|_)+\\}");
-		Pattern reVar = Pattern.compile("\\$\\{|\\}");
+		Pattern var = Pattern.compile("\\{(\\w|_)+\\}");
+		Pattern reVar = Pattern.compile("\\{|\\}");
 		Matcher m = var.matcher(str);
 		ClassLoader loader = new ClassLoader(obj);
 		int i = 0;
@@ -328,6 +328,7 @@ public class StringUtil {
 	            //如果只有一个星号，且表达式的长度不为1 如 *abc 截取abc
 	            if(SNIndex==-1)
 	            {
+	            	if(Src.indexOf("/")>=0)return false;
 	            	String rtemp = regex.substring(1,regex.length()) ;
 	            	//如果字符串的长度与截取表达式片段长度小，匹配失败
 	            	if(Src.length()<rtemp.length())return false;
@@ -348,7 +349,7 @@ public class StringUtil {
 		            }
 	            }
 	            //多个星号，则按片段截取
-	            String temp = regex.substring(SIndex+1, SNIndex);
+	            String temp = SNIndex>0?regex.substring(SIndex+1, SNIndex):regex.substring(SIndex+1);
 	            //如果源字符串不包含该片段，匹配失败
 	            if(Src.indexOf(temp)<0)return false;
 	            //如果第二星号的位置在最后以为 匹配成功
@@ -376,5 +377,12 @@ public class StringUtil {
 			for(int i =0;i<objects.length;i++)
 				hash +=objects[i].hashCode();
 			return hash;
+		}
+
+		public static boolean match(String src, String[] regs) {
+			for(String reg : regs)
+				if(match(src, reg))
+					return true;
+			return false;
 		}
 }

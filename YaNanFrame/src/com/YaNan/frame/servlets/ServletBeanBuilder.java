@@ -7,16 +7,9 @@ import java.lang.reflect.Parameter;
 import com.YaNan.frame.logging.DefaultLog;
 import com.YaNan.frame.logging.Log;
 import com.YaNan.frame.plugin.PlugsFactory;
-import com.YaNan.frame.servlet.view.ViewSolver;
 import com.YaNan.frame.servlets.annotations.Action;
 import com.YaNan.frame.servlets.annotations.ActionResults;
-import com.YaNan.frame.servlets.annotations.CookieValue;
-import com.YaNan.frame.servlets.annotations.PathVariable;
-import com.YaNan.frame.servlets.annotations.RequestBody;
-import com.YaNan.frame.servlets.annotations.RequestHeader;
 import com.YaNan.frame.servlets.annotations.RequestMapping;
-import com.YaNan.frame.servlets.annotations.RequestParam;
-import com.YaNan.frame.servlets.annotations.SessionAttributes;
 import com.YaNan.frame.servlets.annotations.ActionResults.Result;
 
 public class ServletBeanBuilder implements ServletMappingBuilder{
@@ -42,7 +35,7 @@ public class ServletBeanBuilder implements ServletMappingBuilder{
 				urlPath = namespace+urlPath;
 			}
 			String actionName = action.value().equals("")?method.getName():action.value();
-			urlPath =urlPath+actionName+".do";
+			urlPath =urlPath+actionName;
 			bean.setUrlmapping(urlPath);
 			bean.setPathRegex(urlPath);
 			bean.setArgs(action.args());
@@ -89,7 +82,6 @@ public class ServletBeanBuilder implements ServletMappingBuilder{
 		 * 获取url映射
 		 */
 		String urlPath = requestMapping.value().trim().equals("")?"/"+method.getName():requestMapping.value().trim();
-		bean.setViewSolver(requestMapping.viewSolver());
 		if(parentRequestMaping!=null){
 			String namespace = parentRequestMaping.value().trim();
 			if(namespace.equals(""))//如果父类命名空间为空时，父类命名空间为当前类名
@@ -97,8 +89,6 @@ public class ServletBeanBuilder implements ServletMappingBuilder{
 			else if(namespace.equals("/"))//如果父类命名空间为/时，设置命名空间为空，因为子命名空间可能包含了/
 				namespace="";
 			urlPath = namespace+urlPath;
-			if(!parentRequestMaping.viewSolver().equals(ViewSolver.class)&&bean.getViewSolver().equals(ViewSolver.class))//如果父类有实例的视图解析器
-				bean.setViewSolver(parentRequestMaping.viewSolver());
 		}
 		String urlMapping =urlPath+"@"+type;
 		int varIndex = urlMapping.indexOf("{");
@@ -119,30 +109,8 @@ public class ServletBeanBuilder implements ServletMappingBuilder{
 		 */
 		if (method.getParameterCount()!=0) {
 			Parameter[] paras = method.getParameters();
-			for(int i = 0;i<paras.length;i++){
-				ParameterDescription paraDes = null;
-				PathVariable pava = paras[i].getAnnotation(PathVariable.class);
-				if(pava!=null)
-					paraDes=new ParameterDescription(pava.value(),ParameterDescription.ParameterType.PathVariable,pava.defaultValue());
-				RequestParam repa=paras[i].getAnnotation(RequestParam.class);
-				if(repa!=null)
-					paraDes=new ParameterDescription(repa.value(),ParameterDescription.ParameterType.RequestParam,repa.defaultValue());
-				CookieValue	coka=paras[i].getAnnotation(CookieValue.class);
-				if(coka!=null)
-					paraDes=new ParameterDescription(coka.value(),ParameterDescription.ParameterType.CookieValue,coka.defaultValue());
-				SessionAttributes seat=paras[i].getAnnotation(SessionAttributes.class);
-				if(seat!=null)
-					paraDes=new ParameterDescription(seat.value(),ParameterDescription.ParameterType.SessionAttributes,seat.defaultValue());
-				RequestHeader rehe = paras[i].getAnnotation(RequestHeader.class);
-				if(rehe!=null)
-					paraDes=new ParameterDescription(rehe.value(),ParameterDescription.ParameterType.RequestHeader,rehe.defaultValue());
-				RequestBody	rebo=paras[i].getAnnotation(RequestBody.class);
-				if(rebo!=null)
-					paraDes=new ParameterDescription(rebo.value(),ParameterDescription.ParameterType.RequestBody,rebo.defaultValue());
-				if(paras[i].getType().isArray()&&paraDes!=null&&paraDes.getName().length()>0&&paraDes.getName().indexOf("[]")<0)
-					paraDes.setName(paraDes.getName()+"[]");
-				bean.addParameter(paras[i],paraDes);
-			}
+			for(int i = 0;i<paras.length;i++)
+				bean.addParameter(paras[i]);
 		}
 		/**
 		 * 添加PathVariable的描述

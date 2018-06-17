@@ -23,7 +23,7 @@ public @interface Register {
 	 * 组件的属性，匹配模式 *匹配任意字符，？匹配任意单字符
 	 * @return
 	 */
-	String attribute() default "*";
+	String[] attribute() default "*";
 	/**
 	 * 用于描述组件所实现的接口
 	 * @return

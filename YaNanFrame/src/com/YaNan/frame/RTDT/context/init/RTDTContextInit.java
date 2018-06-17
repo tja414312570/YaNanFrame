@@ -2,28 +2,14 @@
  
 import com.YaNan.frame.RTDT.context.ActionManager;
 import com.YaNan.frame.RTDT.context.NotifyManager;
-import com.YaNan.frame.RTDT.context.SocketConfigurator;
 import com.YaNan.frame.RTDT.entity.ActionEntity;
 import com.YaNan.frame.RTDT.entity.NotifyEntity;
 import com.YaNan.frame.plugin.annotations.Register;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import javax.servlet.ServletContextEvent;
-import javax.websocket.ClientEndpointConfig;
-import javax.websocket.ContainerProvider;
-import javax.websocket.Decoder;
-import javax.websocket.DeploymentException;
-import javax.websocket.Encoder;
-import javax.websocket.Extension;
-import javax.websocket.MessageHandler;
-import javax.websocket.Session;
-import javax.websocket.WebSocketContainer;
  
  @Register
  public class RTDTContextInit implements javax.servlet.ServletContextListener

@@ -17,19 +17,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.YaNan.frame.reflect.ClassLoader;
-import com.YaNan.frame.servlets.ServletMapping;
-import com.YaNan.frame.servlets.ServletBean;
 import com.YaNan.frame.servlets.URLSupport;
 import com.YaNan.frame.servlets.session.Token;
 import com.YaNan.frame.servlets.session.TokenManager;
-import com.YaNan.frame.servlets.session.annotation.Chain;
-import com.YaNan.frame.servlets.session.annotation.NoToken;
-import com.YaNan.frame.servlets.session.annotation.iToken;
 import com.YaNan.frame.servlets.session.entity.Failed;
 import com.YaNan.frame.servlets.session.entity.Result;
 import com.YaNan.frame.servlets.session.entity.TokenEntity;
 import com.YaNan.frame.servlets.session.interfaceSupport.TokenFilterInterface;
-import com.YaNan.frame.servlets.session.interfaceSupport.TokenListener;
 import com.YaNan.frame.servlets.session.interfaceSupport.Token_Command_Type;
 import com.YaNan.frame.util.StringUtil;
 /**
@@ -39,61 +33,31 @@ import com.YaNan.frame.util.StringUtil;
  */
 @WebFilter(filterName = "tokenFilter", urlPatterns = "/*")
 public class TokenFilter extends HttpServlet implements Filter {
-	private TokenListener tokenListener = new TokenListener() {
-		@Override
-		public void onSuccess(ServletRequest request, ServletResponse response,
-				FilterChain chain) throws IOException, ServletException {
-			//chain.doFilter(request, response);
-		}
-
-		@Override
-		public void onFailed(Token token, ServletRequest request, ServletResponse response, iToken itoken)
-				throws Exception {
-			response.getWriter().write(itoken.onFailed());
-			response.getWriter().close();
-		}
-	};
-
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private String requestURL;
-	private Token token;
-	private String namespace;
-	private String servletName;
+	
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response,
 			FilterChain chain) throws IOException, ServletException {
 		try {
-			token = Token.getToken((HttpServletRequest) request);
+			response.setContentType("text/html;charset=UTF-8");
+			Token token = Token.getToken((HttpServletRequest) request);
 			if(token==null)
 				token = Token.addToken(((HttpServletRequest)request),(HttpServletResponse) response);
-			String url = ((HttpServletRequest) request).getRequestURL().toString();
-			response.setContentType("text/html;charset=UTF-8");
-			servletName = url.substring(url.lastIndexOf("/") + 1);
-			boolean isServlet=servletName.contains(".do");
-			namespace = URLSupport
-					.getNameSpace((HttpServletRequest) request);
-			requestURL = URLSupport
-					.getRequestPath((HttpServletRequest) request);
-			// 获取servletMap实例
-			//if is CSS、JS、or image file 
-			if((url.contains(".css") || url.contains(".js") || url.contains(".png")|| url.contains(".jpg")||url.contains("fonts"))&&!url.contains(".jsp")){
-	               chain.doFilter(request, response);
-	               return;
-	            }
-			if(isServlet){
-				if(dispatcherServlet( request, response, chain))return;
-			}
-			//================================================处理命名空间拦截
-			 if(TokenManager.hasNameSpace(namespace)) {
-				List<TokenEntity> tokenList = TokenManager.getTokenEntitys(namespace);
+			String url =URLSupport.getRelativePath((HttpServletRequest) request);//URLSupport
+			String queryParam = ((HttpServletRequest) request).getQueryString();
+			if(queryParam!=null)
+				url = new StringBuilder(url).append("?").append(queryParam).toString();
+					//.getRequestPath((HttpServletRequest) request);
+			 if(TokenManager.match(url)) {
+				List<TokenEntity> tokenList = TokenManager.getTokenEntitys(url);
 				Iterator<TokenEntity> iterator = tokenList.iterator();
 				boolean RPIC = false;
 				while(iterator.hasNext()){
 					if(response.isCommitted())return;
-					RPIC = this.dispatcherNamespace(token,iterator.next(), request, response, chain);
+					RPIC = this.dispatcherNamespace(token,iterator.next(), request, response, chain,url);
 					if(RPIC)break;
 				}
 				if(!RPIC)chain.doFilter(request, response);
@@ -106,140 +70,8 @@ public class TokenFilter extends HttpServlet implements Filter {
 		}
 	}
 
-	private boolean dispatcherServlet(ServletRequest request, ServletResponse response, FilterChain chain) {
-		String requestMapping =servletName.replace(".do", "");
-		ServletMapping servletMap = ServletMapping.getInstance();
-		if (servletMap.includeServlet(requestMapping)) {
-			try {
-				ServletBean servletBean = servletMap.getServlet(requestMapping);
-				Class<?> cls = servletBean.getServletClass();
-				iToken itoken =servletBean.getMethod().getAnnotation(iToken.class);
-				if (itoken == null)
-					itoken = cls.getAnnotation(iToken.class);
-				// 要求token验证
-				if (itoken != null) {
-					NoToken n = cls.getAnnotation(NoToken.class);
-					// token是否存在
-					if (token != null) {
-						// token存在-----角色判断
-						// 1判断自定义处理类
-						Chain c = cls.getAnnotation(Chain.class);
-						if (c != null) {
-							// 如果自定义处理类存在，则解析，解析后与role对应
-							String[] cStr = c.chain();
-							for (int i = 0; i < cStr.length; i++) {
-								String[] cPstr = cStr[i].split(",");
-								for (String str : cPstr) {
-									if (StringUtil.match(servletName, str)
-											&& token.isRole(c.role()[i]
-													.split(","))) {
-										chain.doFilter(request, response);
-										return true;
-									}
-								}
-							}
-						}
-						// 处理拦截的角色
-						if (itoken.exRole().length != 0) {
-							if (itoken.exChain().length == 0) {
-								if (token.isRole(itoken.exRole())) {
-									tokenListener.onFailed(token,request, response,
-											itoken);
-									return true;
-								} else {
-									String[] cStr = itoken.exChain();
-									for (int i = 0; i < cStr.length; i++) {
-										String[] cPstr = cStr[i].split(",");
-										for (String str : cPstr) {
-											if (servletName.equals(str)
-													&& token.isRole(itoken
-															.exRole()[i]
-															.split(","))) {
-												chain.doFilter(request, response);
-												return true;
-											}
-										}
-									}
-								}
-							}
-						}
-						// 处理放行的角色
-						if (itoken.role().length != 0) {
-							if (itoken.chain().length == 0) {
-								if (token.isRole(itoken.role())) {
-									chain.doFilter(request, response);
-									return true;
-								} else {
-									tokenListener.onFailed(token,request, response,itoken);
-									return true;
-								}
-							}else{
-								String[] cStr = itoken.chain();
-								for (int i = 0; i < cStr.length; i++) {
-									String[] cPstr = cStr[i].split(",");
-									for (String str : cPstr) {
-										if (servletName.equals(str)) {
-											chain.doFilter(request, response);
-											return true;
-										}
-									}
-								}
-							}
-							tokenListener.onFailed(token,request, response,itoken);
-							return true;
-						}
-						// 无需角色认证，拥有token自动放行
-						chain.doFilter(request, response);
-						return true;
-					} else {
-						// 没有token
-						// 1查看是否有自定义NoToken处理类
-						if (n != null) {
-							for (String str : n.chain()) {
-								if (servletName.equals(str)) {
-									chain.doFilter(request, response);
-									return true;
-								}
-							}
-						}
-						// 2没有NoToken处理类
-						if (itoken.noToken().length != 0) {
-							for (String str : itoken.noToken()) {
-								if (servletName.equals(str)) {
-									chain.doFilter(request, response);
-									return true;
-								}
-							}
-						}
-
-					}
-					// 3没有任何处理方法----默认判断
-					// (1判断是否为排除的action
-					if (itoken.ex().length != 0) {
-						for (String str : itoken.ex()) {
-							if (servletName.equals(str)) {
-								chain.doFilter(request, response);
-								return true;
-							}
-						}
-					}
-					// 不在角色认证范围，也不在过滤条件的，拦截
-					tokenListener.onFailed(token,request, response,itoken);
-					return true;
-				}else{
-					chain.doFilter(request, response);
-					return true;
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-		return false;
-	}
-
-	
 	private void Redirect(String value, ServletRequest request, ServletResponse response) {
-		String contextURL = URLSupport.getContextURL(request);
+		String contextURL = ((HttpServletRequest)request).getContextPath();
 		try {
 			((HttpServletResponse) response)
 			.sendRedirect(getURL(contextURL,value));
@@ -249,7 +81,7 @@ public class TokenFilter extends HttpServlet implements Filter {
 	}
 
 	private void Redirect(TokenFilterInterface ti, String url, ServletRequest request, ServletResponse response) throws IOException {
-		String contextURL = URLSupport.getContextURL(request);
+		String contextURL = ((HttpServletRequest)request).getContextPath();
 		if(!((HttpServletResponse) response).isCommitted())
 			((HttpServletResponse) response).sendRedirect(getURL(contextURL,url,ti));
 	}
@@ -270,11 +102,11 @@ public class TokenFilter extends HttpServlet implements Filter {
 		// TODO Auto-generated method stub
 
 	}
-	public boolean dispatcherNamespace(Token token,TokenEntity tokenEntity, ServletRequest request, ServletResponse response, FilterChain chain) throws Exception{
-		if (tokenEntity.chainURL(requestURL,token)){
+	public boolean dispatcherNamespace(Token token,TokenEntity tokenEntity, ServletRequest request, ServletResponse response, FilterChain chain,String url) throws Exception{
+		if (tokenEntity.chainURL(url,token)){
 			return false;
 		}
-		if(token!=null&&token.isRole(tokenEntity.getRoles().split(","))){
+		if(token!=null&&token.containerRole(tokenEntity.getRoles().split(","))){
 			return false;
 		}
 		if (tokenEntity.getChain() != null) {
@@ -332,10 +164,6 @@ public class TokenFilter extends HttpServlet implements Filter {
 				response.getWriter().write(ro);
 				response.getWriter().flush();
 				return true;
-			}
-			if(ClassLoader.implementOf(cls, TokenListener.class)){
-				TokenListener tokenListen = (TokenListener) cls.newInstance();
-				this.tokenListener = tokenListen;
 			}
 		}
 		//if request url container the url's in Token Entity do chain
@@ -395,11 +223,9 @@ public class TokenFilter extends HttpServlet implements Filter {
 				return true;
 			} else {
 				if (tokenEntity.getRoles() == null || tokenEntity.getRoles().equals("")) {
-					tokenListener.onSuccess(request, response, chain);
 					return false;
 				} else {
 					if (token.isRole(tokenEntity.getRoles())) {
-						tokenListener.onSuccess(request, response, chain);
 						return false;
 					} else {
 						return this.OnFailed(tokenEntity, token, request, response, chain);
@@ -447,13 +273,6 @@ public class TokenFilter extends HttpServlet implements Filter {
 		return true;
 	}
 
-	public TokenListener getTokenListener() {
-		return tokenListener;
-	}
-
-	public void setTokenListener(TokenListener tokenListener) {
-		this.tokenListener = tokenListener;
-	}
 	public static String getURL(String contextUrl,String oUrl,Object ti){
 		if(contextUrl!=null)
 			contextUrl = StringUtil.decodeVar(contextUrl, ti);

@@ -1,11 +1,16 @@
 package com.YaNan.frame.plugin;
 
 import java.io.File;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
 
 import com.YaNan.frame.logging.DefaultLog;
 import com.YaNan.frame.logging.Log;
@@ -15,6 +20,7 @@ import com.YaNan.frame.path.PackageScanner.ClassInter;
 import com.YaNan.frame.path.Path.PathInter;
 import com.YaNan.frame.plugin.annotations.Register;
 import com.YaNan.frame.plugin.annotations.Service;
+import com.YaNan.frame.plugin.handler.InvokeHandler;
 import com.YaNan.frame.plugin.handler.PlugsHandler;
 import com.YaNan.frame.plugin.interfacer.PlugsListener;
 
@@ -62,7 +68,8 @@ public class PlugsFactory implements PlugsListener{
 	 * 初始化组件，当所有的组件扫描完成之后，需要使用{@link #associate()}完成组件的关联
 	 */
 	public void init(){
-		this.addPlugsByDefault(PlugsListener.class);
+		this.addPlugsByDefault(PlugsListener.class);//添加两个Plugin自身支持需要的组件接口 PlugsListener 用于组件初始化完成时的监听
+		this.addPlugsByDefault(InvokeHandler.class);//InvokeHandler用于提供方法拦截接口的支持
 		PackageScanner scanner = new PackageScanner();
 		scanner.doScanner(new ClassInter(){
 			@Override
@@ -86,6 +93,7 @@ public class PlugsFactory implements PlugsListener{
 		List<PlugsListener> listeners = PlugsFactory.getPlugsInstanceList(PlugsListener.class);
 		for(PlugsListener listen : listeners)
 			listen.excute(this);
+		
 	}
 	/**
 	 * 建立个组件和注册器之间的关联
@@ -114,8 +122,8 @@ public class PlugsFactory implements PlugsListener{
 	 * @param plugClass 组件类 即接口
 	 * @return
 	 */
-	public Plug getPlug(Class<?> plugClass){
-		return this.plugsList.get(plugClass);
+	public static Plug getPlug(Class<?> plugClass){
+		return instance.plugsList.get(plugClass);
 	}
 	/**
 	 * 添加组件 当通过扫描comps文件与plugs文件时，需要通过此方法将组件添加到容器中
@@ -178,14 +186,7 @@ public class PlugsFactory implements PlugsListener{
 	 */
 	public static <T> T getPlugsInstanceWithDefault(Class<T> impl,Class<? extends T> defaultClass,Object...args){
 			try {
-				if(instance==null)
-					return (T) defaultClass.newInstance(); 
-				if(!instance.isAvailable())
-					return (T) defaultClass.newInstance(); 
-				Plug plug = instance.getPlug(impl);
-				if(plug==null)
-					return (T) PlugsHandler.newMapperProxy(impl,defaultClass.newInstance()); 
-				RegisterDescription registerDescription = plug.getDefaultRegisterDescription();
+				RegisterDescription registerDescription=getRegisterDescrptionAllowNull(impl);
 				if(registerDescription==null)
 					return (T) PlugsHandler.newMapperProxy(impl,defaultClass.newInstance()); 
 				return registerDescription.getRegisterInstance(impl,args);//instance.getRegisterInstance(impl,registerDescription,args);
@@ -197,6 +198,93 @@ public class PlugsFactory implements PlugsListener{
 	}
 	
 	/**
+	 * 检测服务是否可用
+	 * @return
+	 * @throws Exception
+	 */
+	public static boolean checkAvaliable() throws Exception{
+		if(instance==null)
+			throw new Exception("YaNan.plugs service not initd");
+		if(!instance.isAvailable())
+			throw new Exception("plugs unavailable ! this error may arise because a static field uses the PlugsFactory's proxy");
+		return instance!=null&&instance.isAvailable();
+	}
+	/**
+	 * 检测服务是否可用
+	 * @return
+	 * @throws Exception
+	 */
+	public static boolean checkAvaliableNE() {
+		return instance!=null&&instance.isAvailable();
+	}
+	/**
+	 * 获取注册描述器
+	 * @param impl
+	 * @param b 
+	 * @param attribute 
+	 * @param attribute
+	 * @return
+	 * @throws Exception
+	 */
+	public static  RegisterDescription getRegisterDescrption(Class<?> impl) throws Exception{
+		RegisterDescription registerDescription=null;
+		if(impl.isInterface()&&checkAvaliable()){
+			Plug plug = getPlug(impl);
+			if(plug==null)
+				throw new Exception("service interface "+impl.getName() +" could not found or not be regist");
+			registerDescription = plug.getDefaultRegisterDescription();
+		}else{
+			
+			registerDescription = instance.getRegisterDescription(impl);
+		}
+		return registerDescription;
+	}
+	public static RegisterDescription getRegisterDescrptionAllowNull(Class<?> impl) {
+		RegisterDescription registerDescription=null;
+		try {
+			if(impl.isInterface()){
+				if(checkAvaliableNE()){
+					Plug plug = getPlug(impl);
+					if(plug!=null)
+						registerDescription = plug.getDefaultRegisterDescription();
+				}
+			}else{
+				registerDescription = instance.getRegisterDescription(impl);
+			}
+		} catch (Exception e) {
+			
+		}
+		return registerDescription;
+	}
+	public static RegisterDescription getRegisterDescrption(Class<?> impl, String attribute,boolean strict) throws Exception {
+		RegisterDescription registerDescription=null;
+		if(impl.isInterface()&&checkAvaliable()){
+			Plug plug = getPlug(impl);
+			if(plug==null)
+				throw new Exception("service interface "+impl.getName() +" could not found or not be regist");
+			if(strict)
+				registerDescription = plug.getRegisterDescriptionByAttributeStrict(attribute);
+			else
+				registerDescription = plug.getRegisterDescriptionByAttribute(attribute);
+		}else{
+			registerDescription = instance.getRegisterDescription(impl);
+		}
+		return registerDescription;
+	}
+	public static <T> RegisterDescription getRegisterDescrption(Class<T> impl, Class<? extends T> insClass) throws Exception {
+		RegisterDescription registerDescription=null;
+		if(impl.isInterface()&&checkAvaliable()){
+			Plug plug = getPlug(impl);
+			if(plug==null)
+				throw new Exception("service interface "+impl.getName() +" could not found or not be regist");
+			registerDescription = plug.getRegisterDescriptionByInsClass(insClass);
+			
+		}else{
+			registerDescription = instance.getRegisterDescription(impl);
+		}
+		return registerDescription;
+	}
+	/**
 	 * 获取组件实例，当组件中有多个组件实现实例时，返回一个默认组件
 	 * 具体选择某个组件实例作为默认组件实例依赖其优先级(priority)，当所有优先级相同时选第一个
 	 * 优先级数值越低，优先级越高
@@ -206,18 +294,23 @@ public class PlugsFactory implements PlugsListener{
 	 */
 	public static <T> T getPlugsInstance(Class<T> impl,Object...args) {
 		try {
-			if(instance==null)
-				throw new Exception("YaNan.plugs service not initd");
-			if(!instance.isAvailable())
-				throw new Exception("plugs unavailable ! this error may arise because a static field uses the PlugsFactory's proxy");
-			Plug plug = instance.getPlug(impl);
-			if(plug==null)
-				throw new Exception("service interface "+impl.getName() +" could not found or not be regist");
-			RegisterDescription registerDescription = plug.getDefaultRegisterDescription();
+			//获取一个注册描述
+			RegisterDescription registerDescription=getRegisterDescrption(impl);
 			if(registerDescription==null)
 				throw new Exception("service interface "+impl.getName() +" could not found any registrar");
-			Object object = registerDescription.getRegisterInstance(impl,args);//instance.getRegisterInstance(impl,registerDescription,args);
-			return (T) PlugsHandler.newMapperProxy(impl,object); 
+			return registerDescription.getRegisterInstance(impl,args); 
+		} catch (Exception e) {
+			log.error(e);
+		}
+		return null;
+	}
+	public static <T> T getPlugsInstanceNew(Class<T> impl,Object...args) {
+		try {
+			//获取一个注册描述
+			RegisterDescription registerDescription=getRegisterDescrption(impl);
+			if(registerDescription==null)
+				throw new Exception("service interface "+impl.getName() +" could not found any registrar");
+			return registerDescription.getRegisterNewInstance(impl,args); 
 		} catch (Exception e) {
 			log.error(e);
 		}
@@ -233,23 +326,17 @@ public class PlugsFactory implements PlugsListener{
 	 */
 	public static <T> T getPlugsInstanceByInsClass(Class<T> impl,Class<? extends T> insClass,Object...args) {
 		try {
-			if(instance==null)
-				throw new Exception("YaNan.plugs service not initd");
-			if(!instance.isAvailable())
-				throw new Exception("plugs unavailable ! this error may arise because a static field uses the PlugsFactory's proxy");
-			Plug plug = instance.getPlug(impl);
-			if(plug==null)
-				throw new Exception("service interface "+impl.getName() +" could not found or not be regist");
-			RegisterDescription registerDescription = plug.getRegisterDescriptionByInsClass(insClass);
+			
+			RegisterDescription registerDescription=getRegisterDescrption(impl,insClass);
 			if(registerDescription==null)
 				throw new Exception("service interface "+impl.getName() +" could not found any registrar");
-			Object object = registerDescription.getRegisterInstance(impl,args);//instance.getRegisterInstance(impl,registerDescription,args);
-			return (T) PlugsHandler.newMapperProxy(impl,object); 
+			return registerDescription.getRegisterInstance(impl,args); 
 		} catch (Exception e) {
 			log.error(e);
 		}
 		return null;
 	}
+	
 	/**
 	 * 通过组件实例的属性（attribute）获取组件实例，当组件中有多个组件实例与之匹配时，返回一个优先级组件
 	 * 如果没有匹配的组件，返回一个默认组件，因此这是一种不严谨的组件获取方式，如果需要使用严谨模式（当
@@ -262,14 +349,8 @@ public class PlugsFactory implements PlugsListener{
 	 */
 	public static <T> T getPlugsInstanceByAttribute(Class<T> impl,String attribute,Object...args) {
 		try {
-			if(instance==null)
-				throw new Exception("YaNan.plugs service not initd");
-			if(!instance.isAvailable())
-				throw new Exception("plugs unavailable ! this error may arise because a static field uses the PlugsFactory's proxy");
-			Plug plug = instance.getPlug(impl);
-			if(plug==null)
-				throw new Exception("service interface "+impl.getName() +" could not found or not be regist");
-			RegisterDescription registerDescription = plug.getRegisterDescriptionByAttribute(attribute);
+			
+			RegisterDescription registerDescription=getRegisterDescrption(impl,attribute,false);
 			if(registerDescription==null)
 				throw new Exception("service interface "+impl.getName() +" could not found any registrar");
 			return registerDescription.getRegisterInstance(impl,args);//instance.getRegisterInstance(impl,registerDescription,args);
@@ -278,6 +359,7 @@ public class PlugsFactory implements PlugsListener{
 		}
 		return null;
 	}
+	
 	/**
 	 * 通过组件实例的属性（attribute）获取组件实例，当组件中有多个组件实例与之匹配时，返回一个优先级组件
 	 * 如果没有匹配的组件，会返回null，因此这是一种不严谨的组件获取方式，如果想当匹配不通过时，返回一个
@@ -290,14 +372,7 @@ public class PlugsFactory implements PlugsListener{
 	 */
 	public static  <T> T  getPlugsInstanceByAttributeStrict(Class<T> impl,String attribute,Object...args) {
 		try {
-			if(instance==null)
-				throw new Exception("YaNan.plugs service not initd");
-			if(!instance.isAvailable())
-				throw new Exception("plugs unavailable ! this error may arise because a static field uses the PlugsFactory's proxy");
-			Plug plug = instance.getPlug(impl);
-			if(plug==null)
-				throw new Exception("service interface "+impl.getName() +" could not found or not be regist");
-			RegisterDescription registerDescription = plug.getRegisterDescriptionByAttributeStrict(attribute);
+			RegisterDescription registerDescription=getRegisterDescrption(impl,attribute,true);
 			if(registerDescription!=null)
 				return registerDescription.getRegisterInstance(impl,args);//instance.getRegisterInstance(impl,registerDescription,args);
 		} catch (Exception e) {
@@ -319,7 +394,7 @@ public class PlugsFactory implements PlugsListener{
 				throw new Exception("YaNan.plugs service not initd");
 			if(!instance.isAvailable())
 				throw new Exception("plugs unavailable ! this error may arise because a static field uses the PlugsFactory's proxy");
-			Plug plug = instance.getPlug(impl);
+			Plug plug = getPlug(impl);
 			if(plug==null)
 				throw new Exception("service interface "+impl.getName() +" could not found or not be regist");
 			List<T> objectList = new ArrayList<T>();
@@ -339,6 +414,10 @@ public class PlugsFactory implements PlugsListener{
 	 * @return
 	 */
 	public RegisterDescription getRegisterDescription(Class<?> targetCls) {
+		if(this.RegisterContatiner.get(targetCls)==null){
+			RegisterDescription registerDescription = new RegisterDescription(targetCls);
+			RegisterContatiner.put(targetCls,registerDescription);
+		}
 		return this.RegisterContatiner.get(targetCls);
 	}
 	public void clear(){
@@ -355,4 +434,129 @@ public class PlugsFactory implements PlugsListener{
 	public void excute(PlugsFactory plugsFactory) {
 		log = PlugsFactory.getPlugsInstanceWithDefault(Log.class,DefaultLog.class,PlugsFactory.class);
 	}
+	@SuppressWarnings("unchecked")
+	public static Map<Class<Annotation>, List<Annotation>> getAnnotationGroup(Parameter parameter,
+			Class<Annotation>... annoTypes) {
+		if(parameter==null)
+			return null;
+		Annotation[] annotations = parameter.getAnnotations();
+		if(annotations.length==0)
+			return null;
+		Map<Class<Annotation>,List<Annotation>> annoGroup = new HashMap<Class<Annotation>, List<Annotation>>();
+		if(annoTypes.length==0)//没有指定注解参数时，返回空，因为没有意义
+			return null;
+		//遍历所有注解，进行分组添加
+			for(Annotation annotation : annotations){
+				for(Class<Annotation> annoType : annoTypes){
+					Annotation anno = annotation.annotationType().getAnnotation(annoType);
+					if(anno!=null){
+						List<Annotation> list = annoGroup.get(annoType);
+						if(list==null){
+							list = new ArrayList<Annotation>();
+							list.add(anno);
+							annoGroup.put(annoType, list);
+						}else
+							list.add(anno);
+					}
+				}
+			}
+		return annoGroup;
+	}
+	public static Map<Class<Annotation>, List<Annotation>> getAnnotationGroup(Parameter parameter,
+			List<Class<Annotation>> annoTypes) {
+		if(parameter==null)
+			return null;
+		Annotation[] annotations = parameter.getAnnotations();
+		if(annotations.length==0)
+			return null;
+		Map<Class<Annotation>,List<Annotation>> annoGroup = new HashMap<Class<Annotation>, List<Annotation>>();
+		if(annoTypes.size()==0)//没有指定注解参数时，返回空，因为没有意义
+			return null;
+		//遍历所有注解，进行分组添加
+			for(Annotation annotation : annotations){
+				for(Class<Annotation> annoType : annoTypes){
+					Annotation annoMark = annotation.annotationType().getAnnotation(annoType);
+					if(annoMark!=null){
+						List<Annotation> list = annoGroup.get(annoType);
+						if(list==null){
+							list = new ArrayList<Annotation>();
+							list.add(annotation);
+							annoGroup.put(annoType, list);
+						}else
+							list.add(annotation);
+					}
+				}
+			}
+		return annoGroup;
+	}
+	@SuppressWarnings("unchecked")
+	public static Map<Class<Annotation>, List<Annotation>> getAnnotationGroup(Method method,
+			Class<Annotation>... annoTypes) {
+		if(method==null)
+			return null;
+		Annotation[] annotations = method.getAnnotations();
+		if(annotations.length==0)
+			return null;
+		Map<Class<Annotation>,List<Annotation>> annoGroup = new HashMap<Class<Annotation>, List<Annotation>>();
+		if(annoTypes.length==0)//没有指定注解参数时，返回空，因为没有意义
+			return null;
+		//遍历所有注解，进行分组添加
+			for(Annotation annotation : annotations){
+				for(Class<Annotation> annoType : annoTypes){
+					Annotation annoMark = annotation.annotationType().getAnnotation(annoType);
+					if(annoMark!=null){
+						List<Annotation> list = annoGroup.get(annoType);
+						if(list==null){
+							list = new ArrayList<Annotation>();
+							list.add(annotation);
+							annoGroup.put(annoType, list);
+						}else
+							list.add(annotation);
+					}
+				}
+			}
+		return annoGroup;
+	}
+	public static Map<Class<Annotation>, List<Annotation>> getAnnotationGroup(Method method,
+			List<Class<Annotation>> annoTypes) {
+		if(method==null)
+			return null;
+		Annotation[] annotations = method.getAnnotations();
+		if(annotations.length==0)
+			return null;
+		Map<Class<Annotation>,List<Annotation>> annoGroup = new HashMap<Class<Annotation>, List<Annotation>>();
+		if(annoTypes.size()==0)//没有指定注解参数时，返回空，因为没有意义
+			return null;
+		//遍历所有注解，进行分组添加
+			for(Annotation annotation : annotations){
+				for(Class<Annotation> annoType : annoTypes){
+					Annotation annoMark = annotation.annotationType().getAnnotation(annoType);
+					if(annoMark!=null){
+						List<Annotation> list = annoGroup.get(annoType);
+						if(list==null){
+							list = new ArrayList<Annotation>();
+							list.add(annotation);
+							annoGroup.put(annoType, list);
+						}else
+							list.add(annotation);
+					}
+				}
+			}
+		return annoGroup;
+	}
+	public static List<Annotation> getAnnotationGroup(Field field, Class<? extends Annotation> annotationType) {
+		if(field==null||annotationType==null)
+			return null;
+		Annotation[] annotations = field.getAnnotations();
+		if(annotations.length==0)
+			return null;
+		List<Annotation> annoGroup = new ArrayList<Annotation>();
+		for(Annotation annotation : annotations){
+			Annotation annoMark = annotation.annotationType().getAnnotation(annotationType);
+			if(annoMark!=null)
+				annoGroup.add(annotation);
+		}
+		return annoGroup;
+	}
+	
 }

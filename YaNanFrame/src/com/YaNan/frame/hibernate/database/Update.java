@@ -102,7 +102,7 @@ public class Update extends OperateImplement{
 	 * @throws SecurityException 
 	 * @throws NoSuchFieldException 
 	 */
-	public void setFields(Map<String,Object> updateList) throws NoSuchFieldException, SecurityException {
+	public Update setFields(Map<String,Object> updateList) throws NoSuchFieldException, SecurityException {
 		if(!this.updateList.isEmpty())this.updateList.clear();
 		Iterator<String> iterator= updateList.keySet().iterator();
 		while(iterator.hasNext()){
@@ -111,6 +111,7 @@ public class Update extends OperateImplement{
 			this.updateList.put(column,updateList.get(field));
 			this.updateList = updateList;
 		}
+		return this;
 	}
 	/**
 	 * 要更新的数据库的字段
@@ -119,47 +120,55 @@ public class Update extends OperateImplement{
 	 * @throws SecurityException 
 	 * @throws NoSuchFieldException 
 	 */
-	public void setField(String field,Object value) throws NoSuchFieldException, SecurityException{
+	public Update setField(String field,Object value) throws NoSuchFieldException, SecurityException{
 		String column = this.getDbTab().getDBColumn(field).getName();
 		this.updateList.put(column,value.toString());
+		return this;
 	}
 	/**
 	 * 添加要更新的域
 	 * @param field
 	 * @param value
 	 */
-	public void setColumn(String field,Object value){
+	public Update setColumn(String field,Object value){
 		this.updateList.put(field,value.toString());
+		return this;
 	}
 	/**
 	 * 设置要更新的域
 	 * @param field
 	 * @param condition
 	 */
-	public void setColumns(Map<String,Object> updateList) throws NoSuchFieldException, SecurityException {
+	public Update setColumns(Map<String,Object> updateList) throws NoSuchFieldException, SecurityException {
 		this.updateList = updateList;
+		return this;
 	}
-	public void addCondition(Field field, String condition) {
+	public Update addCondition(Field field, String condition) {
 		this.map.put(getDbTab().getDBColumn(field).getName(), condition);
+		return this;
 	}
 
-	public void addCondition(Field field, Object condition) {
+	public Update addCondition(Field field, Object condition) {
 		this.map.put(getDbTab().getDBColumn(field).getName(), condition.toString());
+		return this;
 	}
 
-	public void addColumnCondition(String column, Object condition) {
+	public Update addColumnCondition(String column, Object condition) {
 		this.map.put(column, condition.toString());
+		return this;
 	}
-	public void addCondition(String field,Object condition) {
+	public Update addCondition(String field,Object condition) {
 		try {
 			this.map.put(getDbTab().getDBColumn(field).getName(), condition.toString());
 		} catch (NoSuchFieldException | SecurityException e) {
 			log.error(e);
 		}
+		return this;
 	}
 
-	public void addConditionCommand(String condition) {
+	public Update addConditionCommand(String condition) {
 		this.condition.add(condition);
+		return this;
 	}
 
 	public String create() {
@@ -193,7 +202,7 @@ public class Update extends OperateImplement{
 	 * 移除要更新的域
 	 * @param field
 	 */
-	public void removeFields(String... fields) {
+	public Update removeFields(String... fields) {
 		try {
 			for(String field :fields){
 				String column = this.getDbTab().getDBColumn(field).getName();
@@ -202,34 +211,37 @@ public class Update extends OperateImplement{
 		} catch (NoSuchFieldException | SecurityException e) {
 			e.printStackTrace();
 		}
+		return this;
 	}
 	/**
 	 * 移除要更新的域
 	 * @param field
 	 */
-	public void removeField(String field){
+	public Update removeField(String field){
 		try{
 			String column = this.getDbTab().getDBColumn(field).getName();
 			this.updateList.remove(column);
 		} catch (NoSuchFieldException | SecurityException e) {
 			e.printStackTrace();
 		}
+		return this;
 	}
 	/**
 	 * 移除要更新的域
 	 * @param field
 	 */
-	public void removeColumns(String... columns){
-		for(String column :columns){
+	public Update removeColumns(String... columns){
+		for(String column :columns)
 			this.updateList.remove(column);
-			}
+		return this;
 	}
 	/**
 	 * 移除要更新的列
 	 * @param field
 	 */
-	public void removeColumn(String column){
+	public Update removeColumn(String column){
 		this.updateList.remove(column);
+		return this;
 	}
 	/**
 	 * 设置域的表达式
@@ -238,28 +250,31 @@ public class Update extends OperateImplement{
 	 * @throws NoSuchFieldException
 	 * @throws SecurityException
 	 */
-	public void setFieldExpression(String field,Object value){
+	public Update setFieldExpression(String field,Object value){
 		try {
 			String column = this.getDbTab().getDBColumn(field).getName();
 			this.updateList.put(column, value);
 		} catch (NoSuchFieldException | SecurityException e) {
 			e.printStackTrace();
 		}
+		return this;
 	}
 	/**
 	 * 设置列的表达式
 	 * @param field
 	 * @param value
 	 */
-	public void setColumnExpression(String field, Object value) {
+	public Update setColumnExpression(String field, Object value) {
 		this.updateList.put(field,value);
+		return this;
 	}
 	/**
 	 * 设置列的Case表达式
 	 * @param field
 	 * @param value
 	 */
-	public void setColumnExpression(Case cases) {
+	public Update setColumnExpression(Case cases) {
 		this.updateList.put(cases.getColumn(),cases.create());
+		return this;
 	}
 }

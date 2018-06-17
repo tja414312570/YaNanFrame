@@ -7,7 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.YaNan.frame.hibernate.WebPath;
+
 import com.YaNan.frame.hibernate.beanSupport.BeanFactory;
 import com.YaNan.frame.hibernate.beanSupport.XMLBean;
 import com.YaNan.frame.logging.Log;
@@ -19,7 +19,7 @@ import com.YaNan.frame.servlets.session.entity.TokenEntity;
 import com.YaNan.frame.servlets.session.interfaceSupport.TokenHibernateInterface;
 import com.YaNan.frame.util.StringUtil;
 
-public class TokenManager {
+public class TokenManager{
 	/**
 	 * 客户端token标示
 	 */
@@ -72,15 +72,15 @@ public class TokenManager {
 	public static void init() {
 		if (manager == null)
 			manager = new TokenManager();
-		manager.file = new File(WebPath.getWebPath().getClassPath().realPath
-				+ "Token.xml");
+		manager.file = new File(TokenManager.class.getClassLoader().getResource("").getPath().replace("%20"," ")
+				,"Token.xml");
 		manager.index();
 	}
 
 	public static void init(TokenManager tokenManager) {
 		manager = tokenManager;
-		manager.file = new File(WebPath.getWebPath().getClassPath().realPath
-				+ "Token.xml");
+		manager.file = new File(TokenManager.class.getClassLoader().getResource("").getPath().replace("%20"," ")
+				,"Token.xml");
 		manager.index();
 	}
 	// index token XML file;
@@ -125,9 +125,6 @@ public class TokenManager {
 		while (i.hasNext()) {
 			TokenEntity tokenBean = (TokenEntity) i.next();
 			manager.addToken(tokenBean.getNamespace(), tokenBean);
-			log.debug(
-					"add token namespace :" + tokenBean.getNamespace() + " ; "
-							+ tokenBean.toString());
 		}
 	}
 
@@ -215,23 +212,23 @@ public class TokenManager {
 		}
 	}
 
-	public static boolean hasNameSpace(String namespace) {
+	public static boolean match(String namespace) {
 		if(manager!=null){
 			Iterator<String> iterator = manager.tokenMap.keySet().iterator();
 			while(iterator.hasNext()){
-				if(StringUtil.match(namespace, iterator.next()))
+				if(StringUtil.matchURI(namespace, iterator.next()))
 					return true;
 			}
 		}
 		return false;
 	}
 
-	public static List<TokenEntity> getTokenEntitys(String namespace) {
+	public static List<TokenEntity> getTokenEntitys(String url) {
 		List<TokenEntity> tl= new ArrayList<TokenEntity>();
 		Iterator<String> iterator = manager.tokenMap.keySet().iterator();
 		while(iterator.hasNext()){
 			String nameReg =  iterator.next();
-			if(StringUtil.match(namespace,nameReg))
+			if(StringUtil.matchURI(url,nameReg))
 				tl.add(manager.tokenMap.get(nameReg));
 		}
 		return tl;

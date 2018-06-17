@@ -30,7 +30,7 @@ public class RegisterDescription {
 	private Register register;
 	private Class<?>[] plugs;
 	private int priority=0;
-	private String attribute="*";
+	private String[] attribute={"*"};
 	private boolean signlton;
 	private File file;
 	private String description ="";
@@ -44,7 +44,7 @@ public class RegisterDescription {
 	 * @param impls
 	 * @throws Exception 
 	 */
-	public RegisterDescription(Register register, Class<?> clzz) throws Exception {
+	public RegisterDescription(Register register, Class<?> clzz){
 		this.clzz = register.declare().equals(Object.class)?clzz:register.declare();
 		this.register = register;
 		this.plugs = register.register().length==0?this.clzz.getInterfaces():register.register();
@@ -52,9 +52,17 @@ public class RegisterDescription {
 		this.signlton = register.signlTon();
 		this.attribute = register.attribute();
 		this.description = register.description();
-		if(this.plugs==null||this.plugs.length==0)
-			throw new Exception("register "+clzz.getName()+" not implements any interface");
 		checkPlugs(this.plugs);
+	}
+	public RegisterDescription(Class<?> clzz){
+		//读取属性
+		this.priority = Integer.MAX_VALUE;
+		this.signlton = true;
+		this.description = "default register description :"+clzz.getName();
+		//获取实现类
+		this.clzz= new ClassLoader(clzz,false).getLoadedClass();
+		//获取实现类所在的接口
+		this.plugs = clzz.getInterfaces();
 	}
 	public static <T> Class<?>[] getPlugs(Class<?> clzz,String declareRegister){
 		Set<Class<?>> set = new HashSet<Class<?>>();
@@ -85,7 +93,7 @@ public class RegisterDescription {
 	}
 	public static void checkPlugs(Class<?>[] plugs){
 		for(Class<?> plug : plugs){
-			if(PlugsFactory.getInstance().getPlug(plug)==null)
+			if(PlugsFactory.getPlug(plug)==null)
 				PlugsFactory.getInstance().addPlugsByDefault(plug);
 		}
 	}
@@ -119,7 +127,7 @@ public class RegisterDescription {
 				//读取属性
 				this.priority = Integer.valueOf(p.getProperty("comps.priority", "0"));
 				this.signlton = Boolean.valueOf(p.getProperty("comps.signlton", "true"));
-				this.attribute = p.getProperty("comps.attribute", "*");
+				this.attribute = p.getProperty("comps.attribute", "*").split(",");
 				this.description = p.getProperty("comps.description", "");
 				String className = p.getProperty("comps.class", clzzStr);
 				String declareRegister = p.getProperty("comps.register", "*");
@@ -166,11 +174,11 @@ public class RegisterDescription {
 		this.priority = priority;
 	}
 
-	public String getAttribute() {
+	public String[] getAttribute() {
 		return attribute;
 	}
 
-	public void setAttribute(String attribute) {
+	public void setAttribute(String... attribute) {
 		this.attribute = attribute;
 	}
 
@@ -184,33 +192,56 @@ public class RegisterDescription {
 	
 	@SuppressWarnings("unchecked")
 	public <T> T getRegisterInstance(Class<T> plug,Object... args) throws Exception {
-		Object proxy;
-		if(args.length==0){
-			if(this.signlton){
-				proxy = proxyContainer.get(hash(plug,args));
-				if(proxy==null){
+		Object proxy = null;
+		if(plug.isInterface()){
+			if(args.length==0){
+				if(this.signlton){
+					proxy = proxyContainer.get(hash(plug,args));
+					if(proxy==null){
+						Object obj = this.clzz.newInstance();
+						proxy = PlugsHandler.newMapperProxy(plug,obj);
+						proxyContainer.put(hash(plug,args), proxy);
+					}
+				}else{
 					Object obj = this.clzz.newInstance();
 					proxy = PlugsHandler.newMapperProxy(plug,obj);
-					proxyContainer.put(hash(plug,args), proxy);
 				}
 			}else{
-				Object obj = this.clzz.newInstance();
+				Class<?>[] parameterTypes = com.YaNan.frame.reflect.ClassLoader.getParameterTypes(args);
+				Constructor<?> constructor =CacheContainer.getClassInfoCache(this.clzz).getConstructor(parameterTypes);//this.cl.getConstructor(parameterTypes);
+				if(constructor==null){
+					StringBuilder sb = new StringBuilder();
+					for(int i = 0;i<parameterTypes.length;i++){
+						sb.append(parameterTypes[i].getName()).append(i<parameterTypes.length-1?",":"");
+					}
+					throw new Exception("constructor "+this.clzz.getSimpleName()+"("+sb.toString()+") is not exist at "+this.clzz.getName());
+				}
+					
+				Object obj = constructor.newInstance(args);
 				proxy = PlugsHandler.newMapperProxy(plug,obj);
 			}
 		}else{
-			Class<?>[] parameterTypes = com.YaNan.frame.reflect.ClassLoader.getParameterTypes(args);
-			Constructor<?> constructor =CacheContainer.getClassInfoCache(this.clzz).getConstructor(parameterTypes);//this.cl.getConstructor(parameterTypes);
-			if(constructor==null){
-				StringBuilder sb = new StringBuilder();
-				for(int i = 0;i<parameterTypes.length;i++){
-					sb.append(parameterTypes[i].getName()).append(i<parameterTypes.length-1?",":"");
+			if(this.signlton&&args.length==0){
+				proxy = proxyContainer.get(hash(plug,args));
+				if(proxy==null){
+					proxy =PlugsHandler.newCglibProxy(this.getRegisterClass());
+					proxyContainer.put(hash(plug,args), proxy);
 				}
-				throw new Exception("constructor "+this.clzz.getSimpleName()+"("+sb.toString()+") is not exist at "+this.clzz.getName());
-			}
-				
-			Object obj = constructor.newInstance(args);
-			proxy = PlugsHandler.newMapperProxy(plug,obj);
+			}else
+				proxy = PlugsHandler.newCglibProxy(this.getRegisterClass(),args);
 		}
+		return (T) proxy;
+	}
+	@SuppressWarnings("unchecked")
+	public <T> T getRegisterNewInstance(Class<T> plug,Object... args) throws InstantiationException, IllegalAccessException {
+		Object proxy = null;
+		if(plug.isInterface()){
+				Object obj = PlugsHandler.newCglibProxy(this.getRegisterClass(),args);
+				proxy = PlugsHandler.newMapperProxy(plug,obj);
+				proxyContainer.put(hash(plug,args), proxy);
+	
+		}else
+			proxy = PlugsHandler.newCglibProxy(this.getRegisterClass(),args);
 		return (T) proxy;
 	}
 	public static int hash(Class<?> clzz,Object...objects){
@@ -236,5 +267,6 @@ public class RegisterDescription {
 	public void setDescription(String description) {
 		this.description = description;
 	}
+	
 
 }

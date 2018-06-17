@@ -21,12 +21,14 @@ import com.YaNan.frame.plugin.PlugsFactory;
  * @author YaNan
  *
  */
-@WebServlet("/")
+@WebServlet("/*")
 public class CoreDispatcher extends HttpServlet{
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -1089658849875241044L;
+	private static final String FORWARD_URI = "javax.servlet.forwad.request_uri";
+	private static final String INCLUDE_URI = "javax.servlet.include.request_uri";
 	// 日志类，用于输出日志
 	protected boolean showServerInfo = true;
 	protected Servlet servlet;
@@ -69,8 +71,15 @@ public class CoreDispatcher extends HttpServlet{
 	@Override
 	protected void service(HttpServletRequest req, HttpServletResponse resp)
 	        throws ServletException, IOException {
+		
 		//获得资源相对路径
 		String path = getRelativePath(req, true);
+		//判断请求是否forward或include
+		Object dispatchURI = req.getAttribute(FORWARD_URI);
+		if(dispatchURI!=null)
+			dispatchURI = req.getAttribute(INCLUDE_URI);
+		if(dispatchURI!=null)
+			path = dispatchURI.toString();
 		ServletMapping servletMap = ServletMapping.getInstance();
 		/**
 		 * 通过模糊的方式查询servlet，此种方式目的在与获取Servlet类型，因此有以下缺点

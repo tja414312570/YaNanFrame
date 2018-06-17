@@ -39,8 +39,9 @@ public class Query extends OperateImplement{
 	public Class<?> getCls() {
 		return cls;
 	}
-	public void setCls(Class<?> cls) {
+	public Query setCls(Class<?> cls) {
 		this.cls = cls;
+		return this;
 	}
 	public static interface Order{
 		public static final String Desc="desc";
@@ -49,7 +50,6 @@ public class Query extends OperateImplement{
 		return key;
 	}
 	public int ident(){
-		
 		return this.identNC()+map.hashCode()+condition.hashCode();
 	}
 	public int identNC(){
@@ -303,59 +303,70 @@ public class Query extends OperateImplement{
 			}
 		}
 	}
-	public void setFields(List<String> key) {
+	public Query setFields(List<String> key) {
 		this.key = key;
+		return this;
 	}
 
-	public void setFields(Object obj) {
+	public Query setFields(Object obj) {
 		this.setFields(obj.getClass());
+		return this;
 	}
 
-	public void setFields(Class<?> cls) {
+	public Query setFields(Class<?> cls) {
 		Iterator<Field> i = dbTab.iterator();
-		while (i.hasNext()) {
+		while (i.hasNext())
 			this.key.add(i.next().getName());
-		}
+		return this;
 	}
-	public void addOrder(String...strings ){
+	public Query addOrder(String...strings ){
 		for(String str : strings)
 			this.order.add(str+" ASC");
+		return this;
 	}
-	public void addOrderByDesc(String...strings ){
+	public Query addOrderByDesc(String...strings ){
 		for(String str : strings)
 			this.order.add(str+" DESC");
+		return this;
 	}
-	public void setlimit(int num){
+	public Query setlimit(int num){
 		this.limit = limit+"";
+		return this;
 	}
-	public void setLimit(int pos,int num){
+	public Query setLimit(int pos,int num){
 		this.limit=pos+","+num;
+		return this;
 	}
-	public void addField(String... strings) {
+	public Query addField(String... strings) {
 		for (String s : strings)
 			this.key.add(s);
+		return this;
 	}
 
-	public void addField(Field... strings) {
+	public Query addField(Field... strings) {
 		for (Field f : strings)
 			this.key.add(f.getName());
+		return this;
 	}
 
-	public void addCondition(Field field, String condition) {
+	public Query addCondition(Field field, String condition) {
 		this.map.put(dbTab.getName()+"."+dbTab.getDBColumn(field).getName(), condition.toString());
+		return this;
 	}
 
-	public void addCondition(String field, Object condition) {
+	public Query addCondition(String field, Object condition) {
 		try {
 			map.put(dbTab.getName()+"."+dbTab.getDBColumn(field).getName(), condition.toString());
 		} catch (NoSuchFieldException | SecurityException e) {
 			log.error(e);
 		}
+		return this;
 	}
-	public void addColumnCondition(String field, Object condition) {
+	public Query addColumnCondition(String field, Object condition) {
 			map.put(field, condition.toString());
+			return this;
 	}
-	public void addConditionField(String... field) {
+	public Query addConditionField(String... field) {
 		for(String str : field){
 			try {
 				Field f = object.getClass().getDeclaredField(str);
@@ -366,11 +377,13 @@ public class Query extends OperateImplement{
 				log.error(e);
 			}
 		}
+		return this;
 	}
 
-	public void addConditionCommand(String... conditions) {
+	public Query addConditionCommand(String... conditions) {
 		for(String condition : conditions)
 			this.condition.add(condition);
+		return this;
 	}
 
 	@Override
@@ -427,6 +440,10 @@ public class Query extends OperateImplement{
 		List<T> resultSet = this.query(true);
 		return resultSet.size()>0?resultSet.get(0):null;
 	}
+	public <T> T queryLastOne() {
+		List<T> resultSet = this.query(true);
+		return resultSet.size()>0?resultSet.get(resultSet.size()-1):null;
+	}
 	public <T> List<T> query(boolean mapping){
 	this.queryTab.setDataBase(this.dbTab.getDataBase());
 	return this.queryTab.query(this,mapping);
@@ -434,7 +451,7 @@ public class Query extends OperateImplement{
 	public Map<Field, DBColumn> getFieldMap(){
 		return this.fieldMap;
 	}
-	public void removeField(String... string) {
+	public Query removeField(String... string) {
 		for(String str :string){
 			Field f;
 			try {
@@ -443,19 +460,24 @@ public class Query extends OperateImplement{
 			} catch (NoSuchFieldException | SecurityException e) {
 			}
 		}
+		return this;
 	}
-	public void setGroup(String group) {
+	public Query setGroup(String group) {
 		this.group = group;
+		return this;
 	}
-	public void setSubQuery(Query subQuery){
+	public Query setSubQuery(Query subQuery){
 		this.subQuery = subQuery;
+		return this;
 	}
-	public void setUnionQuery(Query unionQurery){
+	public Query setUnionQuery(Query unionQurery){
 		this.unionQuery = unionQurery;
+		return this;
 	}
-	public void setUnionAllQuery(Query unionQurery){
+	public Query setUnionAllQuery(Query unionQurery){
 		this.unionQuery = unionQurery;
 		this.unionAll=true;
+		return this;
 	}
 	public Query getSubQuery(){
 		return this.subQuery;
@@ -463,23 +485,26 @@ public class Query extends OperateImplement{
 	public String getTabName() {
 		return this.dbTab.getName();
 	}
-	public void setJoinLeft(Class<?> cls, String... conditions) {
+	public Query setJoinLeft(Class<?> cls, String... conditions) {
 		this.setJoinLeft(cls, false, conditions);
+		return this;
 	}
-	public void setJoinLeft(Class<?> cls,boolean trans, String... conditions) {
-		if(conditions.length==0)return;
+	public Query setJoinLeft(Class<?> cls,boolean trans, String... conditions) {
+		if(conditions.length==0)return this;
 		DBTab rTab = new DBTab(cls);
 		this.joinObject = new JoinObject(this.dbTab.getName(),rTab.getName());
 		this.joinObject.setConditions(conditions);
 		if(trans)
 			for(String condition : this.joinObject.getConditions())
 				this.condition.add(condition);
+		return this;
 	}
-	public void setInnnerJoin(Class<?> cls, String... conditions) {
+	public Query setInnnerJoin(Class<?> cls, String... conditions) {
 		this.setInnnerJoin(cls,false, conditions);
+		return this;
 	}
-	public void setInnnerJoin(Class<?> cls,boolean trans, String... conditions) {
-		if(conditions.length==0)return;
+	public Query setInnnerJoin(Class<?> cls,boolean trans, String... conditions) {
+		if(conditions.length==0)return this;
 		DBTab rTab = new DBTab(cls);
 		this.joinObject = new JoinObject(this.dbTab.getName(),rTab.getName());
 		this.joinObject.setConditions(conditions);
@@ -487,6 +512,7 @@ public class Query extends OperateImplement{
 		if(trans)
 			for(String condition : this.joinObject.getConditions())
 				this.condition.add(condition);
+		return this;
 	}
 	/**
 	 * @author tja41

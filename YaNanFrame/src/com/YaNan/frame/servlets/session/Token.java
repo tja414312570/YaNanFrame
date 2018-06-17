@@ -270,8 +270,20 @@ public class Token {
 	public Iterator<String> getRoleIterator() {
 		return this.roles.iterator();
 	}
+	public List<String> matchRoles(String[] role) {
+		List<String> roles = new ArrayList<String>();
+		for (String key : role) {
+			Iterator<String> rrole = roles.iterator();
+			while (rrole.hasNext()) {
+				String rrolei = rrole.next();
+				if (key.equals(rrolei))
+					roles.add(rrolei);
+			}
+		}
+		return roles;
+	}
 
-	public boolean isRole(String[] role) {
+	public boolean containerRole(String[] role) {
 		for (String key : role) {
 			Iterator<String> rrole = roles.iterator();
 			while (rrole.hasNext()) {

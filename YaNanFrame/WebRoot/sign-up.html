@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ch">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta name="description" content="">
+		<meta name="author" content="">
+		<link rel="shortcut icon" href="images/favicon.png">
+		<title>后台管理系统初始化</title>
+		<link href='http://fonts.googleapis.com/css?family=Open+Sans:400,300,600,400italic,700,800' rel='stylesheet' type='text/css'>
+		<link href='http://fonts.googleapis.com/css?family=Raleway:300,200,100' rel='stylesheet' type='text/css'>
+		<!-- Bootstrap core CSS -->
+		<link href="js/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
+		<link rel="stylesheet" type="text/css" href="http://www.jq22.com/jquery/font-awesome.4.6.0.css">
+		<!-- Custom styles for this template -->
+		<link href="css/style.css" rel="stylesheet" />
+		<style>
+			.tip{
+				display: none;
+			}
+			.tip.active{
+				display: block;
+				color: #F00;
+			}
+		</style>
+	</head>
+	<body class="texture">
+		<canvas id="canvas" style="position: absolute;"></canvas>	
+		<div id="cl-wrapper" class="sign-up-container">
+			<div class="middle-sign-up">
+				<div class="block-flat">
+					<div class="header">
+						<h3 class="text-center"><img class="logo-img" src="images/logo.png" alt="logo"/> 后台管理系统</h3>
+					</div>
+					<div>
+						<form style="margin-bottom: 0px !important;" class="form-horizontal">
+							<div class="content">
+								<h5 class="title text-center"><strong>用户注册</strong></h5>
+								<hr/>
+								<div class="form-group">
+									<div class="col-sm-12">
+										<div class="input-group">
+											<span class="input-group-addon"><i class="fa fa-user"></i></span>
+											<input id="account"  type="text" name="account" parsley-trigger="change" parsley-error-container="#nick-error" required placeholder="账号" class="form-control">
+										</div>
+										<p>账号长度在4-16之间，由字母数字下划线组成且开头必须是字母</p>
+										<div class="tip" id="account-error"></div>
+									</div>
+								</div>
+								<!--<div class="form-group">
+								<div class="col-sm-12">
+									<div class="input-group">
+										<span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+										<input type="email" name="email" parsley-trigger="change" parsley-error-container="#email-error" required placeholder="E-mail" class="form-control">
+									</div>
+                 		 <div id="email-error"></div>
+								</div>
+							</div>
+							-->
+								<div class="form-group">
+									<div class="col-sm-12">
+										<div class="input-group">
+											<span class="input-group-addon"><i class="fa fa-lock"></i></span>
+											<input id="pass1" name="password" type="password" parsley-error-container="#password-error" placeholder="登录密码" required class="form-control">
+										</div>
+										<p>密码长度在6-16之间，且同时包含数字和字母</p>
+										<div class="tip" id="password-error"></div>
+									</div>
+								</div>
+								<div class="form-group">
+									<div class="col-sm-12">
+										<div class="input-group">
+											<span class="input-group-addon"><i class="fa fa-lock"></i></span>
+											<input id="pass2"  parsley-equalto="#pass1" type="password" parsley-error-container="#confirmation-error" required placeholder="再次输入登录密码" class="form-control">
+										</div>
+										<div class="tip" id="confirmation-error"></div>
+									</div>
+								</div>
+								<p class="spacer">一旦你确认注册此账户本公司将默认你同意
+									<a href="#">《用户隐私协议》</a> 与
+									<a href="#">《公司条件》</a>.</p>
+								<button class="btn btn-block btn-success btn-rad btn-lg" type="submit">注册</button>
+								<a class="btn-block btn-lg" href="login.html" style="text-decoration: underline;">已有账号，我要登录</a>
+							</div>
+						</form>
+					</div>
+				</div>
+				<div class="text-center out-links">
+					<a href="#">&copy; 2018 YaNan承建</a>
+				</div>
+			</div>
+
+		</div>
+		<script src="js/jquery-2.1.4.min.js"></script>
+		<script type="text/javascript" src="js/xuhua.js" ></script>
+		<script>
+			function valied(){
+				var flag=true;
+				if($("#account").val().length<4){
+					$("#account-error").addClass("active").html("账号小于4个字符");
+					$("#account").focus();
+					flag=false;
+				}else
+					$("#account-error").removeClass("active");
+				if($("#pass1").val().length<6){
+					if($("#account").val().length>=4)
+						$("#pass1").focus();
+					$("#password-error").addClass("active").html("密码小于6个字符");
+					flag=false;
+				}else
+					$("#password-error").removeClass("active");
+				if($("#pass1").val()!=$("#pass2").val()){
+					$("#confirmation-error").addClass("active").html("验证密码与原密码不同");
+					flag=false;
+				}else
+					$("#confirmation-error").removeClass("active");
+				return flag;
+			}
+			$(document).on("click",".btn",function(e){
+				e.preventDefault();
+				if(valied()){
+					$.ajax({
+						type:"post",
+						url:"regist.do",
+						data:$("form").serialize(),
+						async:true,
+						dataType:"json",
+						success:function(data){
+							if(data.code==4280)
+								location.href="index.jsp";
+							if(data.code==4281){
+								$("#account-error").addClass("active").html(data.message);
+								$("#account").focus();
+							}
+							if(data.code==4282){
+								$("#password-error").addClass("active").html(data.message);
+								$("#password").focus();
+							}
+						},error:function(err){
+							console.log(err);
+						}
+					});
+				}
+				$(document).on("keyup","input",function(e){
+					valied();
+				});
+			});
+		</script>
+		<script src="js/jquery.parsley/dist/parsley.js" type="text/javascript"></script>
+		<script src="js/behaviour/general.js" type="text/javascript"></script>
+
+		<!-- Bootstrap core JavaScript
+================================================== -->
+		<!-- Placed at the end of the document so the pages load faster -->
+		<script src="js/behaviour/voice-commands.js"></script>
+		<script src="js/bootstrap/dist/js/bootstrap.min.js"></script>
+		<script type="text/javascript" src="js/jquery.flot/jquery.flot.js"></script>
+		<script type="text/javascript" src="js/jquery.flot/jquery.flot.pie.js"></script>
+		<script type="text/javascript" src="js/jquery.flot/jquery.flot.resize.js"></script>
+		<script type="text/javascript" src="js/jquery.flot/jquery.flot.labels.js"></script>
+	</body>
+</html>

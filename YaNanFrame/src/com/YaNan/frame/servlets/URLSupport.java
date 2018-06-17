@@ -1,6 +1,7 @@
 package com.YaNan.frame.servlets;
 
 
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 
@@ -109,7 +110,41 @@ public class URLSupport{
 		return url.substring(cUrl.length()-1,
 				url.lastIndexOf("/")+1);
 	}
+	public static  String getRelativePath(HttpServletRequest request) {
+        return getRelativePath(request, false);
+    }
+	public static String getRelativePath(HttpServletRequest request, boolean allowEmptyPath) {
+        // IMPORTANT: DefaultServlet can be mapped to '/' or '/path/*' but always
+        // serves resources from the web app root with context rooted paths.
+        // i.e. it cannot be used to mount the web app root under a sub-path
+        // This method must construct a complete context rooted path, although
+        // subclasses can change this behaviour.
 
+        String servletPath;
+        String pathInfo;
+
+        if (request.getAttribute(RequestDispatcher.INCLUDE_REQUEST_URI) != null) {
+            // For includes, get the info from the attributes
+            pathInfo = (String) request.getAttribute(RequestDispatcher.INCLUDE_PATH_INFO);
+            servletPath = (String) request.getAttribute(RequestDispatcher.INCLUDE_SERVLET_PATH);
+        } else {
+            pathInfo = request.getPathInfo();
+            servletPath = request.getServletPath();
+        }
+
+        StringBuilder result = new StringBuilder();
+        if (servletPath.length() > 0) {
+            result.append(servletPath);
+        }
+        if (pathInfo != null) {
+            result.append(pathInfo);
+        }
+        if (result.length() == 0 && !allowEmptyPath) {
+            result.append('/');
+        }
+
+        return result.toString();
+    }
 	public static Object getRequestFile(ServletRequest request) {
 		String url = getURL((HttpServletRequest) request);
 		if (url.length() == url.lastIndexOf("/"))
