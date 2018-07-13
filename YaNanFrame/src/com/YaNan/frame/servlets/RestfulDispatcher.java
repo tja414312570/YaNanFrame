@@ -46,7 +46,11 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 	protected boolean showServerInfo = true;
 	protected Servlet servlet;
 	//注解类型
-	private static final Class<?>[] annotations = {com.YaNan.frame.servlets.annotations.RequestMapping.class};
+	private static final Class<?>[] annotations = {com.YaNan.frame.servlets.annotations.RequestMapping.class
+			,com.YaNan.frame.servlets.annotations.GetMapping.class
+			,com.YaNan.frame.servlets.annotations.PutMapping.class
+			,com.YaNan.frame.servlets.annotations.PostMapping.class
+			,com.YaNan.frame.servlets.annotations.DeleteMapping.class};
 	private static final ServletMappingBuilder servletMappingBuilder=new ServletBeanBuilder();
 	 /**
      * 此方法用于处理restful的整个业务逻辑，包括一下循序
@@ -83,7 +87,7 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 			Object proxyObject = PlugsFactory.getPlugsInstanceNew(servletBean.getServletClass());
 			//获取参数,参数验证通过拦截里面的方法完成
 			List<Object> parameters = null;
-			if(servletBean.getParameters().size()!=0)
+			if(servletBean.getParameters()!=null)
 				parameters = this.urlencodedParameterBind(request, response, servletBean,model);
 			//执行完之后，判断是否已将response提交，如果为提交，则判断返回结果
 			if(!response.isCommitted()){
@@ -120,6 +124,8 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 						responseHandler.render(request, response, handlerResult, responseAnnotation,servletBean);
 					}
 			}
+			proxyObject = null;
+			parameters = null;
 		} catch ( Exception e) {
 			e.printStackTrace();
 			ServletExceptionHandler servletExceptionHandler = PlugsFactory.getPlugsInstance(ServletExceptionHandler.class);
@@ -208,20 +214,20 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 	 * @throws Exception 
 	*/
 	protected Object invokeProxyMethhod(HttpServletRequest request, HttpServletResponse response,ServletBean servletBean,Object proxyObject,List<Object> parameters) throws Exception{
-		   if(parameters==null)
-			   return null;
+		    Object[] parameter=null;	
 			//判断需要的参数是否与获得的参数匹配
-			if(servletBean.getParameters()!=null&&servletBean.getParameters().size()!=parameters.size()){
-				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,"url mapping "+this.getUrlMapping(request)+" method parameter not match");
-				return null;
-			}
-			//重组准备参数 需要准备参数类型数组和参数数组
-			Object[] parameter = new Object[parameters.size()];
-			int i = 0;
-			Iterator<Object> paraEn = parameters.iterator();
-			while(paraEn.hasNext()){
-				parameter[i] = paraEn.next();
-				i++;
+			if(servletBean.getParameters()!=null){
+				if(parameters==null||servletBean.getParameters().size()!=parameters.size()){
+					throw new ServletException("url mapping "+this.getUrlMapping(request)+" method parameter not match");
+				}else{//重组准备参数 需要准备参数类型数组和参数数组
+					parameter = new Object[parameters.size()];
+					int i = 0;
+					Iterator<Object> paraEn = parameters.iterator();
+					while(paraEn.hasNext()){
+						parameter[i] = paraEn.next();
+						i++;
+					}
+				}
 			}
 			return servletBean.getMethod().invoke(proxyObject, parameter);
 	}
@@ -257,13 +263,14 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 			log.debug("---------------------------------------------------------");
 			log.debug("url mapping:" + key.getKey() + ",servlet method:" + servletBean.getMethod()
 					+ ",servlet type:" +servletBean.getType());
-			Iterator<Entry<Parameter, Map<Class<Annotation>, List<Annotation>>>> iterator1 = servletBean.getParameters().entrySet().iterator();
-			while(iterator1.hasNext()){
-				Entry<Parameter, Map<Class<Annotation>, List<Annotation>>> e = iterator1.next();
-				log.debug(e.getKey().toString());
-				log.debug(e.getValue()+"");
+			if(servletBean.getParameters()!=null){
+				Iterator<Entry<Parameter, Map<Class<Annotation>, List<Annotation>>>> iterator1 = servletBean.getParameters().entrySet().iterator();
+				while(iterator1.hasNext()){
+					Entry<Parameter, Map<Class<Annotation>, List<Annotation>>> e = iterator1.next();
+					log.debug(e.getKey().toString());
+					log.debug(e.getValue()+"");
+				}
 			}
-			
 			log.debug("------------------------------------------------");
 		}
 	}

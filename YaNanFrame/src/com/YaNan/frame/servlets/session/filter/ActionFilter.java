@@ -22,7 +22,6 @@ import com.YaNan.frame.servlets.session.annotation.Chain;
 
 @WebFilter(filterName = "actionFilter", urlPatterns = "/*")
 public class ActionFilter implements Filter{
-
 	@Override
 	public void destroy() {
 		
@@ -55,9 +54,9 @@ public class ActionFilter implements Filter{
 		if (servletBean!=null) {
 			try {
 				Class<?> cls = servletBean.getServletClass();
-				com.YaNan.frame.servlets.session.annotation.Token itoken =servletBean.getMethod().getAnnotation(com.YaNan.frame.servlets.session.annotation.Token.class);//从当前方法获取iToken注解
+				com.YaNan.frame.servlets.session.annotation.Authentication itoken =servletBean.getMethod().getAnnotation(com.YaNan.frame.servlets.session.annotation.Authentication.class);//从当前方法获取iToken注解
 				if (itoken == null)
-					itoken = cls.getAnnotation(com.YaNan.frame.servlets.session.annotation.Token.class);
+					itoken = cls.getAnnotation(com.YaNan.frame.servlets.session.annotation.Authentication.class);
 				// 要求token验证
 				if (itoken != null) {
 					//0获取Token注解中的chain

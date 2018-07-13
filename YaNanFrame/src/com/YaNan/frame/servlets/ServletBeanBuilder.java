@@ -11,6 +11,10 @@ import com.YaNan.frame.servlets.annotations.Action;
 import com.YaNan.frame.servlets.annotations.ActionResults;
 import com.YaNan.frame.servlets.annotations.RequestMapping;
 import com.YaNan.frame.servlets.annotations.ActionResults.Result;
+import com.YaNan.frame.servlets.annotations.DeleteMapping;
+import com.YaNan.frame.servlets.annotations.GetMapping;
+import com.YaNan.frame.servlets.annotations.PostMapping;
+import com.YaNan.frame.servlets.annotations.PutMapping;
 
 public class ServletBeanBuilder implements ServletMappingBuilder{
 	public static final String ACTION_STYLE="ACTION_STYLE";
@@ -65,7 +69,7 @@ public class ServletBeanBuilder implements ServletMappingBuilder{
 			return true;
 		for(int type : requestMapping.method()){
 			try {
-				ServletBean bean = builder(requestMapping,method,parentRequestMaping,type);
+				ServletBean bean = builder(requestMapping.value(),method,parentRequestMaping==null?null:parentRequestMaping.value(),type);
 				servletMannager.add(bean);
 			} catch (Exception e) {
 				log.error(e);
@@ -74,21 +78,27 @@ public class ServletBeanBuilder implements ServletMappingBuilder{
 		}
 		return true;
 	}
-	public static ServletBean builder(RequestMapping requestMapping, Method method, RequestMapping parentRequestMaping,int type) throws Exception {
+	public static ServletBean builder(String requestMapping, Method method, String parentRequestMaping,int type) throws Exception {
 		ServletBean bean = new ServletBean();
 		bean.setStyle(RESTFUL_STYLE);
 		bean.setRequestMethod(type);
 		/**
 		 * 获取url映射
 		 */
-		String urlPath = requestMapping.value().trim().equals("")?"/"+method.getName():requestMapping.value().trim();
+		String urlPath;
 		if(parentRequestMaping!=null){
-			String namespace = parentRequestMaping.value().trim();
+			String namespace = parentRequestMaping.trim();
 			if(namespace.equals(""))//如果父类命名空间为空时，父类命名空间为当前类名
 				namespace = "/"+method.getDeclaringClass().getSimpleName();
 			else if(namespace.equals("/"))//如果父类命名空间为/时，设置命名空间为空，因为子命名空间可能包含了/
 				namespace="";
-			urlPath = namespace+urlPath;
+			if(requestMapping.trim().equals("")){
+				urlPath = namespace;
+			}else{
+				urlPath = namespace+requestMapping.trim();
+			}
+		}else{
+			urlPath = requestMapping.trim().equals("")?"/"+method.getName():requestMapping.trim();
 		}
 		String urlMapping =urlPath+"@"+type;
 		int varIndex = urlMapping.indexOf("{");
@@ -136,14 +146,74 @@ public class ServletBeanBuilder implements ServletMappingBuilder{
 	@Override
 	public boolean builder(Class<? extends Annotation> annotationClass,Annotation annotation, Class<?> beanClass,Method beanMethod,
 			ServletMapping servletMannager) {
-		if(annotationClass.equals(RequestMapping.class)){
+		if(annotationClass.equals(RequestMapping.class)){//RequestMapping
 			builderRestful((RequestMapping) annotation, beanMethod, beanClass.getAnnotation(RequestMapping.class), servletMannager);
 			return true;
-		}else if(annotationClass.equals(Action.class)){
+		}
+		if(annotationClass.equals(GetMapping.class)){//GetMapping
+			builderRestful((GetMapping) annotation, beanMethod, beanClass.getAnnotation(RequestMapping.class), servletMannager);
+			return true;
+		}
+		if(annotationClass.equals(PutMapping.class)){//PutMapping
+			builderRestful((PutMapping) annotation, beanMethod, beanClass.getAnnotation(RequestMapping.class), servletMannager);
+			return true;
+		}
+		if(annotationClass.equals(PostMapping.class)){//PostMapping
+			builderRestful((PostMapping) annotation, beanMethod, beanClass.getAnnotation(RequestMapping.class), servletMannager);
+			return true;
+		}
+		if(annotationClass.equals(DeleteMapping.class)){//DeleteMapping
+			builderRestful((DeleteMapping) annotation, beanMethod, beanClass.getAnnotation(RequestMapping.class), servletMannager);
+			return true;
+		}
+		if(annotationClass.equals(Action.class)){
 			builderAction((Action) annotation, beanMethod, beanClass.getAnnotation(RequestMapping.class), servletMannager);
 			return true;
 		}
 		return false;
+	}
+	private void builderRestful(DeleteMapping deleteMapping, Method method, RequestMapping requestMapping,
+			ServletMapping servletMannager) {
+			try {
+				ServletBean bean = builder(deleteMapping.value(),method,requestMapping==null?null:requestMapping.value(),REQUEST_METHOD.DELETE);
+				servletMannager.add(bean);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		
+	}
+
+	private void builderRestful(GetMapping mapping, Method method, RequestMapping requestMapping,
+			ServletMapping servletMannager) {
+			try {
+				ServletBean bean = builder(mapping.value(),method,requestMapping==null?null:requestMapping.value(),REQUEST_METHOD.GET);
+				servletMannager.add(bean);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		
+	}
+
+	private void builderRestful(PutMapping mapping, Method method, RequestMapping requestMapping,
+			ServletMapping servletMannager) {
+			try {
+				ServletBean bean = builder(mapping.value(),method,requestMapping==null?null:requestMapping.value(),REQUEST_METHOD.PUT);
+				servletMannager.add(bean);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		
+	}
+
+	private void builderRestful(PostMapping mapping, Method method, RequestMapping requestMapping,
+			ServletMapping servletMannager) {
+			try {
+				ServletBean bean = builder(mapping.value(),method,requestMapping==null?null:requestMapping.value(),REQUEST_METHOD.POST);
+				servletMannager.add(bean);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		
 	}
 
 }

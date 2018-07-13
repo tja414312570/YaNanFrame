@@ -14,11 +14,11 @@ public @interface SessionAttributes {
 	 * 参数名称
 	 * @return
 	 */
-	String value();
+	String value() default "";
 	/**
 	 * 默认值
 	 * @return
 	 */
-	String defaultValue();
+	String defaultValue() default "";
 	
 	}

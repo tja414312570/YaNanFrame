@@ -27,7 +27,7 @@ public class DBTab implements mySqlInterface {
 	private Field AIField;
 	private boolean autoUpdate;
 	private String charset;
-	private Class<?> cls;
+	private Class<?> dataTablesClass;
 	private String collate;
 	private Map<String, String> columns = new LinkedHashMap<String, String>();
 	private DataBase dataBase;
@@ -37,21 +37,29 @@ public class DBTab implements mySqlInterface {
 	private ClassLoader loader;
 	private Map<Field, DBColumn> map = new LinkedHashMap<Field, DBColumn>();
 	private String name;
-	private Object object;
+	private Object dataTablesObject;
 	private Field Primary_key;
 	private Map<String, ResultSet> session = new HashMap<String, ResultSet>();
 	private String value;
 	private boolean exist;
 	private final Log log = PlugsFactory.getPlugsInstance(Log.class,DBTab.class);
+	
+	public Object getDataTablesObject() {
+		return dataTablesObject;
+	}
+
+	public void setDataTablesObject(Object dataTablesObject) {
+		this.dataTablesObject = dataTablesObject;
+	}
 
 	/**
 	 * 默认构造器，需要传入一个Class《？》的class 构造器会默认从DataBase中获得connection
-	 * 同时该构造器会对cls进行处理，进行class与Field的映射
+	 * 同时该构造器会对dataTablesClass进行处理，进行class与Field的映射
 	 * 
-	 * @param cls
+	 * @param dataTablesClass
 	 */
-	public DBTab(Class<?> cls) {
-		this(new ClassLoader(cls).getLoadedObject());
+	public DBTab(Class<?> dataTablesClass) {
+		this(new ClassLoader(dataTablesClass).getLoadedObject());
 	}
 
 	public DBTab(com.YaNan.frame.hibernate.database.entity.Tab tabEntity)
@@ -61,22 +69,22 @@ public class DBTab implements mySqlInterface {
 	}
 
 	public DBTab(Object obj) {
-		this.cls = obj.getClass();
-		this.object = obj;
+		this.dataTablesClass = obj.getClass();
+		this.dataTablesObject = obj;
 		this.loader = new ClassLoader(obj);
 		Tab tab = this.loader.getLoadedClass().getAnnotation(Tab.class);
 		if (tab == null) {
-			Class<?> sCls = this.cls.getSuperclass();
+			Class<?> sCls = this.dataTablesClass.getSuperclass();
 			tab = sCls.getAnnotation(Tab.class);
 			if (tab != null) {
-				this.cls = sCls;
+				this.dataTablesClass = sCls;
 			}
 		}
 		// 如果表缓存中有当前类得表
-		if (Class2TabMappingCache.hasTab(this.cls)) {
-			this.Clone(Class2TabMappingCache.getDBTab(this.cls), obj);
+		if (Class2TabMappingCache.hasTab(this.dataTablesClass)) {
+			this.Clone(Class2TabMappingCache.getDBTab(this.dataTablesClass), obj);
 			if (tab != null) {
-				this.setName(tab.name().equals("") ? this.DBName + "." + this.cls.getSimpleName()
+				this.setName(tab.name().equals("") ? this.DBName + "." + this.dataTablesClass.getSimpleName()
 						: this.DBName + "." + tab.name());
 				try {
 					if (!this.exist&&!this.DBName.equals("") && this.isMust) {
@@ -87,7 +95,7 @@ public class DBTab implements mySqlInterface {
 					}
 				} catch (Exception e) {
 					log.error("the databaes [" + this.DBName
-							+ "] is't init ,please try to init database! at class [" + this.getCls().getName() + "]");
+							+ "] is't init ,please try to init database! at class [" + this.dataTablesClass.getName() + "]");
 					e.printStackTrace();
 				}
 			}
@@ -96,13 +104,13 @@ public class DBTab implements mySqlInterface {
 			// 重新解析数据表
 			log.debug(
 					"================================================================================================================");
-			log.debug("the current class：" + cls.getSimpleName());
+			log.debug("the current class：" + dataTablesClass.getSimpleName());
 			// 如果当前类有Tab注解
 			if (tab != null) {
 				this.setDBName(tab.DB());
 				this.setInclude(tab.include());
 				this.setMust(tab.isMust());
-				this.setName(tab.name().equals("") ? this.DBName + "." + cls.getSimpleName()
+				this.setName(tab.name().equals("") ? this.DBName + "." + dataTablesClass.getSimpleName()
 						: this.DBName + "." + tab.name());
 				this.setValue(tab.value());
 				this.setAutoUpdate(tab.autoUpdate());
@@ -115,11 +123,11 @@ public class DBTab implements mySqlInterface {
 				this.setDBName("");
 				this.setInclude("");
 				this.setMust(false);
-				this.setName(cls.getSimpleName());
+				this.setName(dataTablesClass.getSimpleName());
 				this.setValue("");
 				this.setAutoUpdate(false);
 			}
-			this.setMap(cls);
+			this.setMap(dataTablesClass);
 			try {
 				if (this.DBName != null && !this.DBName.equals("")){
 					this.dataBase = DBFactory.HasDB(this.DBName) ? DBFactory.getDataBase(this.DBName)
@@ -135,7 +143,7 @@ public class DBTab implements mySqlInterface {
 				}
 			} catch (Exception e) {
 				log.error("the databaes [" + this.DBName
-						+ "] is't init ,please try to init database! at class [" + this.getCls().getName() + "]");
+						+ "] is't init ,please try to init database! at class [" + this.dataTablesClass.getName() + "]");
 				e.printStackTrace();
 			}
 		}
@@ -156,13 +164,13 @@ public class DBTab implements mySqlInterface {
 
 	private void Clone(DBTab tab, Object obj) {
 		this.dataBase = tab.dataBase;
-		this.object = obj;
+		this.dataTablesObject = obj;
 		this.name = tab.name;
 		this.isMust = tab.isMust;
 		this.include = tab.include;
 		this.value = tab.value;
 		this.DBName = tab.DBName;
-		this.cls = tab.cls;
+		this.dataTablesClass = tab.dataTablesClass;
 		this.map = tab.map;
 		this.session = tab.session;
 		this.AIField = tab.AIField;
@@ -204,8 +212,12 @@ public class DBTab implements mySqlInterface {
 				+ "'";
 		if (this.dataBase == null)
 			throw new Exception("unknow database exception");
-		ResultSet rs = this.dataBase.executeQuery(sql);
-		return rs.next();
+		PreparedStatement  ps= this.dataBase.executeQuery(sql);
+		ResultSet rs = ps.executeQuery();
+		boolean exist = rs.next();
+		rs.close();
+		ps.close();
+		return exist;
 	}
 
 	private String FilterSql(String sql) {
@@ -221,8 +233,8 @@ public class DBTab implements mySqlInterface {
 		return charset;
 	}
 
-	public Class<?> getCls() {
-		return cls;
+	public Class<?> getDataTablesClass() {
+		return dataTablesClass;
 	}
 
 	public String getCollate() {
@@ -270,42 +282,57 @@ public class DBTab implements mySqlInterface {
 	}
 
 	public DBColumn getDBColumn(String field) throws NoSuchFieldException, SecurityException {
-		Field f = this.cls.getDeclaredField(field);
+		Field f = this.dataTablesClass.getDeclaredField(field);
 		return getDBColumn(f);
 	}
 
-	public Object insert(Insert insert) throws IllegalArgumentException, IllegalAccessException {
+	public int insert(Insert insert) {
+		int gk=-1;
 		try {
 			PreparedStatement ps = this.dataBase.execute(insert.create(), java.sql.Statement.RETURN_GENERATED_KEYS);
 			if (ps != null) {
+				Iterator<Object> iterator = insert.getParameters().iterator();
+				int i = 0;
+				while(iterator.hasNext())
+					ps.setObject(++i,iterator.next());
+				ps.execute();
+				QueryCache.getCache().cleanCache(this.getName());//清理查询缓存
 				ResultSet rs = ps.getGeneratedKeys();
 				if (this.AIField != null && rs.next())
-					this.setField(loader, this.AIField, rs.getInt(1));
-			} else {
-				return null;
+					gk = rs.getInt(1);
+				else gk = 0;
+				rs.close();
+				ps.close();
 			}
-			QueryCache.getCache().cleanCache(this.getName());
-		} catch (InvocationTargetException | NoSuchMethodException | SQLException | SecurityException e) {
+		} catch (SQLException | SecurityException e) {
+			log.error("error to execute sql:"+insert.create());
+			log.error("parameter:"+insert.getParameters());
 			log.error(e);
 		}
-		return this.loader.getLoadedObject();
+		return gk;
 	}
 
-	public Object insert(Insert insert, Connection connection)
+	public int insert(Insert insert, Connection connection)
 			throws IllegalArgumentException, IllegalAccessException, SecurityException, SQLException {
-		try {
-			PreparedStatement ps = this.dataBase.execute(insert.create(), connection,
-					java.sql.Statement.RETURN_GENERATED_KEYS);
-			if (this.AIField != null) {
+		int gk=-1;
+		PreparedStatement ps = this.dataBase.execute(insert.create(), connection,
+				java.sql.Statement.RETURN_GENERATED_KEYS);
+		if (ps != null) {
+			Iterator<Object> iterator = insert.getParameters().iterator();
+			int i = 0;
+			while(iterator.hasNext())
+				ps.setObject(++i,iterator.next());
+			if(ps.execute()){
+				QueryCache.getCache().cleanCache(this.getName());//清理查询缓存
 				ResultSet rs = ps.getGeneratedKeys();
 				if (this.AIField != null && rs.next())
-					this.setField(loader, this.AIField, rs.getInt(1));
+					gk = rs.getInt(1);
+				else gk = 0;
+				rs.close();
 			}
-			QueryCache.getCache().cleanCache(this.getName());
-		} catch (InvocationTargetException | NoSuchMethodException e) {
-			log.error(e);
+			ps.close();
 		}
-		return this.loader.getLoadedObject();
+		return gk;
 	}
 
 	/**
@@ -329,6 +356,8 @@ public class DBTab implements mySqlInterface {
 		} catch (InvocationTargetException | NoSuchMethodException e) {
 			log.error(e);
 		}
+		rs.close();
+		ps.close();
 		return obj;
 	}
 
@@ -366,10 +395,11 @@ public class DBTab implements mySqlInterface {
 
 	public List<Object> query(Connection connection, String sql) throws SQLException, InstantiationException,
 			IllegalAccessException, NoSuchFieldException, SecurityException, IllegalArgumentException {
-		ResultSet rs = this.dataBase.executeQuery(sql);
-		List<Object> objects = new ArrayList<Object>();
+		PreparedStatement  ps= this.dataBase.executeQuery(sql);
+		ResultSet rs = ps.executeQuery();
+		List<Object> dataTablesObjects = new ArrayList<Object>();
 		while (rs.next()) {
-			loader = new ClassLoader(cls, true);
+			loader = new ClassLoader(dataTablesClass, true);
 			Iterator<Field> iterator = this.map.keySet().iterator();
 			while (iterator.hasNext()) {
 				Field field = iterator.next();
@@ -384,9 +414,11 @@ public class DBTab implements mySqlInterface {
 					continue;
 				}
 			}
-			objects.add(loader.getLoadedObject());
+			dataTablesObjects.add(loader.getLoadedObject());
 		}
-		return objects;
+		rs.close();
+		ps.close();
+		return dataTablesObjects;
 	}
 
 	public List<Object> query(Query query) throws SQLException, InstantiationException, IllegalAccessException,
@@ -397,14 +429,15 @@ public class DBTab implements mySqlInterface {
 	@SuppressWarnings("unchecked")
 	public <T> List<T> query(Query query, boolean mapping) {
 		String sql = query.create();
-		List<T> objects = QueryCache.getCache().getQuery(sql);
-		if(objects!=null)
-			return objects;
-		objects = new ArrayList<T>();
+		List<T> dataTablesObjects = QueryCache.getCache().getQuery(sql);
+		if(dataTablesObjects!=null)
+			return dataTablesObjects;
+		dataTablesObjects = new ArrayList<T>();
 		try {
-			ResultSet rs = this.dataBase.executeQuery(sql);
+			PreparedStatement  ps= this.dataBase.executeQuery(sql);
+			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
-				loader = new ClassLoader(this.cls);
+				loader = new ClassLoader(this.dataTablesClass);
 				Iterator<Field> iterator = query.getFieldMap().keySet().iterator();
 				while (iterator.hasNext()) {
 					Field field = iterator.next();
@@ -417,30 +450,33 @@ public class DBTab implements mySqlInterface {
 							this.setField(loader, field, rs.getObject(columnName));
 					} catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException
 							| IllegalArgumentException | SecurityException | SQLException e) {
+						log.error("sql:"+query.create());
 						log.error(e);
-						e.printStackTrace();
 						continue;
 					}
 				}
-				objects.add((T) loader.getLoadedObject());
+				dataTablesObjects.add((T) loader.getLoadedObject());
 			}
+			rs.close();
+			ps.close();
 		} catch (SQLException e) {
+			log.error("sql:"+query.create());
 			log.error(e);
-			e.printStackTrace();
 		}
-		QueryCache.getCache().addQuery(this.getName(),sql, objects);
-		return objects;
+		QueryCache.getCache().addQuery(this.getName(),sql, dataTablesObjects);
+		return dataTablesObjects;
 	}
 	@SuppressWarnings("unchecked")
 	public <T> List<T> query(String sql ) {
-		List<T> objects = QueryCache.getCache().getQuery(sql);
-		if(objects!=null)
-			return objects;
-		objects = new ArrayList<T>();
+		List<T> dataTablesObjects = QueryCache.getCache().getQuery(sql);
+		if(dataTablesObjects!=null)
+			return dataTablesObjects;
+		dataTablesObjects = new ArrayList<T>();
 		try {
-			ResultSet rs = this.dataBase.executeQuery(sql);
+			PreparedStatement  ps= this.dataBase.executeQuery(sql);
+			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
-				loader = new ClassLoader(this.cls);
+				loader = new ClassLoader(this.dataTablesClass);
 				Iterator<Field> iterator = this.map.keySet().iterator();
 				while (iterator.hasNext()) {
 					Field field = iterator.next();
@@ -453,27 +489,29 @@ public class DBTab implements mySqlInterface {
 							this.setField(loader, field, rs.getObject(columnName));
 					} catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException
 							| IllegalArgumentException | SecurityException | SQLException e) {
+						log.error("sql:"+sql);
 						log.error(e);
-						e.printStackTrace();
 						continue;
 					}
 				}
-				objects.add((T) loader.getLoadedObject());
+				dataTablesObjects.add((T) loader.getLoadedObject());
 			}
+			rs.close();
+			ps.close();
 		} catch (SQLException e) {
+			log.error("sql:"+sql);
 			log.error(e);
-			e.printStackTrace();
 		}
-		QueryCache.getCache().addQuery(this.getName(),sql, objects);
-		return objects;
+		QueryCache.getCache().addQuery(this.getName(),sql, dataTablesObjects);
+		return dataTablesObjects;
 	}
 
 	public List<Object> query(Query query, Connection connection) throws SQLException, InstantiationException,
 			IllegalAccessException, NoSuchFieldException, SecurityException, IllegalArgumentException {
 		ResultSet rs = this.dataBase.executeQuery(query.create(), connection);
-		List<Object> objects = new ArrayList<Object>();
+		List<Object> dataTablesObjects = new ArrayList<Object>();
 		while (rs.next()) {
-			loader = new ClassLoader(cls, true);
+			loader = new ClassLoader(dataTablesClass, true);
 			Iterator<Field> iterator = this.map.keySet().iterator();
 			while (iterator.hasNext()) {
 				Field field = iterator.next();
@@ -487,9 +525,10 @@ public class DBTab implements mySqlInterface {
 					e.printStackTrace();
 				}
 			}
-			objects.add(loader.getLoadedObject());
+			dataTablesObjects.add(loader.getLoadedObject());
 		}
-		return objects;
+		rs.close();
+		return dataTablesObjects;
 	}
 	public void setField(ClassLoader loader, Field field, Object value) throws IllegalAccessException,
 			IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
@@ -503,9 +542,9 @@ public class DBTab implements mySqlInterface {
 	}
 
 
-	private void setMap(Class<?> cls) {
+	private void setMap(Class<?> dataTablesClass) {
 		DBColumn dbColumn;
-		for (Field field : cls.getDeclaredFields()) {
+		for (Field field : dataTablesClass.getDeclaredFields()) {
 			dbColumn = getDBColumn(field);
 			if (dbColumn != null) {
 				this.map.put(field, dbColumn);
@@ -517,9 +556,10 @@ public class DBTab implements mySqlInterface {
 		String sql = "SELECT * FROM " + this.name;
 		List<Object> objs = new ArrayList<Object>();
 		try {
-			ResultSet rs = this.dataBase.executeQuery(sql);
+			PreparedStatement  ps= this.dataBase.executeQuery(sql);
+			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
-				Object obj = this.cls.newInstance();
+				Object obj = this.dataTablesClass.newInstance();
 				Iterator<Field> i = this.iterator();
 				while (i.hasNext()) {
 					Field f = i.next();
@@ -532,6 +572,8 @@ public class DBTab implements mySqlInterface {
 				}
 				objs.add(obj);
 			}
+			rs.close();
+			ps.close();
 		} catch (SQLException | InstantiationException | IllegalAccessException e) {
 			e.printStackTrace();
 		}
@@ -540,8 +582,8 @@ public class DBTab implements mySqlInterface {
 
 	@Override
 	public String toString() {
-		return "DBTab [object=" + object + ", name=" + name + ", isMust=" + isMust + ", include=" + include + ", value="
-				+ value + ", DBName=" + DBName + ", autoUpdate=" + autoUpdate + ", cls=" + cls + ", loader=" + loader
+		return "DBTab [dataTablesObject=" + dataTablesObject + ", name=" + name + ", isMust=" + isMust + ", include=" + include + ", value="
+				+ value + ", DBName=" + DBName + ", autoUpdate=" + autoUpdate + ", dataTablesClass=" + dataTablesClass + ", loader=" + loader
 				+ ", map=" + map + ", columns=" + columns + ", session=" + session + ", AIField=" + AIField + "]";
 	}
 
@@ -593,8 +635,8 @@ public class DBTab implements mySqlInterface {
 		this.charset = charset;
 	}
 
-	public void setCls(Class<?> cls) {
-		this.cls = cls;
+	public void setDataTablesClass(Class<?> dataTablesClass) {
+		this.dataTablesClass = dataTablesClass;
 	}
 
 	public void setCollate(String collate) {
@@ -610,8 +652,8 @@ public class DBTab implements mySqlInterface {
 	}
 
 	public void setDBName(String dBName) {
-		if (this.object != null) {
-			dBName = StringUtil.decodeVar(dBName, this.object);
+		if (this.dataTablesObject != null) {
+			dBName = StringUtil.decodeVar(dBName, this.dataTablesObject);
 		}
 		DBName = dBName;
 	}
@@ -622,8 +664,8 @@ public class DBTab implements mySqlInterface {
 	}
 
 	public void setName(String name) {
-		if (this.object != null) {
-			name = StringUtil.decodeVar(name, this.object);
+		if (this.dataTablesObject != null) {
+			name = StringUtil.decodeVar(name, this.dataTablesObject);
 		}
 		this.name = name;
 	}
@@ -633,8 +675,8 @@ public class DBTab implements mySqlInterface {
 	}
 
 	public void setValue(String value) {
-		if (this.object != null) {
-			value = StringUtil.decodeVar(value, this.object);
+		if (this.dataTablesObject != null) {
+			value = StringUtil.decodeVar(value, this.dataTablesObject);
 		}
 		this.value = value;
 	}

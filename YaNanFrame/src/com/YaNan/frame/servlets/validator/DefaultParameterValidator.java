@@ -233,6 +233,9 @@ public class DefaultParameterValidator implements ParameterValidator,ParameterAn
 	 */
 	private boolean size(Size anno, Object value,Class<?>... groups) {
 		if(!this.checkeGroup(anno.groups(), groups))return true;
+		//如果是字符
+		if(value==null)
+			return false;
 		//如果是数组
 		if(value.getClass().isArray())
 			return anno.max()>=Array.getLength(value)&&anno.min()<=Array.getLength(value);
@@ -242,7 +245,7 @@ public class DefaultParameterValidator implements ParameterValidator,ParameterAn
 		//map
 		if(value instanceof Map)
 			return anno.max()>=((Map<?,?>)value).size()&&anno.min()<=((Map<?,?>)value).size();
-		return false;
+		return anno.min()<=value.toString().length()&&value.toString().length()<=anno.max();
 	}
 
 	@SuppressWarnings("unchecked")

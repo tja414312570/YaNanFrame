@@ -5,12 +5,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import com.YaNan.frame.plugin.Default;
+import com.YaNan.frame.plugin.annotations.group.Defaullt;
 
 
 @Target(ElementType.ANNOTATION_TYPE )
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Component {
 	Class<? extends AnnotationHandler>[] value() default {AnnotationHandler.class};
-	Class<?> group() default Default.class;
+	Class<?> group() default Defaullt.class;
 }

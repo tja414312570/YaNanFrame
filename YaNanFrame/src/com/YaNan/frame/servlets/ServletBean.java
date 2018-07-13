@@ -19,19 +19,19 @@ public class ServletBean {
 	/**
 	 * 返回类型
 	 */
-	private Map<String, ServletResult> result = new HashMap<String,ServletResult>();
+	private Map<String, ServletResult> result;
 	/**
 	 * 域缓存 action风格有效
 	 */
-	private Map<String,Field> fieldMap = new HashMap<String,Field>();
+	private Map<String,Field> fieldMap;
 	/**
 	 * 参数缓存 restful风格有效  存储类型为  参数  ==》<Array>注解
 	 */
-	private Map<Parameter,Map<Class<Annotation>,List<Annotation>>> parameter = new LinkedHashMap<Parameter,Map<Class<Annotation>,List<Annotation>>>();
+	private Map<Parameter,Map<Class<Annotation>,List<Annotation>>> parameter;
 	/**
 	 * 路径变量信息记录 restful风格有效
 	 */
-	private Map<Integer,String> pathVariable = new HashMap<Integer,String>();
+	private Map<Integer,String> pathVariable ;
 	/**
 	 * 接口类
 	 */
@@ -47,7 +47,7 @@ public class ServletBean {
 	/**
 	 * 方法的注解
 	 */
-	private Map<Class<Annotation>,List<Annotation>> methodAnnotation = new HashMap<Class<Annotation>, List<Annotation>>();
+	private Map<Class<Annotation>,List<Annotation>> methodAnnotation;
 	/**
 	 * 接口返回类型
 	 */
@@ -115,15 +115,17 @@ public class ServletBean {
 		return this.result;
 	}
 	public boolean hasResult() {
-		return this.result.size()!=0;
+		return this.result==null;
 	}
 	public boolean hasResultName(String resultName) {
-		return this.result.containsKey(resultName);
+		return this.result!=null&&this.result.containsKey(resultName);
 	}
 	public Iterator<String> getResultIterator() {
+		if(this.result==null) return null;
 		return this.result.keySet().iterator();
 	}
 	public ServletResult getResult(String resultName) {
+		if(this.result==null) return null;
 		return this.result.get(resultName);
 	}
 	public void setDecode(boolean decode){
@@ -133,6 +135,11 @@ public class ServletBean {
 		return this.decode;
 	}
 	public void addResult(ServletResult result) {
+		if(this.result==null)
+			synchronized (this) {
+				if(this.result==null)
+					this.result = new HashMap<String,ServletResult>();
+			}
 		this.result.put(result.getName(), result);
 	}
 	public boolean isCorssOrgin() {
@@ -190,6 +197,8 @@ public class ServletBean {
 		Map<Class<Annotation>,List<Annotation>> maps = PlugsFactory.getAnnotationGroup(parameter,annos);
 		//获取参数类型
 		//将参数信息添加到参数集合中
+		if(this.parameter == null)
+			this.parameter = new LinkedHashMap<Parameter,Map<Class<Annotation>,List<Annotation>>>();
 		this.parameter.put(parameter, maps);
 	}
 	public String getPathRegex() {
@@ -212,6 +221,11 @@ public class ServletBean {
 		this.pathVariable = pathVariable;
 	}
 	public void addPathVariable(Integer index,String paraName) {
+		if(this.pathVariable==null)
+			synchronized (this) {
+				if(this.pathVariable==null)
+					this.pathVariable = new HashMap<Integer,String>();
+			}
 		this.pathVariable.put(index, paraName);
 	}
 	public int getRequestMethod() {
@@ -227,6 +241,8 @@ public class ServletBean {
 		this.parameter = parameter;
 	}
 	public  List<Annotation> getParameterAnnotation(Parameter param ,Class<? extends Annotation> annoType) {
+		if(this.parameter == null) 
+			return null;
 		Map<Class<Annotation>,List<Annotation>> annoMap = this.parameter.get(param);
 		if(annoMap==null)
 			return null;

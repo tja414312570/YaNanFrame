@@ -101,15 +101,14 @@ public class ServletBuilder{
 			@Override
 			public void find(Class<?> cls) {
 				Method[] methods = cls.getMethods();
-				for(Method method :methods){
+methodIterator:		for(Method method :methods){
 						List<ServletDispatcher> sds = PlugsFactory.getPlugsInstanceList(ServletDispatcher.class);
 						for(ServletDispatcher sd : sds){
 							Class<? extends Annotation>[] annosType = sd.getDispatcherAnnotation();
 							for(Class<?  extends Annotation> annoType :annosType){
-								method.getAnnotation(annoType);
 								if(annosType!=null&&method.getAnnotation(annoType)!=null)
 									if(sd.getBuilder().builder(annoType,method.getAnnotation(annoType),cls,method,servletMannager))
-										continue;
+										continue methodIterator;
 							}
 						}
 				}

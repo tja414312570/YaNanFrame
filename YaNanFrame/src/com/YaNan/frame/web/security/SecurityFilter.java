@@ -21,7 +21,6 @@ public class SecurityFilter extends HttpServlet implements Filter {
 		chain.doFilter(new XSSRequestWrapper((HttpServletRequest) request),
 				response);
 	}
-
 	@Override
 	public void init(FilterConfig arg0) throws ServletException {
 

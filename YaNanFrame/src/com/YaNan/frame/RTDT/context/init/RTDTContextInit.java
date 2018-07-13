@@ -4,6 +4,8 @@ import com.YaNan.frame.RTDT.context.ActionManager;
 import com.YaNan.frame.RTDT.context.NotifyManager;
 import com.YaNan.frame.RTDT.entity.ActionEntity;
 import com.YaNan.frame.RTDT.entity.NotifyEntity;
+import com.YaNan.frame.logging.Log;
+import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.plugin.annotations.Register;
 
 import java.util.Iterator;
@@ -16,10 +18,11 @@ import javax.servlet.ServletContextEvent;
  {
    ActionManager manager = ActionManager.getActionManager();
    Thread thread = null;
-   
+   private Log log  = PlugsFactory.getPlugsInstance(Log.class, RTDTContextInit.class);
    public void contextDestroyed(ServletContextEvent arg0) {
-     System.out.println("application context destory ,destory the RTDT services");
+	   log.debug("Destory the RTDT services");
      if (this.thread != null) {
+    	 thread.interrupt();
        this.thread = null;
      }
    }

@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.validation.Constraint;
 
 import com.YaNan.frame.logging.DefaultLog;
 import com.YaNan.frame.logging.Log;
@@ -26,6 +27,7 @@ import com.YaNan.frame.plugin.interfacer.PlugsListener;
 
 /**
  * 组件工厂类，用于初始化所有组件注册，管理，以及提供组件获取
+ * 2018 7-12 新增多个方法拦截器，更改拦截器规则，添加一个拦截器链表，实现迭代器
  * @author yanan
  *
  */
@@ -304,6 +306,26 @@ public class PlugsFactory implements PlugsListener{
 		}
 		return null;
 	}
+	/**
+	 * 获取组件实例，当组件中有多个组件实现实例时，返回一个默认组件，当组件实例为空时，返回null，并不抛出异常
+	 * 具体选择某个组件实例作为默认组件实例依赖其优先级(priority)，当所有优先级相同时选第一个
+	 * 优先级数值越低，优先级越高
+	 * @param impl
+	 * @param args
+	 * @return
+	 */
+	public static <T> T getPlugsInstanceAllowNull(Class<T> impl,Object...args) {
+		try {
+			//获取一个注册描述
+			RegisterDescription registerDescription=getRegisterDescrption(impl);
+			if(registerDescription!=null)
+				return registerDescription.getRegisterInstance(impl,args); 
+		} catch (Exception e) {
+			log.error(e);
+		}
+		return null;
+	}
+	
 	public static <T> T getPlugsInstanceNew(Class<T> impl,Object...args) {
 		try {
 			//获取一个注册描述
@@ -375,6 +397,34 @@ public class PlugsFactory implements PlugsListener{
 			RegisterDescription registerDescription=getRegisterDescrption(impl,attribute,true);
 			if(registerDescription!=null)
 				return registerDescription.getRegisterInstance(impl,args);//instance.getRegisterInstance(impl,registerDescription,args);
+		} catch (Exception e) {
+			log.error(e);
+		}
+		return null;
+	}
+	/**
+	 * 获取组件的实例列表
+	 * 返回的list按其优先级排序
+	 * 优先级数值越低，优先级越高
+	 * @param impl
+	 * @param args
+	 * @return
+	 */
+	public static <T> List<T> getPlugsInstanceListByAttribute(Class<T> impl,String attribute,Object...args) {
+		try {
+			if(instance==null)
+				throw new Exception("YaNan.plugs service not initd");
+			if(!instance.isAvailable())
+				throw new Exception("plugs unavailable ! this error may arise because a static field uses the PlugsFactory's proxy");
+			Plug plug = getPlug(impl);
+			if(plug==null)
+				throw new Exception("service interface "+impl.getName() +" could not found or not be regist");
+			List<T> objectList = new ArrayList<T>();
+			List<RegisterDescription> registerDescriptionList = plug.getRegisterDescriptionListByAttribute(attribute);
+			Iterator<RegisterDescription> iterator = registerDescriptionList.iterator();
+			while(iterator.hasNext())
+				objectList.add(iterator.next().getRegisterInstance(impl,args));
+			return objectList;
 		} catch (Exception e) {
 			log.error(e);
 		}
@@ -558,5 +608,13 @@ public class PlugsFactory implements PlugsListener{
 		}
 		return annoGroup;
 	}
-	
+	public static List<Annotation> getAnnotationGroup(Object parameter, Class<? extends Annotation> annotationType) {
+		if(parameter.getClass().equals(Field.class))
+			return PlugsFactory.getAnnotationGroup((Field) parameter, Constraint.class);
+		if(parameter.getClass().equals(Parameter.class))
+			return  PlugsFactory.getAnnotationGroup((Parameter) parameter, Constraint.class);
+		if(parameter.getClass().equals(Method.class))
+			return  PlugsFactory.getAnnotationGroup((Method) parameter, Constraint.class);
+		return null;
+	}
 }

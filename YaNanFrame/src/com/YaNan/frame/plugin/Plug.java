@@ -52,6 +52,13 @@ public class Plug {
 		RegisterDescription registerDescription  =this.getRegisterDescriptionByAttributeStrict(attribute);
 		return registerDescription==null?defaultRegisterDescription:registerDescription;
 	}
+	public List<RegisterDescription> getRegisterDescriptionListByAttribute(String attribute) {
+		List<RegisterDescription> retistDescriptionList = new ArrayList<RegisterDescription>();
+		for(int i = 0;i<registerList.size();i++)
+			if(StringUtil.match(attribute, registerList.get(i).getAttribute()))
+				retistDescriptionList.add(registerList.get(i));
+		return retistDescriptionList;
+	}
 	public RegisterDescription getRegisterDescriptionByAttributeStrict(String attribute) {
 		for(int i = 0;i<registerList.size();i++){
 			if(StringUtil.match(attribute, registerList.get(i).getAttribute()))

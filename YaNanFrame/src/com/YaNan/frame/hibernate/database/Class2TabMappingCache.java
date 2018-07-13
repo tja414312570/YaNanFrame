@@ -21,7 +21,7 @@ public class Class2TabMappingCache {
 		if (map.containsKey(cls))
 			return map.get(cls);
 		DBTab tab = new DBTab(cls);
-		map.put(tab.getCls(), tab);
+		map.put(tab.getDataTablesClass(), tab);
 		return tab;
 	}
 
@@ -29,7 +29,7 @@ public class Class2TabMappingCache {
 		if (map.containsKey(obj.getClass()))
 			return map.get(obj.getClass());
 		DBTab tab = new DBTab(obj);
-		map.put(tab.getCls(), tab);
+		map.put(tab.getDataTablesClass(), tab);
 		return tab;
 	}
 
@@ -43,6 +43,6 @@ public class Class2TabMappingCache {
 	}
 
 	public static void addTab(DBTab tab) {
-		map.put(tab.getCls(), tab);
+		map.put(tab.getDataTablesClass(), tab);
 	}
 }

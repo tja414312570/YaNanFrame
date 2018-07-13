@@ -1,23 +1,23 @@
 package com.YaNan.frame.hibernate.database;
 
 public class DataBaseConfigure {
-	private String id;
-	private String name;
-	private String driver = "com.mysql.jdbc.Driver";
-	private String type = "mysql";
-	private String scheme = "jdbc:mysql";
-	private String host = "localhost";
-	private String port = "3306";
-	private String username = "root";
-	private String password = "";
-	private String charset = "utf8";
-	private String collate = "utf8_general_ci";
-	private String encoding = "utf-8";
-	private String defaulted;
-	private String log="false";
-	private int minNum = 2;
-	private int maxNum = 6;
-	private int addNum = 2;
+	private String id;//数据库ID
+	private String name;//数据库名
+	private String driver = "com.mysql.jdbc.Driver";//数据库驱动
+	private String type = "mysql";//类型
+	private String scheme = "jdbc:mysql";//协议
+	private String host = "localhost";//地址
+	private String port = "3306";//端口
+	private String username = "root";//用户名
+	private String password = "";//密码
+	private String charset = "utf8";//字符集
+	private String collate = "utf8_general_ci";//排序规则
+	private String encoding = "utf-8";//编码
+	private String defaulted;//是否设置为默认
+	private String log="false";//使用日志
+	private int minNum = 2;//连接池初始化链接量
+	private int maxNum = 8;//连接池最大连接量
+	private int addNum = 2;//数据库每次添加的数量
 	public int getMinNum() {
 		return minNum;
 	}

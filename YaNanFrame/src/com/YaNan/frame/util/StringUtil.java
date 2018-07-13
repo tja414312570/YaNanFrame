@@ -12,8 +12,8 @@ public class StringUtil {
 	public static int maxTimes = 10;
 	private static Map<Integer,Boolean> resourceCache = new HashMap<Integer,Boolean>();
 	public static String decodeVar(String str, Object obj) {
-		Pattern var = Pattern.compile("\\{(\\w|_)+\\}");
-		Pattern reVar = Pattern.compile("\\{|\\}");
+		Pattern var = Pattern.compile("\\$\\{(\\w|_)+\\}");
+		Pattern reVar = Pattern.compile("\\$\\{|\\}");
 		Matcher m = var.matcher(str);
 		ClassLoader loader = new ClassLoader(obj);
 		int i = 0;
@@ -384,5 +384,15 @@ public class StringUtil {
 				if(match(src, reg))
 					return true;
 			return false;
+		}
+
+		public static String decodeVar(String src, Object... arguments) {
+			StringBuilder sb = new StringBuilder(src);
+			int index,v=0;
+			while((index=sb.indexOf("${"))>=0&&v<arguments.length)
+				sb = new StringBuilder(sb.substring(0, index))
+						.append(arguments[v++])
+						.append(sb.substring(sb.indexOf("}", index+1)+1));
+			return sb.toString();
 		}
 }

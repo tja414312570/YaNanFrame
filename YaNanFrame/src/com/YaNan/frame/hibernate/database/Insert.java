@@ -4,13 +4,14 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import com.YaNan.frame.hibernate.database.DBInterface.OperateImplement;
 import com.YaNan.frame.logging.Log;
 import com.YaNan.frame.plugin.PlugsFactory;
-import com.YaNan.frame.reflect.ClassLoader;
 
 /**
  * 该类用于提供给DATab的query一个查询的SQL语句的生成方法 提过一个构造器，传入一个DBTab型的表对象，应为他需要使用DBTab context
@@ -20,34 +21,58 @@ import com.YaNan.frame.reflect.ClassLoader;
  */
 public class Insert extends OperateImplement{
 	private Object obj;
-	private Map<String, String> fieldMap = new LinkedHashMap<String, String>();
+	protected List<String> fieldList = new LinkedList<String>();
 	private Log log = PlugsFactory.getPlugsInstance(Log.class,Insert.class);
+	private int generatedKey;
+	public List<String> getFieldList() {
+		return fieldList;
+	}
+	public void setFieldList(List<String> fieldList) {
+		this.fieldList = fieldList;
+	}
+	public void setFieldMap(Map<String,Object> fieldMap) {
+		for(Entry<String,Object> entry : fieldMap.entrySet()){
+			this.fieldList.add(entry.getKey());
+			this.addParameters(entry.getValue());
+		}
+	}
+	public int getGeneratedKey() {
+		return generatedKey;
+	}
 	/**
 	 * 默认构造方法
 	 * @param obj
 	 */
 	public Insert(Object obj) {
-		this.dbTab = new DBTab(obj);
+		this.dataTables = new DBTab(obj);
 		this.obj = obj;
-		try {
-			if (!this.dbTab.exists()) {
-				if (this.dbTab.isMust())
-					this.dbTab.create();
-			}
-		} catch (Exception e1) {
-			e1.printStackTrace();
-		}
-		Iterator<Field> fI = this.dbTab.getFieldMap().keySet().iterator();
-		while(fI.hasNext()){
-			Field field = fI.next();
+		Iterator<Field> fI = this.dataTables.getFieldMap().keySet().iterator();
+		Field field;
+//		try {
+//			while(fI.hasNext()&&
+//					(field = fI.next())!=null&&
+//					!this.dataTables.getDBColumn(field).isAuto_Increment()&&
+//					this.dataTables.getLoader().get(field.getName())!=null&&
+//					this.fieldList.add(this.dataTables.getFieldMap().get(field).getName())&&
+//					this.parameters.add(this.dataTables.getLoader().get(field.getName())));
+//		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+//				| SecurityException e1) {
+//			e1.printStackTrace();
+//		}
+		while(fI.hasNext()&&(field = fI.next())!=null){
 			try {
-				if (this.dbTab.getDBColumn(field).isAuto_Increment())
-					continue;
-				if(this.dbTab.getLoader().get(field.getName())!=null){
-					this.fieldMap.put(this.dbTab.getFieldMap().get(field).getName(),"'"+this.dbTab.getLoader().get(field.getName()).toString().replace("'", "\\'")+"'");
+//				这段代码和下面代码作用在本程序中等同
+//				if(!this.dataTables.getDBColumn(field).isAuto_Increment()
+//						&&this.dataTables.getLoader().get(field.getName())!=null
+//						&&this.fieldList.add(this.dataTables.getFieldMap().get(field).getName())
+//						&&this.parameters.add(this.dataTables.getLoader().get(field.getName())));
+				
+				if(!this.dataTables.getDBColumn(field).isAuto_Increment()&&this.dataTables.getLoader().get(field.getName())!=null){
+					this.fieldList.add(this.dataTables.getFieldMap().get(field).getName());
+					this.parameters.add(this.dataTables.getLoader().get(field.getName()));
 				}
 			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
-				e.printStackTrace();
+				log.error(e);
 			}
 		}
 	}
@@ -56,16 +81,17 @@ public class Insert extends OperateImplement{
 	 */
 	@Override
 	public String create() {
-		StringBuilder sb = new StringBuilder("INSERT INTO ").append(this.dbTab.getName()).append("(");
-		if (this.fieldMap.size() == 0) 
+		StringBuilder sb = new StringBuilder("INSERT INTO ").append(this.dataTables.getName()).append("(");
+		if (this.fieldList.size() == 0) 
 			log.error("没有任何字段，请检查植入对象是否所有元素的值都为null或是否所有元素都设置了自增。具体请查看sql语句");
-		Iterator<String> iterator = this.fieldMap.keySet().iterator();
-		while (iterator.hasNext()) {
-				sb.append(iterator.next()).append(iterator.hasNext() ? "," : ") VALUES(");
-		}
-		iterator = this.fieldMap.keySet().iterator();
+		Iterator<String> iterator = this.fieldList.iterator();
 		while (iterator.hasNext())
-			sb.append(this.fieldMap.get(iterator.next())).append(iterator.hasNext() ? "," : ")");
+				sb.append(iterator.next()).append(iterator.hasNext() ? "," : ") VALUES(");
+		iterator = this.fieldList.iterator();
+		while (iterator.hasNext()){
+			iterator.next();
+			sb.append("?").append(iterator.hasNext()? "," :")");
+		}
 		return sb.toString();
 	}
 	/**
@@ -73,14 +99,20 @@ public class Insert extends OperateImplement{
 	 * @return
 	 */
 	public boolean insert() {
-		try {
-			return this.dbTab.insert(this)!=null;
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return false;
+		return this.insertGk()>=0;
 	}
-
+	/**
+	 * 导入数据库，传入一个接受改变的对象
+	 * @param object
+	 * @return
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 * @throws SQLException
+	 */
+	public int insertGk() {
+		this.generatedKey = this.dataTables.insert(this);
+		return this.generatedKey;
+	}
 	public Object getObj() {
 		return obj;
 	}
@@ -99,45 +131,28 @@ public class Insert extends OperateImplement{
 		try{
 			for(String field : fields){
 					Field f;
-					f = this.dbTab.getCls().getDeclaredField(field);
+					f = this.dataTables.getDataTablesClass().getDeclaredField(field);
 					f.setAccessible(true);
 					update.addCondition(f, f.get(obj));
 					query.addCondition(f.getName(), f.get(this.obj));
 				}
 				if (query.query().size() != 0) {
-					if(this.dbTab.getPrimary_key()!=null)
-						update.removeField(this.dbTab.getPrimary_key().getName());
+					if(this.dataTables.getPrimary_key()!=null)
+						update.removeField(this.dataTables.getPrimary_key().getName());
 					return update.update()>0;
 				} else {
 					return insert();
 				}
 			} catch (NoSuchFieldException | SecurityException
 					| IllegalArgumentException | IllegalAccessException e) {
-				e.printStackTrace();
+				log.error(e);
 				return false;
 			}
 		} else {
 			return insert();
 		}
 	}
-	/**
-	 * 导入数据库，传入一个接受改变的对象
-	 * @param object
-	 * @return
-	 * @throws IllegalArgumentException
-	 * @throws IllegalAccessException
-	 * @throws SQLException
-	 */
-	public boolean insert(Object object) {
-		try {
-			Object result = this.dbTab.insert(this);
-			ClassLoader.DisClone(object,result);
-			return true;
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return false;
-	}
+	
 	/**
 	 * 移除不需要获取的字段
 	 * @param string
@@ -147,30 +162,9 @@ public class Insert extends OperateImplement{
 			Field f;
 			try {
 				f = this.obj.getClass().getDeclaredField(str);
-				this.fieldMap.remove(f);
+				this.fieldList.remove(f);
 			} catch (NoSuchFieldException | SecurityException e) {
 			}
-		}
-	}
-	public void addAutoIncrement(String... strings) {
-		for(String string : strings)
-		try {
-			String name = this.dbTab.getDBColumn(string).getName();
-			this.fieldMap.put(name, "last_insert_id()+1");
-		} catch (NoSuchFieldException | SecurityException e) {
-			e.printStackTrace();
-			continue;
-		}
-	}
-	public void addAutoIncrement(Field... fields) {
-		for(Field field : fields)
-		try {
-			field.setAccessible(true);
-			String name = this.dbTab.getDBColumn(field).getName();
-			this.fieldMap.put(name, "last_insert_id()+1");
-		} catch (SecurityException e) {
-			e.printStackTrace();
-			continue;
 		}
 	}
 }

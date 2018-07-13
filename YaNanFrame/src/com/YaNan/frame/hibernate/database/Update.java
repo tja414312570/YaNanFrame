@@ -24,8 +24,8 @@ public class Update extends OperateImplement{
 	private List<String> condition = new ArrayList<String>();
 	private Map<String,Object> updateList = new LinkedHashMap<String,Object>();
 	private final Log log = PlugsFactory.getPlugsInstance(Log.class,Query.class);
-	public Update(DBTab dbTab, Object object) {
-		this.setDbTab(dbTab);
+	public Update(DBTab dataTables, Object object) {
+		this.setDbTab(dataTables);
 	}
 	/**
 	 * 更新所有域(不包括null字段)
@@ -37,8 +37,8 @@ public class Update extends OperateImplement{
 		while(fI.hasNext()){
 			Field field = fI.next();
 			try {
-				if(this.dbTab.getLoader().get(field.getName())!=null)
-					this.updateList.put(this.getDbTab().getDBColumn(field).getName(),this.dbTab.getLoader().get(field.getName()).toString());
+				if(this.dataTables.getLoader().get(field.getName())!=null)
+					this.updateList.put(this.getDbTab().getDBColumn(field).getName(),this.dataTables.getLoader().get(field.getName()).toString());
 			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
 				log.error(e);
 			}
@@ -54,8 +54,8 @@ public class Update extends OperateImplement{
 		while(fI.hasNext()){
 			Field field = fI.next();
 			try {
-				if(this.dbTab.getLoader().get(field.getName())!=null)
-					this.updateList.put(this.getDbTab().getDBColumn(field).getName(),this.dbTab.getLoader().get(field.getName()).toString());
+				if(this.dataTables.getLoader().get(field.getName())!=null)
+					this.updateList.put(this.getDbTab().getDBColumn(field).getName(),this.dataTables.getLoader().get(field.getName()).toString());
 			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
 				log.error(e);
 			}
@@ -69,9 +69,9 @@ public class Update extends OperateImplement{
 		try{
 			this.setDbTab(new DBTab(object));
 			for(String strField : fields){
-				Field field =this.getDbTab().getCls().getDeclaredField(strField);
-				if(this.dbTab.getLoader().get(field.getName())!=null)
-					this.updateList.put(this.getDbTab().getDBColumn(field).getName(),this.dbTab.getLoader().get(field.getName()).toString());
+				Field field =this.getDbTab().getDataTablesClass().getDeclaredField(strField);
+				if(this.dataTables.getLoader().get(field.getName())!=null)
+					this.updateList.put(this.getDbTab().getDBColumn(field).getName(),this.dataTables.getLoader().get(field.getName()).toString());
 			}
 		}catch(Exception e){
 			log.error(e);
@@ -88,9 +88,9 @@ public class Update extends OperateImplement{
 		try{
 			this.setDbTab(new DBTab(cls));
 			for(String strField : fields){
-				Field field =this.getDbTab().getCls().getDeclaredField(strField);
-				if(this.dbTab.getLoader().get(field.getName())!=null)
-					this.updateList.put(this.getDbTab().getDBColumn(field).getName(),"'"+this.dbTab.getLoader().get(field.getName()).toString().replace("'", "\\'")+"'");
+				Field field =this.getDbTab().getDataTablesClass().getDeclaredField(strField);
+				if(this.dataTables.getLoader().get(field.getName())!=null)
+					this.updateList.put(this.getDbTab().getDBColumn(field).getName(),"'"+this.dataTables.getLoader().get(field.getName()).toString().replace("'", "\\'")+"'");
 			}
 		}catch(Exception e){
 			log.error(e);

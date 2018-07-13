@@ -914,10 +914,18 @@ public class ClassLoader {
 		}
 		return false;
 	}
-	public static boolean extendsOf(Class<?> orginClass,Class<?> parentClass){
+	public static boolean extendOf(Class<?> orginClass,Class<?> parentClass){
 		return orginClass.getSuperclass().equals(parentClass);
 	}
-
+	public static boolean extendsOf(Class<?> orginClass,Class<?> parentClass){
+		Class<?> tempClass = orginClass;
+		while(!tempClass.equals(Object.class)){
+			if(tempClass.equals(parentClass))
+				return true;
+			tempClass = tempClass.getSuperclass();
+		}
+		return false;
+	}
 	public static Class<?> patchBaseType(Object patchType){
 		//无类型
 		if(patchType.getClass().equals(Void.class))

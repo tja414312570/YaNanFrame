@@ -6,6 +6,7 @@ public class TokenCell {
 	private String tokenId;
 	private Date createDate;
 	private String other;
+	private int timeOut;
 	public TokenCell(String tokenId, Date date, String other) {
 		this.tokenId=tokenId;
 		this.createDate=date;
@@ -34,6 +35,12 @@ public class TokenCell {
 	@Override
 	public String toString() {
 		return "TokenCell [tokenId=" + tokenId + ", createDate=" + createDate + ", other=" + other + "]";
+	}
+	public int getTimeOut() {
+		return timeOut;
+	}
+	public void setTimeOut(int timeOut) {
+		this.timeOut = timeOut;
 	}
 	
 }

@@ -1,6 +1,5 @@
 package com.YaNan.frame.servlets.session;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -22,16 +21,12 @@ import com.YaNan.frame.servlets.session.entity.TokenCell;
 public class Token {
 	private String tokenId;
 	public final static int MaxTimeout = Integer.MAX_VALUE;
-	private static int timeOut=864000;
+	private int timeOut=864000;//超时
 	private Map<String, Object> arguments = new HashMap<String, Object>();
-	private Map<String,String> strArguments = new HashMap<String,String>();
-	private Map<String,Integer> intArguments = new HashMap<String,Integer>();
 	private Map<String,ArrayList<Object>> listArguments = new HashMap<String,ArrayList<Object>>();
 	private List<String> roles = new ArrayList<String>();
-	private Map<String,Object> hibernateDatas = new HashMap<String,Object>();
-	private Map<Class<?>, Object> objs = new HashMap<Class<?>, Object>();
 	private boolean valid;
-	private Date createDate;
+	private long lastuse;
 	/************************超时，有效***************/
 	public int getTimeOut() {
 		return timeOut;
@@ -51,7 +46,7 @@ public class Token {
 	}
 	/*******************************存储*************************/
 	public boolean container(Class<?> cls) {
-		return this.objs.containsKey(cls);
+		return this.arguments.containsKey(cls.getName());
 	}
 	public boolean container(String key){
 		return this.arguments.containsKey(key);
@@ -61,10 +56,7 @@ public class Token {
 	 */
 	public void clearAll(){
 		this.arguments.clear();
-		this.hibernateDatas.clear();
-		this.intArguments.clear();
 		this.listArguments.clear();
-		this.strArguments.clear();
 	}
 	public void clear(){
 		this.arguments.clear();
@@ -72,75 +64,25 @@ public class Token {
 	public void set(String key, Object value) {
 		this.arguments.put(key, value);
 	}
+	public void set(Class<?> cls, Object value) {
+		this.arguments.put(cls.getName(), value);
+	}
 	public Object get(String key) {
 		return arguments.get(key);
 	}
 	public void remove(String key){
 		this.arguments.remove(key);
 	}
-	public String getString(String key){
-		return this.strArguments.get(key);
-	}
-	public void setString(String key,String value){
-		this.strArguments.put(key, value);
-	}
-	public void clearString(){
-		this.strArguments.clear();
-	}
-	public int getInt(String key){
-		return this.intArguments.get(key);
-	}
-	public void setInt(String key,int value){
-		this.intArguments.put(key, value);
-	}
-	public void clearInt(){
-		this.intArguments.clear();
-	}
 	public void set(Object obj) {
-		if (objs.containsKey(obj.getClass())) {
-			objs.replace(obj.getClass(), obj);
-		} else {
-			objs.put(obj.getClass(), obj);
-		}
-	}
-	public void clearClass(){
-		this.objs.clear();
-	}
-	public void set(Class<?> cls, Object value) {
-		this.objs.put(cls, value);
+		this.arguments.put(obj.getClass().getName(), obj);
 	}
 	public Object get(Class<?> cls) {
-		return objs.get(cls);
+		return this.arguments.get(cls.getName());
 	}
 	public void remove(Class<?> cls) {
-		this.objs.remove(cls);
+		this.arguments.remove(cls.getName());
 	}
 	/***********************************存储结束*****************/
-	/*******************************持久化数据*******************/
-	public void setHibernate(String key,Object value){
-		this.hibernateDatas.put(key, value);
-		if(TokenManager.getHibernateInterface()!=null)
-			TokenManager.getHibernateInterface().set(tokenId,key,value);
-	}
-	public Object getHibernate(String key){
-		if(this.hibernateDatas.containsKey(key))
-			return this.hibernateDatas.get(key);
-		if(TokenManager.getHibernateInterface()!=null)
-			return TokenManager.getHibernateInterface().get(tokenId,key);
-		return null;
-	}
-	public void removeHibernate(String key){
-		this.hibernateDatas.remove(key);
-		if(TokenManager.getHibernateInterface()!=null)
-			TokenManager.getHibernateInterface().remove(tokenId, key);
-	}
-	public void clearHibernate(){
-		this.hibernateDatas.clear();
-		if(TokenManager.getHibernateInterface()!=null)
-			TokenManager.getHibernateInterface().clear(tokenId);
-	}
-	/********************************持久化数据完成********************/
-	
 	
 	/**
 	 * 默认构造方法
@@ -148,10 +90,8 @@ public class Token {
 	 */
 	private Token(String tokenId) {
 		this.tokenId = tokenId;
-		this.createDate=new Date();
 	}
 	private Token() {
-		this.createDate=new Date();
 	}
 	public String getTokenId() {
 		return tokenId;
@@ -178,23 +118,25 @@ public class Token {
 	 * @return
 	 */
 	public static Token getToken(HttpServletRequest requestContext){
-		String tokenId = getTokenId(requestContext);
-		return getToken(tokenId);
+		Token token = getToken(getTokenId(requestContext));
+			if(token==null)
+				token = getToken((String)requestContext.getAttribute(TokenManager.TokenMark));
+		return token;
 	}
 	public static Token getToken(String tokenId){
-		if(tokenId==null)return null;
-		if(TokenPool.hasToken(tokenId))
-			return TokenPool.getToken(tokenId);
-		if(TokenManager.getHibernateInterface()!=null)
-		if(TokenManager.getHibernateInterface().containerToken(tokenId)){
+		if(tokenId==null)return null;//如果tokenId为null 则返回null
+		Token token = TokenPool.getToken(tokenId);//从缓存中获取Token
+		if(token==null&&TokenManager.getHibernateInterface()!=null){//如果缓存中没有，且有持久化接口时，常识从持久层接口中获取
 			TokenCell tokenCell = TokenManager.getHibernateInterface().getToken(tokenId);
-			Token token = new Token(tokenId);
-			token.setCreateDate(tokenCell.getCreateDate());
-			if(token!=null)
+			if(tokenCell !=null){
+				token = new Token(tokenId);
+				token.setTimeOut(tokenCell.getTimeOut());
 				TokenPool.addToken(token);
-			return token;
+			}
 		}
-		return null;
+		if(token!=null)
+			token.setLastuse(System.currentTimeMillis());
+		return token;
 	}
 	/**
 	 * 从request中获取token id
@@ -202,24 +144,21 @@ public class Token {
 	 * @return
 	 */
 	private static String getTokenId(HttpServletRequest requestContext) {
-		String cookie = requestContext.getHeader("Cookie");
-		String tokenMark = TokenManager.getTokenMark();
-		if (cookie == null) {
-			cookie = requestContext.getParameter(tokenMark);
+		Cookie[] cookies = requestContext.getCookies();
+		if (cookies == null||cookies.length==0) {
+			return requestContext.getParameter(TokenManager.TokenMark);
 		} else {
-			if (cookie.contains(tokenMark)) {
-				cookie = cookie.substring(cookie.lastIndexOf(tokenMark)).replace("=", "");
-				if (cookie.contains(";"))
-					cookie = cookie.substring(0, cookie.indexOf(";"));
+			for(int i = 0;i<cookies.length;i++){
+				if(cookies[i].getName().equals(TokenManager.TokenMark))
+					return cookies[i].getValue();
 			}
-			cookie = cookie.replace(tokenMark,"");
 		}
-		return cookie;
+		return null;
 	}
-	
 	private static Token addToken(String tokenId) {
 		Token token = new Token(tokenId);
 		token.setTimeOut(TokenManager.Timeout);
+		token.setLastuse(System.currentTimeMillis());
 		TokenPool.addToken(token);
 		return token;
 	}
@@ -230,38 +169,39 @@ public class Token {
 	 */
 	public static Token addToken(HttpServletRequest request,HttpServletResponse response){
 		String tokenId=newTokenId();
-		Cookie cookie = new Cookie(TokenManager.getTokenMark(),tokenId);
+		Token token = addToken(tokenId);
+		Cookie cookie = new Cookie(TokenManager.TokenMark,tokenId);
 		cookie.setPath("/");
-		cookie.setMaxAge(timeOut);
+		cookie.setMaxAge(token.getTimeOut());
 		response.addCookie(cookie);
+		request.setAttribute(TokenManager.TokenMark, tokenId);
 		if(TokenManager.getHibernateInterface()!=null){
 			TokenCell tc = new TokenCell();
 			tc.setTokenId(tokenId);
 			tc.setCreateDate(new Date());
+			tc.setTimeOut(token.getTimeOut());
 			TokenManager.getHibernateInterface().addToken(tc);
 		}
-		request.getSession().setAttribute(TokenManager.getTokenMark(), tokenId);
-		return addToken(tokenId);
+		request.setAttribute(TokenManager.TokenMark, tokenId);
+		return token;
 	}
 	/**
 	 * 产生新的token Id
 	 * @return
 	 */
 	private static String newTokenId() {
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-		String date = sdf.format(new Date());
-		date=Integer.toHexString(Integer.valueOf(date));
-		String uuid = UUID.randomUUID().toString();
-		String tokenId=date+uuid.replace("-", "");
-		return tokenId;
+		UUID uuid = UUID.randomUUID();
+		return new StringBuilder(32).append(digits(uuid.getMostSignificantBits() >> 32, 8))
+				.append(digits(uuid.getMostSignificantBits() >> 16, 4))
+				.append(digits(uuid.getMostSignificantBits(), 4))
+				.append(digits(uuid.getLeastSignificantBits() >> 48, 4))
+				.append(digits(uuid.getLeastSignificantBits(), 12)).toString();
 	}
-		public boolean exists() {
+	public boolean exists() {
 		if (TokenPool.hasToken(this))
 			return true;
 		return false;
 	}
-
-	
 	// --------------------------role -----start
 	public Object[] getRoles() {
 		return roles.toArray();
@@ -361,15 +301,17 @@ public class Token {
 	public void destory(){
 		this.arguments.clear();
 		this.roles.clear();
-		this.objs.clear();
 		TokenManager.removeToken(tokenId);
 		tokenId=null;
 	}
-	public Date getCreateDate() {
-		return createDate;
+	public static String digits(long val, int digits) {
+		long hi = 1L << (digits * 4);
+		return Long.toHexString(hi | (val & (hi - 1))).substring(1);
 	}
-	public void setCreateDate(Date createDate) {
-		this.createDate = createDate;
+	public long getLastuse() {
+		return lastuse;
 	}
-
+	public void setLastuse(long lastuse) {
+		this.lastuse = lastuse;
+	}
 }

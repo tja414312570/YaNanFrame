@@ -25,24 +25,25 @@ public class Query extends OperateImplement{
 	protected DBTab queryTab;
 	protected Query unionQuery=null;
 	protected boolean unionAll=false;
-	protected Object object;
-	protected Class<?> cls;
+	protected Object dataTablesObject;
 	protected Map<String, String> map = new HashMap<String, String>();
 	protected List<String> condition = new ArrayList<String>();
 	protected List<String> order = new ArrayList<String>();
 	protected Map<Field, DBColumn> fieldMap = new LinkedHashMap<Field, DBColumn>();
 	protected String limit="";
+	public Object getDataTablesObject() {
+		return dataTablesObject;
+	}
+	public void setDataTablesObject(Object dataTablesObject) {
+		this.dataTablesObject = dataTablesObject;
+	}
+	public Class<?> getDataTablesClass() {
+		return this.dataTables.getDataTablesClass();
+	}
 	protected String group=null;
 	private Query subQuery=null;
 	private JoinObject joinObject;
 	private final Log log = PlugsFactory.getPlugsInstance(Log.class,Query.class);
-	public Class<?> getCls() {
-		return cls;
-	}
-	public Query setCls(Class<?> cls) {
-		this.cls = cls;
-		return this;
-	}
 	public static interface Order{
 		public static final String Desc="desc";
 	}
@@ -59,10 +60,8 @@ public class Query extends OperateImplement{
 		if(unionQuery!=null)
 			hashCode+=unionQuery.hashCode();
 		hashCode+=unionAll==true?0:1;
-		if(object!=null)
-			hashCode+=object.hashCode();
-		if(cls!=null)
-			hashCode+=cls.hashCode();
+		if(dataTablesObject!=null)
+			hashCode+=dataTablesObject.hashCode();
 		hashCode+=order.hashCode();
 		hashCode+=fieldMap.hashCode();
 		hashCode+=limit.hashCode();
@@ -127,12 +126,12 @@ public class Query extends OperateImplement{
 				return false;
 		}else if(this.joinObject!=null)
 			return false;
-		if(query.object!=null){
-			if(this.object==null)
+		if(query.dataTablesObject!=null){
+			if(this.dataTablesObject==null)
 				return false;
-			else if (!this.object.equals(this.object))
+			else if (!this.dataTablesObject.equals(this.dataTablesObject))
 				return false;
-		}else if(this.object!=null)
+		}else if(this.dataTablesObject!=null)
 			return false;
 		return true;
 	}
@@ -141,25 +140,25 @@ public class Query extends OperateImplement{
 		return this.key.contains(str);
 	}
 
-	public Query(DBTab dbTab) {
-		this.dbTab = dbTab;
+	public Query(DBTab dataTables) {
+		this.dataTables = dataTables;
 	}
 
 	public Query(Object obj, String... strings) {
-		this.dbTab = new DBTab(obj);
-		object = obj;
-		this.queryTab = this.dbTab;
+		this.dataTables = new DBTab(obj);
+		dataTablesObject = obj;
+		this.queryTab = this.dataTables;
 		if (strings.length != 0) {
 			for (String str : strings){
 				this.key.add(str);
 				try {
 				if(str.contains(" AS ")){
 					String fieldName = str.split(" AS ")[1];
-					Field field = this.queryTab.getCls().getDeclaredField(fieldName);
+					Field field = this.queryTab.getDataTablesClass().getDeclaredField(fieldName);
 						this.fieldMap.put(field,null);
 					
 					}else if(!str.trim().equals("*")){
-						Field field = this.queryTab.getCls().getDeclaredField(str);
+						Field field = this.queryTab.getDataTablesClass().getDeclaredField(str);
 						this.fieldMap.put(field,null);
 					}else{
 						this.fieldMap.putAll(this.queryTab.getFieldMap());
@@ -173,31 +172,31 @@ public class Query extends OperateImplement{
 		}
 	}
 	public Query(Object obj, boolean starReplace) {
-		this.dbTab = new DBTab(obj);
-		this.queryTab = this.dbTab;
-		object = obj;
-		this.fieldMap.putAll(dbTab.getFieldMap());
+		this.dataTables = new DBTab(obj);
+		this.queryTab = this.dataTables;
+		dataTablesObject = obj;
+		this.fieldMap.putAll(dataTables.getFieldMap());
 		if(starReplace){
-			Map<Field, DBColumn> map = dbTab.getFieldMap();
+			Map<Field, DBColumn> map = dataTables.getFieldMap();
 			Iterator<DBColumn> iterator= map.values().iterator();
 			while(iterator.hasNext()){
 				this.key.add(iterator.next().getName());
 			}
 		}
 	}
-	public Query(Class<?> cls,String... strings) {
-		int clsHash = cls.hashCode();
-		this.dbTab = SqlCache.getCache().getAttribute(clsHash);
-		if(this.dbTab==null){
-			this.dbTab = new DBTab(cls);
-			SqlCache.getCache().addAttribute(clsHash, this.dbTab);
+	public Query(Class<?> dataTablesClass,String... strings) {
+		int dataTablesClassHash = dataTablesClass.hashCode();
+		this.dataTables = SqlCache.getCache().getAttribute(dataTablesClassHash);
+		if(this.dataTables==null){
+			this.dataTables = new DBTab(dataTablesClass);
+			SqlCache.getCache().addAttribute(dataTablesClassHash, this.dataTables);
 		}
-		this.queryTab = this.dbTab;
+		this.queryTab = this.dataTables;
 		if (strings.length != 0) {
 			StringBuilder sb = new StringBuilder();
 			for(String str : strings)
 				sb.append(str);
-			int strHash = cls.hashCode()+sb.toString().hashCode();
+			int strHash = dataTablesClass.hashCode()+sb.toString().hashCode();
 			this.fieldMap = SqlCache.getCache().getAttribute(strHash);
 			if(this.fieldMap==null){
 				this.fieldMap =  new LinkedHashMap<Field, DBColumn>();
@@ -206,10 +205,10 @@ public class Query extends OperateImplement{
 					try {
 					if(str.contains(" AS ")){
 						String fieldName = str.split(" AS ")[1];
-						Field field = this.queryTab.getCls().getDeclaredField(fieldName);
+						Field field = this.queryTab.getDataTablesClass().getDeclaredField(fieldName);
 							this.fieldMap.put(field,null);
 						}else if(!str.trim().equals("*")){
-							Field field = this.queryTab.getCls().getDeclaredField(str);
+							Field field = this.queryTab.getDataTablesClass().getDeclaredField(str);
 							this.fieldMap.put(field,null);
 						}else{
 							this.fieldMap.putAll(this.queryTab.getFieldMap());
@@ -221,7 +220,7 @@ public class Query extends OperateImplement{
 			SqlCache.getCache().addAttribute(strHash, this.fieldMap);
 			}
 		}else{
-			int strHash = cls.hashCode() +42804280;
+			int strHash = dataTablesClass.hashCode() +42804280;
 			this.fieldMap = SqlCache.getCache().getAttribute(strHash);
 			if(this.fieldMap==null){
 				this.fieldMap =  new LinkedHashMap<Field, DBColumn>();
@@ -230,12 +229,12 @@ public class Query extends OperateImplement{
 			}
 		}
 	}
-	public Query(Class<?> cls,boolean trans) {
-		this.dbTab = new DBTab(cls);
-		this.queryTab = this.dbTab;
-		this.fieldMap.putAll(dbTab.getFieldMap());
+	public Query(Class<?> dataTablesClass,boolean trans) {
+		this.dataTables = new DBTab(dataTablesClass);
+		this.queryTab = this.dataTables;
+		this.fieldMap.putAll(dataTables.getFieldMap());
 		if(trans){
-			Map<Field, DBColumn> map = dbTab.getFieldMap();
+			Map<Field, DBColumn> map = dataTables.getFieldMap();
 			Iterator<DBColumn> iterator= map.values().iterator();
 			while(iterator.hasNext()){
 				this.key.add(iterator.next().getName());
@@ -248,12 +247,12 @@ public class Query extends OperateImplement{
 	 * @param saveCls
 	 */
 	public Query(Class<?> queryCls, Class<?> saveCls) {
-		this.dbTab = new DBTab(queryCls);
+		this.dataTables = new DBTab(queryCls);
 		this.queryTab = new DBTab(saveCls);
 		this.fieldMap.putAll(queryTab.getFieldMap());
 	}
 	public Query(Class<?> queryCls, Class<?> saveCls,String...strings) {
-		this.dbTab = new DBTab(queryCls);
+		this.dataTables = new DBTab(queryCls);
 		this.queryTab = new DBTab(saveCls);
 		if (strings.length != 0) {
 			for (String str : strings){
@@ -261,11 +260,11 @@ public class Query extends OperateImplement{
 				try {
 				if(str.contains(" AS ")){
 					String fieldName = str.split(" AS ")[1];
-					Field field = this.queryTab.getCls().getDeclaredField(fieldName);
+					Field field = this.queryTab.getDataTablesClass().getDeclaredField(fieldName);
 						this.fieldMap.put(field,null);
 					
 					}else if(!str.trim().equals("*")){
-						Field field = this.queryTab.getCls().getDeclaredField(str);
+						Field field = this.queryTab.getDataTablesClass().getDeclaredField(str);
 						this.fieldMap.put(field,null);
 					}else{
 						this.fieldMap.putAll(this.queryTab.getFieldMap());
@@ -279,7 +278,7 @@ public class Query extends OperateImplement{
 		}
 	}
 	public Query(Class<?> queryCls, Class<?> saveCls, boolean trans, String...strings) {
-		this.dbTab = new DBTab(queryCls);
+		this.dataTables = new DBTab(queryCls);
 		this.queryTab = new DBTab(saveCls);
 		this.fieldMap.putAll(queryTab.getFieldMap());
 		if (strings.length != 0) {
@@ -295,7 +294,7 @@ public class Query extends OperateImplement{
 				try {
 					String fieldName=str;
 					if(str.contains(" AS "))fieldName = str.split(" AS ")[1];
-					Field field = this.queryTab.getCls().getDeclaredField(fieldName);
+					Field field = this.queryTab.getDataTablesClass().getDeclaredField(fieldName);
 					this.fieldMap.put(field,null);
 				} catch (NoSuchFieldException | SecurityException e) {
 					log.error(e);
@@ -313,8 +312,8 @@ public class Query extends OperateImplement{
 		return this;
 	}
 
-	public Query setFields(Class<?> cls) {
-		Iterator<Field> i = dbTab.iterator();
+	public Query setFields(Class<?> dataTablesClass) {
+		Iterator<Field> i = dataTables.iterator();
 		while (i.hasNext())
 			this.key.add(i.next().getName());
 		return this;
@@ -350,13 +349,13 @@ public class Query extends OperateImplement{
 	}
 
 	public Query addCondition(Field field, String condition) {
-		this.map.put(dbTab.getName()+"."+dbTab.getDBColumn(field).getName(), condition.toString());
+		this.map.put(dataTables.getName()+"."+dataTables.getDBColumn(field).getName(), condition.toString());
 		return this;
 	}
 
 	public Query addCondition(String field, Object condition) {
 		try {
-			map.put(dbTab.getName()+"."+dbTab.getDBColumn(field).getName(), condition.toString());
+			map.put(dataTables.getName()+"."+dataTables.getDBColumn(field).getName(), condition.toString());
 		} catch (NoSuchFieldException | SecurityException e) {
 			log.error(e);
 		}
@@ -369,9 +368,9 @@ public class Query extends OperateImplement{
 	public Query addConditionField(String... field) {
 		for(String str : field){
 			try {
-				Field f = object.getClass().getDeclaredField(str);
+				Field f = dataTablesObject.getClass().getDeclaredField(str);
 				f.setAccessible(true);
-				map.put(dbTab.getName()+"."+dbTab.getDBColumn(str).getName(), f.get(object).toString().replace("'", "\\'"));
+				map.put(dataTables.getName()+"."+dataTables.getDBColumn(str).getName(), f.get(dataTablesObject).toString().replace("'", "\\'"));
 			} catch (NoSuchFieldException | SecurityException
 					| IllegalArgumentException | IllegalAccessException e) {
 				log.error(e);
@@ -399,7 +398,7 @@ public class Query extends OperateImplement{
 			while(s.hasNext())
 				sb.append(s.next()).append(s.hasNext()?",":"");
 		}
-		sb.append(" FROM ").append(this.subQuery==null?dbTab.getName():"("+this.subQuery.create()+") AS T"+((int)Math.random()*100));
+		sb.append(" FROM ").append(this.subQuery==null?dataTables.getName():"("+this.subQuery.create()+") AS T"+((int)Math.random()*100));
 		if(this.joinObject!=null){
 			sb.append(this.joinObject.isInnerJoin()?" INNER OUTER ":" LEFT "+"JOIN "+this.joinObject.getRight()+" ON ");
 			for(int i =0;i<this.joinObject.getConditions().length;i++)
@@ -445,17 +444,18 @@ public class Query extends OperateImplement{
 		return resultSet.size()>0?resultSet.get(resultSet.size()-1):null;
 	}
 	public <T> List<T> query(boolean mapping){
-	this.queryTab.setDataBase(this.dbTab.getDataBase());
+	this.queryTab.setDataBase(this.dataTables.getDataBase());
+	this.queryTab.setName(this.dataTables.getName());
 	return this.queryTab.query(this,mapping);
 }
 	public Map<Field, DBColumn> getFieldMap(){
 		return this.fieldMap;
 	}
 	public Query removeField(String... string) {
+		Field f;
 		for(String str :string){
-			Field f;
 			try {
-				f = this.object.getClass().getDeclaredField(str);
+				f= this.dataTables.getDataTablesClass().getDeclaredField(str);
 				this.fieldMap.remove(f);
 			} catch (NoSuchFieldException | SecurityException e) {
 			}
@@ -483,30 +483,30 @@ public class Query extends OperateImplement{
 		return this.subQuery;
 	}
 	public String getTabName() {
-		return this.dbTab.getName();
+		return this.dataTables.getName();
 	}
-	public Query setJoinLeft(Class<?> cls, String... conditions) {
-		this.setJoinLeft(cls, false, conditions);
+	public Query setJoinLeft(Class<?> dataTablesClass, String... conditions) {
+		this.setJoinLeft(dataTablesClass, false, conditions);
 		return this;
 	}
-	public Query setJoinLeft(Class<?> cls,boolean trans, String... conditions) {
+	public Query setJoinLeft(Class<?> dataTablesClass,boolean trans, String... conditions) {
 		if(conditions.length==0)return this;
-		DBTab rTab = new DBTab(cls);
-		this.joinObject = new JoinObject(this.dbTab.getName(),rTab.getName());
+		DBTab rTab = new DBTab(dataTablesClass);
+		this.joinObject = new JoinObject(this.dataTables.getName(),rTab.getName());
 		this.joinObject.setConditions(conditions);
 		if(trans)
 			for(String condition : this.joinObject.getConditions())
 				this.condition.add(condition);
 		return this;
 	}
-	public Query setInnnerJoin(Class<?> cls, String... conditions) {
-		this.setInnnerJoin(cls,false, conditions);
+	public Query setInnnerJoin(Class<?> dataTablesClass, String... conditions) {
+		this.setInnnerJoin(dataTablesClass,false, conditions);
 		return this;
 	}
-	public Query setInnnerJoin(Class<?> cls,boolean trans, String... conditions) {
+	public Query setInnnerJoin(Class<?> dataTablesClass,boolean trans, String... conditions) {
 		if(conditions.length==0)return this;
-		DBTab rTab = new DBTab(cls);
-		this.joinObject = new JoinObject(this.dbTab.getName(),rTab.getName());
+		DBTab rTab = new DBTab(dataTablesClass);
+		this.joinObject = new JoinObject(this.dataTables.getName(),rTab.getName());
 		this.joinObject.setConditions(conditions);
 		this.joinObject.setInnerJoin(true);
 		if(trans)

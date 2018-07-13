@@ -12,9 +12,7 @@ import com.YaNan.frame.hibernate.beanSupport.BeanFactory;
 import com.YaNan.frame.hibernate.beanSupport.XMLBean;
 import com.YaNan.frame.logging.Log;
 import com.YaNan.frame.plugin.PlugsFactory;
-import com.YaNan.frame.reflect.ClassLoader;
 import com.YaNan.frame.servlets.session.entity.Result;
-import com.YaNan.frame.servlets.session.entity.TokenConfigure;
 import com.YaNan.frame.servlets.session.entity.TokenEntity;
 import com.YaNan.frame.servlets.session.interfaceSupport.TokenHibernateInterface;
 import com.YaNan.frame.util.StringUtil;
@@ -30,8 +28,9 @@ public class TokenManager{
 	/**
 	 * token 数据持久层接口
 	 */
-	public static TokenHibernateInterface hibernateInterface;
-	
+	private TokenHibernateInterface hibernateInterface = PlugsFactory.getPlugsInstanceAllowNull(TokenHibernateInterface.class);
+	private final Thread tokenDeamon;
+	private final TokenLifeDeamon tokenLifeTask;
 	private static TokenManager manager;
 	private Map<String, TokenEntity> tokenMap = new LinkedHashMap<String, TokenEntity>();
 	public Map<String, TokenEntity> getTokenMap() {
@@ -39,10 +38,14 @@ public class TokenManager{
 	}
 	private File file;
 	private TokenManager() {
+		tokenLifeTask = new TokenLifeDeamon();
+		tokenDeamon = new Thread();
+		tokenDeamon.setPriority(1);
+		tokenDeamon.start();
 	};
-	@Override
-	public String toString(){
-		return "cs";
+	public void destory(){
+		tokenLifeTask.shutdown();
+		tokenDeamon.interrupt();
 	}
 	public static String getTokenMark() {
 		return TokenMark;
@@ -51,10 +54,12 @@ public class TokenManager{
 		TokenMark = tokenMark;
 	}
 	public static TokenHibernateInterface getHibernateInterface() {
-		return hibernateInterface;
+		if(manager!=null)
+			return manager.hibernateInterface;
+		return null;
 	}
-	public static void setHibernateInterface(TokenHibernateInterface hibernateInterface) {
-		TokenManager.hibernateInterface = hibernateInterface;
+	public void setHibernateInterface(TokenHibernateInterface hibernateInterface) {
+		this.hibernateInterface = hibernateInterface;
 	}
 	public void addToken(String namespace, TokenEntity bean) {
 		this.tokenMap.put(namespace, bean);
@@ -65,10 +70,15 @@ public class TokenManager{
 	
 	public static TokenManager getInstance() {
 		if (manager == null)
-			manager = new TokenManager();
+			synchronized (manager) {
+				if(manager==null)
+					manager = new TokenManager();
+			}
 		return manager;
 	}
-
+	public static boolean isInstance(){
+		return manager !=null;
+	}
 	public static void init() {
 		if (manager == null)
 			manager = new TokenManager();
@@ -88,30 +98,6 @@ public class TokenManager{
 		if(!this.file.exists()){
 			log.error("token xml file is not exists path:"+this.file.getAbsoluteFile());
 			return;
-		}
-		XMLBean cmlBean = BeanFactory.getXMLBean();
-		cmlBean.addXMLFile(this.file);
-		cmlBean.setBeanClass(TokenConfigure.class);
-		cmlBean.addElementPath("/Token");
-		cmlBean.setNodeName("Config");
-		List<?> cmls = cmlBean.execute();
-		if(cmls.size()!=0){
-			TokenConfigure configure = (TokenConfigure) cmls.get(0);
-			if(configure.getTokenMark()!=null&&!configure.getTokenMark().equals(""))
-				TokenMark=configure.getTokenMark();
-			Timeout=configure.getTimeout();
-			if(configure.getHibernateInterface()!=null&&ClassLoader.exists(configure.getHibernateInterface())){
-				Class<?> cls;
-				try {
-					cls = Class.forName(configure.getHibernateInterface());
-					if(ClassLoader.implementOf(cls, TokenHibernateInterface.class))
-						hibernateInterface=(TokenHibernateInterface) cls.newInstance();
-				} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-					e.printStackTrace();
-				log.error(e.getMessage(), e);
-				}
-				
-			}
 		}
 		XMLBean xmlBean = BeanFactory.getXMLBean();
 		xmlBean.addXMLFile(this.file);

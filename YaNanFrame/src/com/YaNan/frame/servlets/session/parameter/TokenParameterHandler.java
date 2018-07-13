@@ -18,7 +18,7 @@ import com.YaNan.frame.servlets.session.Token;
  * @author yanan
  *
  */
-@Register(attribute="com.YaNan.frame.servlets.session.parameter.TokenAttributes",signlTon=false,priority=-20180519)
+@Register(attribute={"com.YaNan.frame.servlets.session.parameter.TokenAttribute","com.YaNan.frame.servlets.session.Token"},signlTon=false,priority=-20180519)
 public class TokenParameterHandler implements ParameterHandler{
 	//获取session attribute 名称迭代器
 	private HttpServletRequest servletRequest;
@@ -33,13 +33,14 @@ public class TokenParameterHandler implements ParameterHandler{
 		this.servletRequest = request;
 		this.servletResponse = response;
 		this.token = Token.getToken(request);
+		if(token==null)
+			token = Token.addToken(request, response);
 	}
-
 
 	@Override
 	public Object getParameter(Parameter parameter, Annotation parameterAnnotation) {
 		if(token!=null){
-			TokenAttributes tokenAttributes = (TokenAttributes) parameterAnnotation;
+			TokenAttribute tokenAttributes = (TokenAttribute) parameterAnnotation;
 			if(tokenAttributes.value().trim().equals("")){
 				Object value = token.get(parameter.getType());
 				if(value==null)
@@ -53,14 +54,14 @@ public class TokenParameterHandler implements ParameterHandler{
 
 	@Override
 	public Object getParameter(Parameter parameter) throws IOException {
-		return null;
+		return token;
 	}
 
 
 	@Override
 	public Object getParameter(Field field, Annotation parameterAnnotation) {
 		if(token!=null){
-			TokenAttributes tokenAttributes = (TokenAttributes) parameterAnnotation;
+			TokenAttribute tokenAttributes = (TokenAttribute) parameterAnnotation;
 			if(tokenAttributes.value().trim().equals("")){
 				Object value = token.get(field.getType());
 				if(value==null)
@@ -75,7 +76,7 @@ public class TokenParameterHandler implements ParameterHandler{
 
 	@Override
 	public Object getParameter(Field field) throws IOException {
-		return null;
+		return token;
 	}
 
 

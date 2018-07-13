@@ -14,7 +14,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
@@ -46,9 +45,9 @@ import com.YaNan.frame.servlets.parameter.annotations.RequestHeader;
 import com.YaNan.frame.servlets.parameter.annotations.RequestParam;
 import com.YaNan.frame.servlets.parameter.annotations.SessionAttributes;
 import com.YaNan.frame.servlets.parameter.annotations.UUID;
-import com.YaNan.frame.servlets.session.Token;
 
 /**
+ * 2018-7-9 重新修改获取参数逻辑
  * 默认的参数调配器，优先级最低
  * 该调配器匹配任何类型的数据，但实际使用中可能存在某些数据不能处理
  * 支持put，delete参数处理
@@ -61,7 +60,7 @@ import com.YaNan.frame.servlets.session.Token;
  * @author yanan
  *
  */
-@Register(attribute = "*", signlTon = false)
+@Register(attribute = "*", signlTon = false,priority=Integer.MAX_VALUE)
 public class DefaultParameterHandler implements ParameterHandler {
 	// 路径变量
 	private Map<String, String> pathParameter;
@@ -80,14 +79,12 @@ public class DefaultParameterHandler implements ParameterHandler {
 	//数据读取缓存  设置为8k
 	protected byte[] bodyData = new byte[8192];
 	//此参数处理器用于存储servlet api 不处理的参数
-	private Map<String, List<String>> parameters = new LinkedHashMap<String, List<String>>();
+	private Map<String, String[]> parameters = new LinkedHashMap<String, String[]>();
 	//参数名缓存
 	private StringBuilder tmpName = new StringBuilder();
 	//参数值缓存
 	private StringBuilder tmpValue = new StringBuilder();
 	private Log log = PlugsFactory.getPlugsInstance(Log.class,this.getClass());
-	
-	private boolean parseParameter = false;
 	
 	protected int readRequestBody(byte[] body, int len) throws IOException {
 		int offset = 0;
@@ -101,46 +98,46 @@ public class DefaultParameterHandler implements ParameterHandler {
 	}
 
 	public String[] getParameterValues(String name) {
-		if(!this.parseParameter)
-			this.parseParameter();
-		List<String> values = this.parameters.get(name);
-		if (values == null)
-			return null;
-		return values.toArray(new String[values.size()]);
+		String[] values = this.parameters.get(name);
+		return values;
 	}
 
 	public Enumeration<String> getParameterNames() {
-		if(!this.parseParameter)
-			this.parseParameter();
 		return Collections.enumeration(this.parameters.keySet());
 	}
 
 	public String getParameter(String name) {
-		if(!this.parseParameter)
-			this.parseParameter();
-		List<String> values = this.parameters.get(name);
+		String[] values = this.parameters.get(name);
 		if (values != null) {
-			if (values.size() == 0)
+			if (values.length == 0)
 				return "";
-			return values.get(0);
+			return values[0];
 		}
 		return null;
 	}
 
-	public Map<String, List<String>> getParameterMap() {
-		if(!this.parseParameter)
-			this.parseParameter();
+	public Map<String, String[]> getParameterMap() {
 		return this.parameters;
 	}
 
 	public void addParameter(String key, String value){
 		if (key == null)return;
-		List<String> values = parameters.get(key);
-		if (values == null) {
-			values = new ArrayList<>(1);
-			parameters.put(key, values);
+		String[] values = this.parameters.get(key);
+		if(values==null||values.length==0){
+			if (value == null) 
+				parameters.put(key, null);
+			else
+				parameters.put(key, new String[]{value});
+		}else{
+			if (value != null) {
+				String[] tmp = values;
+				values = new String[values.length+1];
+				for(int i = 0;i<tmp.length;i++)
+					values[i] = tmp[i];
+				values[tmp.length] = value;
+				parameters.put(key, values);
+			}
 		}
-		values.add(value);
 	}
 
 	/**
@@ -232,13 +229,12 @@ public class DefaultParameterHandler implements ParameterHandler {
 	public synchronized void parseParameter(){
 		try {
 			//当上下文长度大于0时，处理上下文内容，maybe，如果实际开发中不需要参数时 也会解析，获取可以放到 getParameter中，加个锁更好
-			//偶尔想想这样可能存在bug，被恶意放松大量数据到服务器
+			//偶尔想想这样可能存在bug，被恶意发送大量数据到服务器
 			int len = this.servletRequest.getContentLength();
 			if (len >= 0) {
 				this.readRequestBody(bodyData, len);
 				this.processParameters(bodyData, 0, len, charset);
 			}
-			this.parseParameter = true;
 		} catch (Exception e) {
 			log.error(e);
 		}
@@ -247,13 +243,17 @@ public class DefaultParameterHandler implements ParameterHandler {
 	public void initHandler(HttpServletRequest request, HttpServletResponse response, ServletBean servletBean,
 			ParameterHandlerCache parameterHandlerCache) {
 		this.pathParameter = this.getPathValues(servletBean.getPathVariable(), URLSupport.getRelativePath(request));
-		pathIterator = pathParameter.values().iterator();
-		entrySetiterator = request.getParameterMap().entrySet().iterator();
+		if(pathParameter!=null)
+			pathIterator = pathParameter.values().iterator();
 		this.servletBean = servletBean;
 		this.servletRequest = request;
 		this.servletResponse = response;
 		this.parameterHandlerCache = parameterHandlerCache;
-		
+		if(request.getParameterMap().size()>0)
+			this.parameters = request.getParameterMap();
+		else
+			this.parseParameter();
+		entrySetiterator = this.parameters.entrySet().iterator();
 
 	}
 
@@ -265,6 +265,8 @@ public class DefaultParameterHandler implements ParameterHandler {
 	 * @return
 	 */
 	public Map<String, String> getPathValues(final Map<Integer, String> pathVariables, String path) {
+		if(pathVariables==null)
+			return null;
 		Map<String, String> pathValues = new LinkedHashMap<String, String>();
 		int Index = path.indexOf("/");
 		int count = 0;
@@ -308,6 +310,8 @@ public class DefaultParameterHandler implements ParameterHandler {
 					return this.uuid((UUID) parameterAnnotation, paras);
 				else if (annoType.equals(com.YaNan.frame.servlets.parameter.annotations.Date.class))
 					return this.date((com.YaNan.frame.servlets.parameter.annotations.Date) parameterAnnotation, paras);
+				else if (annoType.equals(com.YaNan.frame.plugin.annotations.Service.class))
+					return this.service((com.YaNan.frame.plugin.annotations.Service) parameterAnnotation, paras);
 				else
 					return null;// 不支持的的类型
 			} else {
@@ -340,9 +344,15 @@ public class DefaultParameterHandler implements ParameterHandler {
 				}
 			}
 		} catch (Exception e) {
-			log.error(e);
+			log.error("An error occurred while processing the parameters,\r\nClass :"+servletBean.getServletClass().getName()
+					+",\r\nMehod :"+servletBean.getMethod().getName()
+					+",\r\nParamter:"+paras.getName(),e);
 		}
 		return null;
+	}
+
+	private Object service(com.YaNan.frame.plugin.annotations.Service parameterAnnotation, Parameter paras) {
+		return PlugsFactory.getPlugsInstance(paras.getType());
 	}
 
 	/**
@@ -367,7 +377,14 @@ public class DefaultParameterHandler implements ParameterHandler {
 		if (parameterName.trim().equals(""))
 			parameterName = paras.getName();// 此方法只适合 jdk 1.8 以上，并要求编译器编译为
 											// 存储方法参数 否则可能出现 arg0 arg1等编译后修改的参数名
-		return parseBaseType(paras.getType(), pathParameter.get(parameterName), null);
+		String value = pathParameter.get(parameterName);
+		if(value!=null){
+			return parseBaseType(paras.getType(), value, null);
+		}else if(parameterAnnotation.defaultValue().equals("")){
+			return null;
+		}else{
+			return parseBaseType(paras.getType(), parameterAnnotation.defaultValue(), null);
+		}
 	}
 
 	private Object requestBody(RequestBody parameterAnnotation, Parameter paras) throws ParseException {
@@ -375,8 +392,18 @@ public class DefaultParameterHandler implements ParameterHandler {
 		if (parameterName.trim().equals(""))
 			parameterName = paras.getName();// 此方法只适合 jdk 1.8 以上，并要求编译器编译为
 											// 存储方法参数 否则可能出现 arg0 arg1等编译后修改的参数名
-		return paras.getType().isArray() ? parseBaseType(paras.getType(), this.getParameterValues(parameterName), null)
-				: parseBaseType(paras.getType(), this.getParameter(parameterName), null);
+		if(paras.getType().isArray() ){
+			return parseBaseType(paras.getType(), this.getParameterValues(parameterName), null);
+		}else{
+			String para = this.getParameter(parameterName);
+			if(para!=null){
+				return parseBaseType(paras.getType(), para,null);
+			}else if(parameterAnnotation.defaultValue().equals("")){
+				return null;
+			}else{
+				return parseBaseType(paras.getType(),parameterAnnotation.defaultValue(),null);
+			}
+		}
 	}
 
 	private Object requestHeader(RequestHeader parameterAnnotation, Parameter paras) throws ParseException {
@@ -384,17 +411,24 @@ public class DefaultParameterHandler implements ParameterHandler {
 		if (parameterName.trim().equals(""))
 			parameterName = paras.getName();// 此方法只适合 jdk 1.8 以上，并要求编译器编译为
 											// 存储方法参数 否则可能出现 arg0 arg1等编译后修改的参数名
-		return parseBaseType(paras.getType(), this.servletRequest.getHeader(parameterName), null);
+		String header = this.servletRequest.getHeader(parameterName);
+		if(header!=null){
+			return parseBaseType(paras.getType(), this.servletRequest.getHeader(parameterName), null);
+		}else if(parameterAnnotation.defaultValue().equals("")){
+			return null;
+		}else{
+			return parseBaseType(paras.getType(), parameterAnnotation.defaultValue(), null);
+		}
 	}
 
 	private Object requestParam(RequestParam parameterAnnotation, Parameter paras) throws ParseException {
 		String parameterName = parameterAnnotation.value();// 从注解中获取参数名
 		if (parameterName.trim().equals(""))
 			parameterName = paras.getName();// 此方法只适合 jdk 1.8 以上，并要求编译器编译为
-											// 存储方法参数 否则可能出现 arg0 arg1等编译后修改的参数名
 		return paras.getType().isArray()
-				? parseBaseType(paras.getType(), servletRequest.getParameterValues(parameterName), null)
-				: parseBaseType(paras.getType(), servletRequest.getParameter(parameterName), null);
+				? parseBaseType(paras.getType(), this.getParameterValues(parameterName), null)
+				:this.getParameter(parameterName)!=null?parseBaseType(paras.getType(), this.getParameter(parameterName), null):
+					parameterAnnotation.defaultValue().equals("")?null:parseBaseType(paras.getType(),parameterAnnotation.defaultValue(), null);
 	}
 
 	private Object sessionAttributes(SessionAttributes parameterAnnotation, Parameter paras) throws ParseException {
@@ -453,7 +487,6 @@ public class DefaultParameterHandler implements ParameterHandler {
 		return this.getParameter(paras);
 
 	}
-
 	private boolean matchGroups(Groups groups, Class<?>[] groups2) {
 		if (groups2.length == 0)
 			return true;
@@ -472,7 +505,14 @@ public class DefaultParameterHandler implements ParameterHandler {
 		if (parameterName.trim().equals(""))
 			parameterName = paras.getName();// 此方法只适合 jdk 1.8 以上，并要求编译器编译为
 											// 存储方法参数 否则可能出现 arg0 arg1等编译后修改的参数名
-		return parseBaseType(paras.getType(), pathParameter.get(parameterName), null);
+		String value = pathParameter.get(parameterName);
+		if(value!=null){
+			return parseBaseType(paras.getType(), value, null);
+		}else if(parameterAnnotation.defaultValue().equals("")){
+			return null;
+		}else{
+			return parseBaseType(paras.getType(), parameterAnnotation.defaultValue(), null);
+		}
 	}
 
 	private Object requestBody(RequestBody parameterAnnotation, Field paras) throws ParseException {
@@ -480,8 +520,18 @@ public class DefaultParameterHandler implements ParameterHandler {
 		if (parameterName.trim().equals(""))
 			parameterName = paras.getName();// 此方法只适合 jdk 1.8 以上，并要求编译器编译为
 											// 存储方法参数 否则可能出现 arg0 arg1等编译后修改的参数名
-		return paras.getType().isArray() ? parseBaseType(paras.getType(), this.getParameterValues(parameterName), null)
-				: parseBaseType(paras.getType(), this.getParameter(parameterName), null);
+		if(paras.getType().isArray() ){
+			return parseBaseType(paras.getType(), this.getParameterValues(parameterName), null);
+		}else{
+			String para = this.getParameter(parameterName);
+			if(para!=null){
+				return parseBaseType(paras.getType(), para,null);
+			}else if(parameterAnnotation.defaultValue().equals("")){
+				return null;
+			}else{
+				return parseBaseType(paras.getType(),parameterAnnotation.defaultValue(),null);
+			}
+		}
 	}
 
 	private Object requestHeader(RequestHeader parameterAnnotation, Field paras) throws ParseException {
@@ -489,7 +539,14 @@ public class DefaultParameterHandler implements ParameterHandler {
 		if (parameterName.trim().equals(""))
 			parameterName = paras.getName();// 此方法只适合 jdk 1.8 以上，并要求编译器编译为
 											// 存储方法参数 否则可能出现 arg0 arg1等编译后修改的参数名
-		return parseBaseType(paras.getType(), this.servletRequest.getHeader(parameterName), null);
+		String header = this.servletRequest.getHeader(parameterName);
+		if(header!=null){
+			return parseBaseType(paras.getType(), this.servletRequest.getHeader(parameterName), null);
+		}else if(parameterAnnotation.defaultValue().equals("")){
+			return null;
+		}else{
+			return parseBaseType(paras.getType(), parameterAnnotation.defaultValue(), null);
+		}
 	}
 
 	private Object requestParam(RequestParam parameterAnnotation, Field paras) throws ParseException {
@@ -498,8 +555,9 @@ public class DefaultParameterHandler implements ParameterHandler {
 			parameterName = paras.getName();// 此方法只适合 jdk 1.8 以上，并要求编译器编译为
 											// 存储方法参数 否则可能出现 arg0 arg1等编译后修改的参数名
 		return paras.getType().isArray()
-				? parseBaseType(paras.getType(), servletRequest.getParameterValues(parameterName), null)
-				: parseBaseType(paras.getType(), servletRequest.getParameter(parameterName), null);
+				? parseBaseType(paras.getType(), this.getParameterValues(parameterName), null)
+						:this.getParameter(parameterName)!=null?parseBaseType(paras.getType(), this.getParameter(parameterName), null):
+							parameterAnnotation.defaultValue().equals("")?null:parseBaseType(paras.getType(), parameterAnnotation.defaultValue(), null);
 	}
 
 	private Object cookieValue(CookieValue anno, Field paras) throws ParseException {
@@ -520,7 +578,7 @@ public class DefaultParameterHandler implements ParameterHandler {
 			try {
 				// 如按循序获取参数 只支持 pathVariable 与 requestParameter
 				// 如果没有的话会造成HttpServletResponse.SC_INTERNAL_SERVER_ERROR
-				if (pathIterator.hasNext())// 判断pathValues的迭代器是否有下一个值，如果有则赋值
+				if (pathIterator!=null&&pathIterator.hasNext())// 判断pathValues的迭代器是否有下一个值，如果有则赋值
 					return parseBaseType(paras.getType(), pathIterator.next(), null);
 				else if (entrySetiterator.hasNext()) {// 判断requestParameter参数中是否有该参数
 					Entry<String, String[]> entry = entrySetiterator.next();
@@ -548,15 +606,15 @@ public class DefaultParameterHandler implements ParameterHandler {
 				return this.servletRequest.getCookies();
 			else if (paras.getType().equals(Locale.class))// Locale
 				return this.servletRequest.getLocale();
-			else if (paras.getType().equals(Token.class))// Locale
-				return Token.getToken(servletRequest);
 			else {
 				// pojo 类型 异常部分可能需要处理
 				try {
 					return this.pojoParameterBind(paras.getType(), null, servletRequest, servletResponse, servletBean,
 							pathParameter);
 				} catch (Exception e) {
-					log.error(e);
+					log.error("An error occurred while processing the parameters,\r\nClass :"+servletBean.getServletClass().getName()
+							+",\r\nMehod :"+servletBean.getMethod().getName()
+							+",\r\nParamter:"+paras.getName(),e);
 				}
 				// return
 				// this.pojoParameterBind(paras.getType(),paramEntry.getValue().getName(),
@@ -901,7 +959,9 @@ public class DefaultParameterHandler implements ParameterHandler {
 				String name = field.getName();
 				// 如按循序获取参数 只支持 pathVariable 与 requestParameter
 				// 如果没有的话会造成HttpServletResponse.SC_INTERNAL_SERVER_ERROR
-				String value = pathParameter.get(name);
+				String value = null;
+				if(pathParameter!=null)
+					value = pathParameter.get(name);
 				if (value != null)
 					return parseBaseType(field.getType(), value, null);
 				if (field.getType().isArray()) {
@@ -941,15 +1001,13 @@ public class DefaultParameterHandler implements ParameterHandler {
 				return this.servletRequest.getCookies();
 			else if (field.getType().equals(Locale.class))// Locale
 				return this.servletRequest.getLocale();
-			else if (field.getType().equals(Token.class))// Locale
-				return Token.getToken(servletRequest);
 			else {
 				// pojo 类型 异常部分可能需要处理
 				try {
 					return this.pojoParameterBind(field.getType(), null, servletRequest, servletResponse, servletBean,
 							pathParameter);
 				} catch (Exception e) {
-					log.error(e);
+					log.error("An error occurred while processing the parameters at "+field,e);
 				}
 				// return
 				// this.pojoParameterBind(paras.getType(),paramEntry.getValue().getName(),

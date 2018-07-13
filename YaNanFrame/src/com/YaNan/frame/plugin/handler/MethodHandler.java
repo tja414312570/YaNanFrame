@@ -19,6 +19,13 @@ public class MethodHandler {
 	private Object footResult;
 	private Map<String,Object> attribute = new HashMap<String,Object>();
 
+	
+	public boolean isChain() {
+		return chain;
+	}
+	public void setChain(boolean chain) {
+		this.chain = chain;
+	}
 	public MethodHandler(PlugsHandler plugsProxy, Method method, Object[] args) {
 		this.plugsProxy = plugsProxy;
 		this.method = method;
@@ -57,10 +64,8 @@ public class MethodHandler {
 		return null;
 	}
 
-	public boolean chain() {
-		boolean tmp = chain;
-		chain=!chain;
-		return tmp;
+	public void chain() {
+		this.chain = true;
 	}
 
 	public void setOriginResult(Object result) {

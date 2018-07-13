@@ -44,6 +44,10 @@ public class DBFactory {
 		return Class2TabMappingCache.getDBTabelsMap();
 	}
 	private DBFactory(){};
+	/**
+	 * 用于初始化hibernate.xml，创建对应的对应DataBase和连接池等
+	 * @throws Exception
+	 */
 	public void init() throws Exception{
 		if(xmlFile==null)
 			xmlFile =new File(this.getClass().getClassLoader().getResource("").getPath().replace("%20"," "),"hibernate.xml");
@@ -162,6 +166,7 @@ public class DBFactory {
 		return dbFactory.dbMap.containsKey(dbName);
 	}
 	public void destory() {
+		ConnectionPools.getConnectionpoolRefreshService().destory();
 		Iterator<DataBase> iterator = this.dbMap.values().iterator();
 		while(iterator.hasNext()){
 			iterator.next().destory();

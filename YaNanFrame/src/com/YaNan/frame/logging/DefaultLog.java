@@ -27,7 +27,8 @@ public class DefaultLog implements Log{
 
 	@Override
 	public void error(String s, Throwable e) {
-		System.out.println(sdf.format(new Date()) +" Error" +className+ ":" + s + "\r\ncause by:"+e);		
+		System.out.println(sdf.format(new Date()) +" Error" +className+ ":" + s );		
+		e.printStackTrace();
 	}
 
 	@Override
@@ -51,7 +52,7 @@ public class DefaultLog implements Log{
 	}
 	@Override
 	public void error(Throwable e) {
-		System.out.println(sdf.format(new Date()) +" Error" +className+ ":\r\ncause by:"+e);
+		System.out.println(sdf.format(new Date()) +" Error" +className+ ":");
 		e.printStackTrace();
 	}
 }

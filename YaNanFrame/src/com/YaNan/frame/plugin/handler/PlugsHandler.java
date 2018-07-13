@@ -1,9 +1,13 @@
 package com.YaNan.frame.plugin.handler;                                                                                                                                                                       
                                                                                                                                                                                                           
+import java.lang.ref.WeakReference;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;                                                                                                                                                                          
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import com.YaNan.frame.logging.DefaultLog;
@@ -27,7 +31,7 @@ public class PlugsHandler  implements InvocationHandler,PlugsListener,MethodInte
 	private Object proxyObject;//代理对象
 	private Class<?> proxyClass;//代理类
 	private Class<?> interfaceClass;//接口类
-	private Map<Method,InvokeHandler> handlerMapping;//方法拦截器
+	private Map<Method,InvokeHandlerSet> handlerMapping;//方法拦截器
 	private ProxyType proxyType= ProxyType.JDK;//代理模式
 	private static Log log = PlugsFactory.getPlugsInstanceWithDefault(Log.class,DefaultLog.class,PlugsHandler.class);
 	@SuppressWarnings("unchecked")
@@ -68,40 +72,76 @@ public class PlugsHandler  implements InvocationHandler,PlugsListener,MethodInte
 		if(clzz!=null){
 			Method[] methods = clzz.getMethods();
 			for(Method method :methods){
-				InvokeHandler handler = PlugsFactory.getPlugsInstanceByAttributeStrict(InvokeHandler.class,clzz.getName()+"."+method.getName());
-				if(handler!=null)
-					handlerMapping.put(method, handler);
+				InvokeHandlerSet ihs = handlerMapping.get(method);
+				List<InvokeHandler> handlers = PlugsFactory.getPlugsInstanceListByAttribute(InvokeHandler.class,clzz.getName()+"."+method.getName());
+				for(int i = 0,len = handlers.size();i<len;i++){
+					if(ihs==null){
+						ihs = new InvokeHandlerSet(handlers.get(i));
+						handlerMapping.put(method, ihs);
+					}
+					else
+						ihs.getLast().addInvokeHandlerSet(new InvokeHandlerSet(handlers.get(i)));
+				}
 			}
 		}
 	}
 	private void initHandler(){
-		handlerMapping= new HashMap<Method,InvokeHandler>();
+		handlerMapping= new HashMap<Method,InvokeHandlerSet>();
 		this.initHandlerMapping(interfaceClass);
 		this.initHandlerMapping(proxyClass);
 	}
 	@Override                                                                                                                                                                                             
     public Object invoke(Object proxy, Method method, Object[] args){
+		if(this.interfaceClass.equals(InvokeHandler.class))
+		try {
+			return method.invoke(this.proxyObject, args);
+		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+			e.printStackTrace();
+			return null;
+		}
+		Object handlerResult;
 		if(this.handlerMapping==null)this.initHandler();
-		InvokeHandler handler = this.handlerMapping.get(method);
-		MethodHandler mh=null;
+		InvokeHandlerSet handler = this.handlerMapping.get(method);
+		MethodHandler mh= new MethodHandler(this,method,args);
 		if(handler!=null){
-			mh= new MethodHandler(this,method,args);
-			mh.setHeaderResult(handler.before(mh));
-			if(!mh.chain())
-				return mh.getHeaderResult();
+			Iterator<InvokeHandlerSet> iterator =  handler.iterator();
+			InvokeHandlerSet hs ;
+			while(iterator.hasNext()){
+				hs = iterator.next();
+				handlerResult = hs.getInvokeHandler().before(mh);
+				if(!mh.isChain())
+					return handlerResult;
+				mh.setChain(false);
+			}
+			
 		}
 		try {
 			Object result = method.invoke(this.proxyObject, args);
-			if(mh!=null){
-				mh.setOriginResult(result);
-				mh.setFootResult(handler.after(mh));
-				if(!mh.chain())
-					return mh.getFootResult();
+			mh.setOriginResult(result);
+			if(handler!=null){
+				Iterator<InvokeHandlerSet> iterator =  handler.iterator();
+				InvokeHandlerSet hs ;
+				while(iterator.hasNext()){
+					hs = iterator.next();
+					handlerResult = hs.getInvokeHandler().after(mh);
+					if(!mh.isChain())
+						return handlerResult;
+					mh.setChain(false);
+				}
 			}
 			return result;
 		} catch (Exception e) {
-			if(mh!=null){
-				return handler.error(mh,e);
+			e.printStackTrace();
+			if(handler!=null){
+				Iterator<InvokeHandlerSet> iterator =  handler.iterator();
+				InvokeHandlerSet hs ;
+				while(iterator.hasNext()){
+					hs = iterator.next();
+					handlerResult = hs.getInvokeHandler().error(mh,e);
+					if(!mh.isChain())
+						return handlerResult;
+					mh.setChain(false);
+				}
 			}else
 				log.error(e);
 			return null;
@@ -110,13 +150,13 @@ public class PlugsHandler  implements InvocationHandler,PlugsListener,MethodInte
     @SuppressWarnings("unchecked")                                                                                                                                                                        
 	public static <T> T newMapperProxy(Class<T> mapperInterface,Object target) { 
         ClassLoader classLoader = mapperInterface.getClassLoader();                                                                                                                                       
-        Class<?>[] interfaces = new Class[]{mapperInterface};                                                                                                                                             
-        PlugsHandler proxy = new PlugsHandler(target,mapperInterface);    
-        return (T) Proxy.newProxyInstance(classLoader, interfaces, proxy);                                                                                                                                
+        Class<?>[] interfaces = new Class[1];
+        interfaces[0] = mapperInterface;
+        WeakReference<PlugsHandler> wr =  new WeakReference<PlugsHandler>(new PlugsHandler(target,mapperInterface));
+        return (T) Proxy.newProxyInstance(classLoader, interfaces, wr.get());                                                                                                                                
       }
     public static Object newCglibProxy(Class<?> proxyClass,Object...parameters) {
-        PlugsHandler proxy = new PlugsHandler(proxyClass,parameters);
-        return proxy.getProxyObject();
+        return new WeakReference<PlugsHandler>(new PlugsHandler(proxyClass,parameters)).get().getProxyObject();
 	}    
 	@Override
 	public void excute(PlugsFactory plugsFactory) {
@@ -125,26 +165,46 @@ public class PlugsHandler  implements InvocationHandler,PlugsListener,MethodInte
 	@Override
 	public Object intercept(Object object, Method method, Object[] parameters, MethodProxy methodProxy) throws Throwable {
 		if(this.handlerMapping==null)this.initHandler();
-		InvokeHandler handler = this.handlerMapping.get(method);
-		MethodHandler mh=null;
+		Object handlerResult;
+		InvokeHandlerSet handler = this.handlerMapping.get(method);
+		MethodHandler mh= new MethodHandler(this,method,parameters);
 		if(handler!=null){
-			mh= new MethodHandler(this,method,parameters);
-			mh.setHeaderResult(handler.before(mh));
-			if(!mh.chain())
-				return mh.getHeaderResult();
+			Iterator<InvokeHandlerSet> iterator =  handler.iterator();
+			InvokeHandlerSet hs ;
+			while(iterator.hasNext()){
+				hs = iterator.next();
+				handlerResult = hs.getInvokeHandler().before(mh);
+				if(!mh.isChain())
+					return handlerResult;
+				mh.setChain(false);
+			}
 		}
 		try {
 			Object result = methodProxy.invokeSuper(object, parameters);
-			if(mh!=null){
-				mh.setOriginResult(result);
-				mh.setFootResult(handler.after(mh));
-				if(!mh.chain())
-					return mh.getFootResult();
+			if(handler!=null){
+				Iterator<InvokeHandlerSet> iterator =  handler.iterator();
+				InvokeHandlerSet hs ;
+				while(iterator.hasNext()){
+					hs = iterator.next();
+					handlerResult = hs.getInvokeHandler().after(mh);
+					if(!mh.isChain())
+						return handlerResult;
+					mh.setChain(false);
+				}
+				
 			}
 			return result;
 		} catch (Exception e) {
-			if(mh!=null){
-				return handler.error(mh,e);
+			if(handler!=null){
+				Iterator<InvokeHandlerSet> iterator =  handler.iterator();
+				InvokeHandlerSet hs ;
+				while(iterator.hasNext()){
+					hs = iterator.next();
+					handlerResult = hs.getInvokeHandler().error(mh, e);
+					if(!mh.isChain())
+						return handlerResult;
+					mh.setChain(false);
+				}
 			}else
 				log.error(e);
 			return null;
