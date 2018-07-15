@@ -1,4 +1,14 @@
-# YaNanFrame
+# YaNanFrame 2.0 
+# 全新PLUGIN组件，带给您高效的开发效率
+
+       PLUGINPLUGIN     PLUG         PLUG       PLUG      PLUGINPLUGIN    PLUGINPLUGIN   PLUG         PLUG
+      PLUG      PLUG   PLUG         PLUG       PLUG    PLUG                  PLUG       PLUGPLUG     PLUG
+     PLUG      PLUG   PLUG         PLUG       PLUG   PLUG                   PLUG       PLUG PLUG    PLUG
+    PLUG      PLUG   PLUG         PLUG       PLUG   PLUG                   PLUG       PLUG  PLUG   PLUG
+   PLUGPLUGPLUGI    PLUG         PLUG       PLUG   PLUG      PLUGINP      PLUG       PLUG   PLUG  PLUG
+  PLUG             PLUG         PLUG       PLUG   PLUG         PLUG      PLUG       PLUG    PLUG PLUG
+ PLUG             PLUG         PLUG       PLUG     PLUG       PLUG      PLUG       PLUG     PLUGINPL
+PLUG             PLUGINPLUGI   PLUGINPLUGINP        PLUGINPLUGIN    PLUGINPLUGIN  PLUG         PLUG
 com.yanan.frame
 此框架为M-C（为什么去掉V层？V层都交给前端啊）模式框架，提供持久层和交互层的实现。采用注解方式配置，支持多种交互方式，对象化的数据库层操作，
 我们的理念为，程序员只关心核心业务逻辑，除此之外，全都交给框架吧。
