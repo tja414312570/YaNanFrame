@@ -381,7 +381,7 @@ public class DefaultParameterHandler implements ParameterHandler {
 		if(value!=null){
 			return parseBaseType(paras.getType(), value, null);
 		}else if(parameterAnnotation.defaultValue().equals("")){
-			return null;
+			return parseBaseType(paras.getType(), null, null);
 		}else{
 			return parseBaseType(paras.getType(), parameterAnnotation.defaultValue(), null);
 		}
@@ -393,13 +393,13 @@ public class DefaultParameterHandler implements ParameterHandler {
 			parameterName = paras.getName();// 此方法只适合 jdk 1.8 以上，并要求编译器编译为
 											// 存储方法参数 否则可能出现 arg0 arg1等编译后修改的参数名
 		if(paras.getType().isArray() ){
-			return parseBaseType(paras.getType(), this.getParameterValues(parameterName), null);
+			return parseBaseTypes(paras.getType(), this.getParameterValues(parameterName), null);
 		}else{
 			String para = this.getParameter(parameterName);
 			if(para!=null){
 				return parseBaseType(paras.getType(), para,null);
 			}else if(parameterAnnotation.defaultValue().equals("")){
-				return null;
+				return parseBaseType(paras.getType(), null, null);
 			}else{
 				return parseBaseType(paras.getType(),parameterAnnotation.defaultValue(),null);
 			}
@@ -415,7 +415,7 @@ public class DefaultParameterHandler implements ParameterHandler {
 		if(header!=null){
 			return parseBaseType(paras.getType(), this.servletRequest.getHeader(parameterName), null);
 		}else if(parameterAnnotation.defaultValue().equals("")){
-			return null;
+			return parseBaseType(paras.getType(), null, null);
 		}else{
 			return parseBaseType(paras.getType(), parameterAnnotation.defaultValue(), null);
 		}
@@ -426,7 +426,7 @@ public class DefaultParameterHandler implements ParameterHandler {
 		if (parameterName.trim().equals(""))
 			parameterName = paras.getName();// 此方法只适合 jdk 1.8 以上，并要求编译器编译为
 		return paras.getType().isArray()
-				? parseBaseType(paras.getType(), this.getParameterValues(parameterName), null)
+				? parseBaseTypes(paras.getType(), this.getParameterValues(parameterName), null)
 				:this.getParameter(parameterName)!=null?parseBaseType(paras.getType(), this.getParameter(parameterName), null):
 					parameterAnnotation.defaultValue().equals("")?null:parseBaseType(paras.getType(),parameterAnnotation.defaultValue(), null);
 	}
@@ -448,7 +448,7 @@ public class DefaultParameterHandler implements ParameterHandler {
 			if (cookie.getName().equals(parameterName))
 				return parseBaseType(paras.getType(), cookie.getValue(), null);
 		}
-		return null;
+		return parseBaseType(paras.getType(), null, null);
 	}
 
 	/**
@@ -509,7 +509,7 @@ public class DefaultParameterHandler implements ParameterHandler {
 		if(value!=null){
 			return parseBaseType(paras.getType(), value, null);
 		}else if(parameterAnnotation.defaultValue().equals("")){
-			return null;
+			return parseBaseType(paras.getType(), null, null);
 		}else{
 			return parseBaseType(paras.getType(), parameterAnnotation.defaultValue(), null);
 		}
@@ -521,13 +521,13 @@ public class DefaultParameterHandler implements ParameterHandler {
 			parameterName = paras.getName();// 此方法只适合 jdk 1.8 以上，并要求编译器编译为
 											// 存储方法参数 否则可能出现 arg0 arg1等编译后修改的参数名
 		if(paras.getType().isArray() ){
-			return parseBaseType(paras.getType(), this.getParameterValues(parameterName), null);
+			return parseBaseTypes(paras.getType(), this.getParameterValues(parameterName), null);
 		}else{
 			String para = this.getParameter(parameterName);
 			if(para!=null){
 				return parseBaseType(paras.getType(), para,null);
 			}else if(parameterAnnotation.defaultValue().equals("")){
-				return null;
+				return parseBaseType(paras.getType(), null, null);
 			}else{
 				return parseBaseType(paras.getType(),parameterAnnotation.defaultValue(),null);
 			}
@@ -543,7 +543,7 @@ public class DefaultParameterHandler implements ParameterHandler {
 		if(header!=null){
 			return parseBaseType(paras.getType(), this.servletRequest.getHeader(parameterName), null);
 		}else if(parameterAnnotation.defaultValue().equals("")){
-			return null;
+			return parseBaseType(paras.getType(), null, null);
 		}else{
 			return parseBaseType(paras.getType(), parameterAnnotation.defaultValue(), null);
 		}
@@ -555,7 +555,7 @@ public class DefaultParameterHandler implements ParameterHandler {
 			parameterName = paras.getName();// 此方法只适合 jdk 1.8 以上，并要求编译器编译为
 											// 存储方法参数 否则可能出现 arg0 arg1等编译后修改的参数名
 		return paras.getType().isArray()
-				? parseBaseType(paras.getType(), this.getParameterValues(parameterName), null)
+				? parseBaseTypes(paras.getType(), this.getParameterValues(parameterName), null)
 						:this.getParameter(parameterName)!=null?parseBaseType(paras.getType(), this.getParameter(parameterName), null):
 							parameterAnnotation.defaultValue().equals("")?null:parseBaseType(paras.getType(), parameterAnnotation.defaultValue(), null);
 	}
@@ -569,7 +569,7 @@ public class DefaultParameterHandler implements ParameterHandler {
 			if (cookie.getName().equals(parameterName))
 				return parseBaseType(paras.getType(), cookie.getValue(), null);
 		}
-		return null;
+		return parseBaseType(paras.getType(), null, null);
 	}
 
 	@Override
@@ -582,9 +582,10 @@ public class DefaultParameterHandler implements ParameterHandler {
 					return parseBaseType(paras.getType(), pathIterator.next(), null);
 				else if (entrySetiterator.hasNext()) {// 判断requestParameter参数中是否有该参数
 					Entry<String, String[]> entry = entrySetiterator.next();
-					return parseBaseType(paras.getType(), entry.getValue().length == 1 && entry.getValue()[0].equals("")
+					return parseBaseTypes(paras.getType(), entry.getValue().length == 1 && entry.getValue()[0].equals("")
 							? new String[] { entry.getKey() } : entry.getValue(), null);
 				}
+				return parseBaseType(paras.getType(), null, null);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -767,61 +768,15 @@ public class DefaultParameterHandler implements ParameterHandler {
 	 * @return
 	 * @throws ParseException
 	 */
-	protected static Object parseBaseType(Class<?> clzz, String[] arg, String format) throws ParseException {
+	public static Object parseBaseTypes(Class<?> clzz, String[] arg, String format) throws ParseException {
 		if (!clzz.isArray())
 			return parseBaseType(clzz, arg[0], format);
-		// 匹配时应该考虑优先级 比如常用的String int boolean应该放在前面 其实 包装类型应该分开
 		if (clzz.equals(String[].class))
 			return arg;
-		// 8个基本数据类型
-		if (clzz.equals(int[].class) || clzz.equals(Integer[].class)) {
-			int[] args = new int[arg.length];
-			for (int i = 0; i < args.length; i++)
-				args[i] = Integer.parseInt(arg[i]);
-			return args;
-		}
-		if (clzz.equals(boolean[].class) || clzz.equals(Boolean[].class)) {
-			boolean[] args = new boolean[arg.length];
-			for (int i = 0; i < args.length; i++)
-				args[i] = Boolean.parseBoolean(arg[i]);
-			return args;
-		}
-
-		if (clzz.equals(float[].class) || clzz.equals(Float[].class)) {
-			float[] args = new float[arg.length];
-			for (int i = 0; i < args.length; i++)
-				args[i] = Float.parseFloat(arg[i]);
-			return args;
-		}
-
-		if (clzz.equals(short[].class) || clzz.equals(Short[].class)) {
-			short[] args = new short[arg.length];
-			for (int i = 0; i < args.length; i++)
-				args[i] = Short.parseShort(arg[i]);
-			return args;
-		}
-
-		if (clzz.equals(long[].class) || clzz.equals(Long[].class)) {
-			long[] args = new long[arg.length];
-			for (int i = 0; i < args.length; i++)
-				args[i] = Long.parseLong(arg[i]);
-			return args;
-		}
-
-		if (clzz.equals(double[].class) || clzz.equals(Double[].class)) {
-			double[] args = new double[arg.length];
-			for (int i = 0; i < args.length; i++)
-				args[i] = Double.parseDouble(arg[i]);
-			return args;
-		}
-		// 日期
-		if (clzz.equals(Date.class)) {
-			Date[] args = new Date[arg.length];
-			for (int i = 0; i < args.length; i++)
-				args[i] = format == null ? DATE_FORMAT.parse(arg[i]) : new SimpleDateFormat(format).parse(arg[i]);
-			return args;
-		}
-		return arg;
+		Object[] args = new Object[arg.length];
+		for (int i = 0; i < args.length; i++)
+			args[i] = parseBaseType(clzz, arg[i], format);
+		return args;
 	}
 
 	/**
@@ -831,29 +786,51 @@ public class DefaultParameterHandler implements ParameterHandler {
 	 * @return
 	 * @throws ParseException
 	 */
-	protected static Object parseBaseType(Class<?> clzz, String arg, String format) throws ParseException {
+	public static Object parseBaseType(Class<?> clzz, String arg, String format) throws ParseException {
 		// 匹配时应该考虑优先级 比如常用的String int boolean应该放在前面 其实 包装类型应该分开
 		if (clzz.equals(String.class))
 			return arg;
 		// 8个基本数据类型
-		if (clzz.equals(int.class) || clzz.equals(Integer.class))
-			return Integer.parseInt(arg);
-		if (clzz.equals(boolean.class) || clzz.equals(Boolean.class))
-			return Boolean.parseBoolean(arg);
-		if (clzz.equals(float.class) || clzz.equals(Float.class))
-			return Float.parseFloat(arg);
-		if (clzz.equals(short.class) || clzz.equals(Short.class))
-			return Short.parseShort(arg);
-		if (clzz.equals(long.class) || clzz.equals(Long.class))
-			return Long.parseLong(arg);
-		if (clzz.equals(double.class) || clzz.equals(Double.class))
-			return Double.parseDouble(arg);
-		if (clzz.equals(char.class) || clzz.equals(Character.class))
-			return arg.charAt(0);
-		if (clzz.equals(char[].class) || clzz.equals(Character[].class))
-			return arg.toCharArray();
-		if (clzz.equals(byte.class) || clzz.equals(Byte.class))
-			return Byte.parseByte(arg);
+		if (clzz.equals(int.class))
+			return arg==null?0:Integer.parseInt(arg);
+		if(clzz.equals(Integer.class))
+			return arg==null?null:Integer.valueOf(arg);
+		
+		if (clzz.equals(boolean.class))
+			return arg==null?false:Boolean.parseBoolean(arg);
+		if(clzz.equals(Boolean.class))
+			return arg==null?null:Boolean.valueOf(arg);
+		
+		if (clzz.equals(float.class))
+			return arg==null?0.0f:Float.parseFloat(arg);
+		if(clzz.equals(Float.class))
+			return arg==null?null:Float.valueOf(arg);
+		
+		if (clzz.equals(short.class))
+			return arg==null?0:Short.parseShort(arg);
+		if( clzz.equals(Short.class))
+			return arg==null?null:Short.valueOf(arg);
+					
+		if (clzz.equals(long.class))
+			return arg==null?0l:Long.parseLong(arg);
+		if(clzz.equals(Long.class))
+			return arg==null?null:Long.valueOf(arg);
+		
+		if (clzz.equals(double.class) )
+			return arg==null?0.0f:Double.parseDouble(arg);
+		if(clzz.equals(Double.class))
+			return arg==null?null:Double.valueOf(arg);
+		
+		if (clzz.equals(char.class) )
+			return arg==null?null:arg.charAt(0);
+		if(clzz.equals(Character.class))
+			return arg==null?null:Character.valueOf(arg.charAt(0));
+		
+		if (clzz.equals(char[].class))
+			return arg==null?null:arg.toCharArray();
+		
+		if (clzz.equals(byte.class)||clzz.equals(Byte.class))
+			return arg==null?null:Byte.parseByte(arg);
 		// 日期
 		if (clzz.equals(Date.class))
 			return format == null ? DATE_FORMAT.parse(arg) : new SimpleDateFormat(format).parse(arg);
@@ -967,10 +944,10 @@ public class DefaultParameterHandler implements ParameterHandler {
 				if (field.getType().isArray()) {
 					String[] values = servletRequest.getParameterValues(name);
 					if (values != null)
-						return parseBaseType(field.getType(), values, null);
+						return parseBaseTypes(field.getType(), values, null);
 					values = this.getParameterValues(name);
 					if (values != null)
-						return parseBaseType(field.getType(), values, null);
+						return parseBaseTypes(field.getType(), values, null);
 				} else {
 					value = servletRequest.getParameter(name);
 					if (value != null)
