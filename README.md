@@ -12,7 +12,7 @@
     
 基于AOP的编程模式，自带mvc组件，持久层组件，基于AOP的设计模式，用接口规范您的代码，实现团队解耦。用JAVA Bean来做数据库对象，让您无需知道sql就可以实现数据库的CURD，支持子查询，联表查询。将项目的各种模块声明为Service，通过PluginFactory来管理Service的创建，装配，注入。
 
-项目结构：通用父级命名空间,com.YaNan.frame
+项目结构：通用父级命名空间,com.YaNan.frame<p>
 1、hibernate：持久层，用于数据库的CRUD以及事物
 2、logging:日志,框架的日志记录
 3、plugin：项目核心组件，其它组件的依赖，实现aop，di，扩展了自动注入，支持方法拦截，自动管理接口，自动装配服务，上下文初始化
