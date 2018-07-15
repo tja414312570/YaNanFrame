@@ -1,18 +1,27 @@
 # YaNanFrame 2.0 
 # 全新PLUGIN组件，带给您高效的开发效率
 
-       PLUGINPLUGIN     PLUG         PLUG       PLUG      PLUGINPLUGIN    PLUGINPLUGIN   PLUG         PLUG
-      PLUG      PLUG   PLUG         PLUG       PLUG    PLUG                  PLUG       PLUGPLUG     PLUG
-     PLUG      PLUG   PLUG         PLUG       PLUG   PLUG                   PLUG       PLUG PLUG    PLUG
-    PLUG      PLUG   PLUG         PLUG       PLUG   PLUG                   PLUG       PLUG  PLUG   PLUG
-   PLUGPLUGPLUGI    PLUG         PLUG       PLUG   PLUG      PLUGINP      PLUG       PLUG   PLUG  PLUG
-  PLUG             PLUG         PLUG       PLUG   PLUG         PLUG      PLUG       PLUG    PLUG PLUG
- PLUG             PLUG         PLUG       PLUG     PLUG       PLUG      PLUG       PLUG     PLUGINPL
-PLUG             PLUGINPLUGI   PLUGINPLUGINP        PLUGINPLUGIN    PLUGINPLUGIN  PLUG         PLUG
-com.yanan.frame
-此框架为M-C（为什么去掉V层？V层都交给前端啊）模式框架，提供持久层和交互层的实现。采用注解方式配置，支持多种交互方式，对象化的数据库层操作，
-我们的理念为，程序员只关心核心业务逻辑，除此之外，全都交给框架吧。
-来吧  一起为美好的明天奋斗
+           PLUGINPLUGIN     PLUG         PLUG       PLUG      PLUGINPLUGIN    PLUGINPLUGIN   PLUG         PLUG
+          PLUG      PLUG   PLUG         PLUG       PLUG    PLUG                  PLUG       PLUGPLUG     PLUG
+         PLUG      PLUG   PLUG         PLUG       PLUG   PLUG                   PLUG       PLUG PLUG    PLUG
+        PLUG      PLUG   PLUG         PLUG       PLUG   PLUG                   PLUG       PLUG  PLUG   PLUG
+       PLUGPLUGPLUGI    PLUG         PLUG       PLUG   PLUG      PLUGINP      PLUG       PLUG   PLUG  PLUG
+      PLUG             PLUG         PLUG       PLUG   PLUG         PLUG      PLUG       PLUG    PLUG PLUG
+     PLUG             PLUG         PLUG       PLUG     PLUG       PLUG      PLUG       PLUG     PLUGINPL
+    PLUG             PLUGINPLUGI   PLUGINPLUGINP        PLUGINPLUGIN    PLUGINPLUGIN  PLUG         PLUG
+    
+基于AOP的编程模式，自带mvc组件，持久层组件，基于AOP的设计模式，用接口规范您的代码，实现团队解耦。用JAVA Bean来做数据库对象，让您无需知道sql就可以实现数据库的CURD，支持子查询，联表查询。将项目的各种模块声明为Service，通过PluginFactory来管理Service的创建，装配，注入。
+
+项目结构：通用父级命名空间,com.YaNan.frame
+1、hibernate：持久层，用于数据库的CRUD以及事物
+2、logging:日志,框架的日志记录
+3、plugin：项目核心组件，其它组件的依赖，实现aop，di，扩展了自动注入，支持方法拦截，自动管理接口，自动装配服务，上下文初始化
+4、reflect：反射，用于提供框架所需的反射部分的实现
+5、servlet：servlet组件，提供action、restful等接口的实现，支持可扩展的验证，参数，回调处理器
+6、servlet.session:web开发的回话管理，权限验证，数据存储等
+7、util：基础工具类，提供一些框架常用的工具
+8、web.sercurity:提供xss请求的包裹，防止js、sql等注入
+	
 
 使用案例:
 <br>
