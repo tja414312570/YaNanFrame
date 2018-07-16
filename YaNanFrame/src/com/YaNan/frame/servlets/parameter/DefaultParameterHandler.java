@@ -47,6 +47,7 @@ import com.YaNan.frame.servlets.parameter.annotations.SessionAttributes;
 import com.YaNan.frame.servlets.parameter.annotations.UUID;
 
 /**
+ * 2018-7-15 重新修改parseBaseType代码，将包装类型和原始类型分开
  * 2018-7-9 重新修改获取参数逻辑
  * 默认的参数调配器，优先级最低
  * 该调配器匹配任何类型的数据，但实际使用中可能存在某些数据不能处理
@@ -428,7 +429,7 @@ public class DefaultParameterHandler implements ParameterHandler {
 		return paras.getType().isArray()
 				? parseBaseTypes(paras.getType(), this.getParameterValues(parameterName), null)
 				:this.getParameter(parameterName)!=null?parseBaseType(paras.getType(), this.getParameter(parameterName), null):
-					parameterAnnotation.defaultValue().equals("")?null:parseBaseType(paras.getType(),parameterAnnotation.defaultValue(), null);
+					parameterAnnotation.defaultValue().equals("")?parseBaseType(paras.getType(),null, null):parseBaseType(paras.getType(),parameterAnnotation.defaultValue(), null);
 	}
 
 	private Object sessionAttributes(SessionAttributes parameterAnnotation, Parameter paras) throws ParseException {
@@ -790,7 +791,7 @@ public class DefaultParameterHandler implements ParameterHandler {
 		// 匹配时应该考虑优先级 比如常用的String int boolean应该放在前面 其实 包装类型应该分开
 		if (clzz.equals(String.class))
 			return arg;
-		// 8个基本数据类型
+		// 8个基本数据类型及其包装类型
 		if (clzz.equals(int.class))
 			return arg==null?0:Integer.parseInt(arg);
 		if(clzz.equals(Integer.class))
