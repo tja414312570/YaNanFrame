@@ -30,7 +30,7 @@ public class PropertyManager {
 	public String getProperty(String name){
 		return this.propertyPools.get(name);
 	}
-	void scanAllProperty(){
+	public void scanAllProperty(){
 		File dir = new File(this.getClass().getClassLoader().getResource("").getPath().replace("%20"," "));
 		Path path = new Path(dir);
 		path.filter(".properties");
@@ -42,16 +42,53 @@ public class PropertyManager {
 					InputStream is = new FileInputStream(file);
 					properties.load(is);
 					Iterator<Entry<Object, Object>> iterator = properties.entrySet().iterator();
+					Entry<Object, Object> entry;
 					while(iterator.hasNext()){
-						Entry<Object, Object> entry = iterator.next();
-						propertyPools.put(entry.getKey().toString(), entry.getValue().toString());
+						entry=iterator.next();
+						if(entry.getValue()!=null)
+							propertyPools.put(entry.getKey().toString(),entry.getValue().toString());
 					}
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
 		});
+		this.rebuild();
 	}
-	
+	public synchronized void rebuild(){
+		Map<String,String> tempProp = propertyPools;
+		propertyPools =new HashMap<String,String>();
+			Iterator<Entry<String,String>> iterator = tempProp.entrySet().iterator();
+			while(iterator.hasNext()){
+				Entry<String,String> entry = iterator.next();
+				if(propertyPools.containsKey(entry.getKey()))
+					continue;
+				propertyPools.put(entry.getKey(), getValues(entry.getValue(),tempProp));
+			}
+	}
+	private String getValues(String orginValue,Map<String,String> tempProp) {
+		if(orginValue==null)
+			return null;
+		String tempKey;
+		String tempValue;
+		int index,endex = 0;
+		while((index=orginValue.indexOf("${", endex))>-1
+				&&(endex=orginValue.indexOf("}",index+2))>-1
+				&&(tempKey=orginValue.substring(index+2, endex))!=null
+				&&!tempKey.trim().equals("")){
+			tempValue = propertyPools.get(tempKey);
+			if(tempValue==null)
+				tempValue = tempProp.get(tempKey);
+			if(tempValue == null){
+				index = endex+1;
+			}else{
+				tempValue = getValues(tempValue,tempProp);
+				propertyPools.put(tempKey, tempValue);
+				orginValue = orginValue.substring(0,index)+tempValue+orginValue.substring(endex+1);
+				index = endex-tempKey.length()-2+tempValue.length();
+			}
+		}
+		return orginValue;
+	}
 	
 }
