@@ -1,10 +1,16 @@
 package com.YaNan.frame.servlets.session.annotation;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
+@Target({ElementType.METHOD,ElementType.TYPE})
+@Repeatable(AuthenticationGroups.class)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Authentication {
+
 	/**
 	 * 需要满足的角色，包含的角色才能进入
 	 * @return
@@ -24,5 +30,5 @@ public @interface Authentication {
 	 * 当角色认证失败时返回的内容
 	 * @return
 	 */
-	String onFailed() default "{status:false,message:\"token auth failed\"}";
+	String message() default "{status:false,message:\"token auth failed\"}";
 }
