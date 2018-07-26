@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 
 import javax.validation.Constraint;
 
@@ -27,6 +28,7 @@ import com.YaNan.frame.plugin.interfacer.PlugsListener;
 
 /**
  * 组件工厂类，用于初始化所有组件注册，管理，以及提供组件获取
+ * 2018 7-27 修改MethodHandler初始化时间为RegisterDescription的初始化时间，降低代理执行时的方法开销
  * 2018 7-12 新增多个方法拦截器，更改拦截器规则，添加一个拦截器链表，实现迭代器
  * @author yanan
  *
@@ -39,9 +41,27 @@ public class PlugsFactory implements PlugsListener{
 	 * 组件的容器
 	 */
 	private Map<Class<?>,Plug> plugsList = new HashMap<Class<?>,Plug>();
-	
 	//register >> registerInfo
 	private  Map<Class<?>,RegisterDescription> RegisterContatiner = new HashMap<Class<?>,RegisterDescription>();
+	private volatile Vector<RegisterDescription> registerList = new Vector<RegisterDescription>();
+	public void addRegisterHandlerQueue(RegisterDescription registerDescription){
+		synchronized (registerList) {
+			this.registerList.add(registerDescription);
+		}
+		this.initRegisterDescriptionHandler();
+	}
+	private void initRegisterDescriptionHandler(){
+		if(this.available&&!this.registerList.isEmpty()){
+			synchronized (registerList) {
+				Iterator<RegisterDescription> registerDesIterator = registerList.iterator();
+				while(registerDesIterator.hasNext()){
+					RegisterDescription registerDescription = registerDesIterator.next();
+					registerDescription.initHandler();
+					registerDesIterator.remove();
+				}
+			}
+		}
+	}
 	//registerClass >> registerInstance
 	// Register >> Service array
 	static{
@@ -184,13 +204,13 @@ public class PlugsFactory implements PlugsListener{
 	 * @param impl 组件接口类
 	 * @param defaultClass 默认实现类
 	 * @param args 组件参数
-	 * @return
+	 * @return 代理对象
 	 */
 	public static <T> T getPlugsInstanceWithDefault(Class<T> impl,Class<? extends T> defaultClass,Object...args){
 			try {
 				RegisterDescription registerDescription=getRegisterDescrptionAllowNull(impl);
 				if(registerDescription==null)
-					return (T) PlugsHandler.newMapperProxy(impl,defaultClass.newInstance()); 
+					return (T) PlugsHandler.newMapperProxy(impl,null,defaultClass.newInstance()); 
 				return registerDescription.getRegisterInstance(impl,args);//instance.getRegisterInstance(impl,registerDescription,args);
 			} catch (Exception e) {
 				e.printStackTrace();
