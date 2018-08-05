@@ -42,8 +42,8 @@ public class DBTab implements mySqlInterface {
 	private Map<String, ResultSet> session = new HashMap<String, ResultSet>();
 	private String value;
 	private boolean exist;
-	private final Log log = PlugsFactory.getPlugsInstance(Log.class,DBTab.class);
-	
+	private final Log log = PlugsFactory.getPlugsInstance(Log.class, DBTab.class);
+
 	public Object getDataTablesObject() {
 		return dataTablesObject;
 	}
@@ -65,7 +65,7 @@ public class DBTab implements mySqlInterface {
 	public DBTab(com.YaNan.frame.hibernate.database.entity.Tab tabEntity)
 			throws ClassNotFoundException, InstantiationException, IllegalAccessException {
 		this(new ClassLoader(tabEntity.getCLASS()).getLoadedClass());
-		
+
 	}
 
 	public DBTab(Object obj) {
@@ -87,15 +87,15 @@ public class DBTab implements mySqlInterface {
 				this.setName(tab.name().equals("") ? this.DBName + "." + this.dataTablesClass.getSimpleName()
 						: this.DBName + "." + tab.name());
 				try {
-					if (!this.exist&&!this.DBName.equals("") && this.isMust) {
-						if(this.exists())
-							this.exist=true;
-						else if(this.create())
-							this.exist=true;
+					if (!this.exist && !this.DBName.equals("") && this.isMust) {
+						if (this.exists())
+							this.exist = true;
+						else if (this.create())
+							this.exist = true;
 					}
 				} catch (Exception e) {
-					log.error("the databaes [" + this.DBName
-							+ "] is't init ,please try to init database! at class [" + this.dataTablesClass.getName() + "]");
+					log.error("the databaes [" + this.DBName + "] is't init ,please try to init database! at class ["
+							+ this.dataTablesClass.getName() + "]");
 					e.printStackTrace();
 				}
 			}
@@ -129,21 +129,21 @@ public class DBTab implements mySqlInterface {
 			}
 			this.setMap(dataTablesClass);
 			try {
-				if (this.DBName != null && !this.DBName.equals("")){
+				if (this.DBName != null && !this.DBName.equals("")) {
 					this.dataBase = DBFactory.HasDB(this.DBName) ? DBFactory.getDataBase(this.DBName)
 							: DBFactory.getDefaultDB();
 					this.dataBase.addTab(this);
 				}
 				Class2TabMappingCache.addTab(this);
-				if (!this.exist&&!this.DBName.equals("") && this.isMust) {
-					if(this.exists())
-						this.exist=true;
-					else if(this.create())
-						this.exist=true;
+				if (!this.exist && !this.DBName.equals("") && this.isMust) {
+					if (this.exists())
+						this.exist = true;
+					else if (this.create())
+						this.exist = true;
 				}
 			} catch (Exception e) {
-				log.error("the databaes [" + this.DBName
-						+ "] is't init ,please try to init database! at class [" + this.dataTablesClass.getName() + "]");
+				log.error("the databaes [" + this.DBName + "] is't init ,please try to init database! at class ["
+						+ this.dataTablesClass.getName() + "]");
 				e.printStackTrace();
 			}
 		}
@@ -186,15 +186,24 @@ public class DBTab implements mySqlInterface {
 	}
 
 	public int create(Create create) {
+		if (this.dataBase == null)
+			throw new RuntimeException("DataTable mapping class " + this.dataTablesClass.getName()
+					+ " datatable is null,please try to configure the @Tab attribute DB to declare database ");
 		return this.dataBase.executeUpdate(create.create());
 
 	}
 
 	public int delete() {
-		return this.dataBase.executeUpdate("DROP TABLE "+this.getName());
+		if (this.dataBase == null)
+			throw new RuntimeException("DataTable mapping class " + this.dataTablesClass.getName()
+					+ " datatable is null,please try to configure the @Tab attribute DB to declare database ");
+		return this.dataBase.executeUpdate("DROP TABLE " + this.getName());
 	}
 
 	public int delete(Delete delete) {
+		if (this.dataBase == null)
+			throw new RuntimeException("DataTable mapping class " + this.dataTablesClass.getName()
+					+ " datatable is null,please try to configure the @Tab attribute DB to declare database ");
 		QueryCache.getCache().cleanCache(this.getName());
 		return this.dataBase.executeUpdate(delete.create());
 	}
@@ -211,8 +220,9 @@ public class DBTab implements mySqlInterface {
 				+ this.name.substring(!this.name.contains(".") ? 0 : this.name.lastIndexOf(".") + 1, this.name.length())
 				+ "'";
 		if (this.dataBase == null)
-			throw new Exception("unknow database exception");
-		PreparedStatement  ps= this.dataBase.executeQuery(sql);
+			throw new RuntimeException("DataTable mapping class " + this.dataTablesClass.getName()
+					+ " datatable is null,please try to configure the @Tab attribute DB to declare database ");
+		PreparedStatement ps = this.dataBase.executeQuery(sql);
 		ResultSet rs = ps.executeQuery();
 		boolean exist = rs.next();
 		rs.close();
@@ -258,8 +268,7 @@ public class DBTab implements mySqlInterface {
 	public DBColumn getDBColumn(Field field) {
 		if (this.map.containsKey(field))
 			return this.map.get(field);
-		log.debug(
-				"--------------------------------------------------------------------------------------------------");
+		log.debug("--------------------------------------------------------------------------------------------------");
 		log.debug("current field:" + field.getName());
 		Column column = field.getAnnotation(Column.class);
 		if (column != null && column.ignore() == true) {
@@ -281,32 +290,38 @@ public class DBTab implements mySqlInterface {
 		return db;
 	}
 
-	public DBColumn getDBColumn(String field) throws NoSuchFieldException, SecurityException {
-		Field f = this.dataTablesClass.getDeclaredField(field);
+	public DBColumn getDBColumn(String field) {
+		Field f = this.loader.getDeclaredField(field);
+		if (f == null)
+			throw new RuntimeException("could not find field "+field+" at class" + this.dataTablesClass.getName());
 		return getDBColumn(f);
 	}
 
 	public int insert(Insert insert) {
-		int gk=-1;
+		if (this.dataBase == null)
+			throw new RuntimeException("DataTable mapping class " + this.dataTablesClass.getName()
+					+ " datatable is null,please try to configure the @Tab attribute DB to declare database ");
+		int gk = -1;
 		try {
 			PreparedStatement ps = this.dataBase.execute(insert.create(), java.sql.Statement.RETURN_GENERATED_KEYS);
 			if (ps != null) {
 				Iterator<Object> iterator = insert.getParameters().iterator();
 				int i = 0;
-				while(iterator.hasNext())
-					ps.setObject(++i,iterator.next());
+				while (iterator.hasNext())
+					ps.setObject(++i, iterator.next());
 				ps.execute();
-				QueryCache.getCache().cleanCache(this.getName());//清理查询缓存
+				QueryCache.getCache().cleanCache(this.getName());// 清理查询缓存
 				ResultSet rs = ps.getGeneratedKeys();
 				if (this.AIField != null && rs.next())
 					gk = rs.getInt(1);
-				else gk = 0;
+				else
+					gk = 0;
 				rs.close();
 				ps.close();
 			}
 		} catch (SQLException | SecurityException e) {
-			log.error("error to execute sql:"+insert.create());
-			log.error("parameter:"+insert.getParameters());
+			log.error("error to execute sql:" + insert.create());
+			log.error("parameter:" + insert.getParameters());
 			log.error(e);
 		}
 		return gk;
@@ -314,22 +329,25 @@ public class DBTab implements mySqlInterface {
 
 	public int insert(Insert insert, Connection connection)
 			throws IllegalArgumentException, IllegalAccessException, SecurityException, SQLException {
-		int gk=-1;
+		if (this.dataBase == null)
+			throw new RuntimeException("DataTable mapping class " + this.dataTablesClass.getName()
+					+ " datatable is null,please try to configure the @Tab attribute DB to declare database ");
+		int gk = -1;
 		PreparedStatement ps = this.dataBase.execute(insert.create(), connection,
 				java.sql.Statement.RETURN_GENERATED_KEYS);
 		if (ps != null) {
 			Iterator<Object> iterator = insert.getParameters().iterator();
 			int i = 0;
-			while(iterator.hasNext())
-				ps.setObject(++i,iterator.next());
-			if(ps.execute()){
-				QueryCache.getCache().cleanCache(this.getName());//清理查询缓存
-				ResultSet rs = ps.getGeneratedKeys();
-				if (this.AIField != null && rs.next())
-					gk = rs.getInt(1);
-				else gk = 0;
-				rs.close();
-			}
+			while (iterator.hasNext())
+				ps.setObject(++i, iterator.next());
+			ps.execute();
+			QueryCache.getCache().cleanCache(this.getName());// 清理查询缓存
+			ResultSet rs = ps.getGeneratedKeys();
+			if (this.AIField != null && rs.next())
+				gk = rs.getInt(1);
+			else
+				gk = 0;
+			rs.close();
 			ps.close();
 		}
 		return gk;
@@ -346,13 +364,16 @@ public class DBTab implements mySqlInterface {
 	 */
 	public Object insert(Insert insert, Object obj)
 			throws SQLException, IllegalArgumentException, IllegalAccessException {
+		if (this.dataBase == null)
+			throw new RuntimeException("DataTable mapping class " + this.dataTablesClass.getName()
+					+ " datatable is null,please try to configure the @Tab attribute DB to declare database ");
 		PreparedStatement ps = this.dataBase.execute(insert.create());
 		QueryCache.getCache().cleanCache(this.getName());
 		ResultSet rs = ps.getGeneratedKeys();
 		ClassLoader loader = new ClassLoader(obj);
 		try {
 			if (this.AIField != null && rs.next())
-				this.setField(loader, this.AIField, rs.getInt(1));
+				loader.set(AIField, rs.getInt(1));
 		} catch (InvocationTargetException | NoSuchMethodException e) {
 			log.error(e);
 		}
@@ -395,7 +416,10 @@ public class DBTab implements mySqlInterface {
 
 	public List<Object> query(Connection connection, String sql) throws SQLException, InstantiationException,
 			IllegalAccessException, NoSuchFieldException, SecurityException, IllegalArgumentException {
-		PreparedStatement  ps= this.dataBase.executeQuery(sql);
+		if (this.dataBase == null)
+			throw new RuntimeException("DataTable mapping class " + this.dataTablesClass.getName()
+					+ " datatable is null,please try to configure the @Tab attribute DB to declare database ");
+		PreparedStatement ps = this.dataBase.executeQuery(sql);
 		ResultSet rs = ps.executeQuery();
 		List<Object> dataTablesObjects = new ArrayList<Object>();
 		while (rs.next()) {
@@ -408,7 +432,7 @@ public class DBTab implements mySqlInterface {
 					if (columnName.contains("."))
 						columnName = columnName.substring(columnName.lastIndexOf(".") + 1);
 					if (rs.getObject(columnName) != null)
-						this.setField(loader, field, rs.getObject(columnName));
+						loader.set(field, rs.getObject(columnName));
 				} catch (InvocationTargetException | NoSuchMethodException e) {
 					e.printStackTrace();
 					continue;
@@ -428,13 +452,21 @@ public class DBTab implements mySqlInterface {
 
 	@SuppressWarnings("unchecked")
 	public <T> List<T> query(Query query, boolean mapping) {
+		if (this.dataBase == null){
+			Query subQuery = query.getSubQuery();
+			while(subQuery!=null&&(this.dataBase=subQuery.getDbTab().getDataBase())==null)
+				subQuery = subQuery.getSubQuery();
+		}
+		if (this.dataBase == null)
+				throw new RuntimeException("DataTable mapping class " + this.dataTablesClass.getName()
+						+ " datatable is null,please try to configure the @Tab attribute DB to declare database ");
 		String sql = query.create();
 		List<T> dataTablesObjects = QueryCache.getCache().getQuery(sql);
-		if(dataTablesObjects!=null)
+		if (dataTablesObjects != null)
 			return dataTablesObjects;
 		dataTablesObjects = new ArrayList<T>();
 		try {
-			PreparedStatement  ps= this.dataBase.executeQuery(sql);
+			PreparedStatement ps = this.dataBase.executeQuery(sql);
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
 				loader = new ClassLoader(this.dataTablesClass);
@@ -446,11 +478,11 @@ public class DBTab implements mySqlInterface {
 								: this.map.get(field).getName();
 						if (columnName.contains(".") && mapping)
 							columnName = columnName.substring(columnName.lastIndexOf(".") + 1);
-						if (rs.getObject(columnName) != null)
-							this.setField(loader, field, rs.getObject(columnName));
+						if (rs!=null&&rs.getObject(columnName) != null)
+							loader.set(field, rs.getObject(columnName));
 					} catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException
 							| IllegalArgumentException | SecurityException | SQLException e) {
-						log.error("sql:"+query.create());
+						log.error("sql:" + query.create());
 						log.error(e);
 						continue;
 					}
@@ -459,21 +491,25 @@ public class DBTab implements mySqlInterface {
 			}
 			rs.close();
 			ps.close();
+			QueryCache.getCache().addQuery(this.getName(), sql, dataTablesObjects);
 		} catch (SQLException e) {
-			log.error("sql:"+query.create());
+			log.error("sql:" + query.create());
 			log.error(e);
 		}
-		QueryCache.getCache().addQuery(this.getName(),sql, dataTablesObjects);
 		return dataTablesObjects;
 	}
+
 	@SuppressWarnings("unchecked")
-	public <T> List<T> query(String sql ) {
+	public <T> List<T> query(String sql) {
+		if (this.dataBase == null)
+			throw new RuntimeException("DataTable mapping class " + this.dataTablesClass.getName()
+					+ " datatable is null,please try to configure the @Tab attribute DB to declare database ");
 		List<T> dataTablesObjects = QueryCache.getCache().getQuery(sql);
-		if(dataTablesObjects!=null)
+		if (dataTablesObjects != null)
 			return dataTablesObjects;
 		dataTablesObjects = new ArrayList<T>();
 		try {
-			PreparedStatement  ps= this.dataBase.executeQuery(sql);
+			PreparedStatement ps = this.dataBase.executeQuery(sql);
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
 				loader = new ClassLoader(this.dataTablesClass);
@@ -486,10 +522,10 @@ public class DBTab implements mySqlInterface {
 						if (columnName.contains("."))
 							columnName = columnName.substring(columnName.lastIndexOf(".") + 1);
 						if (rs.getObject(columnName) != null)
-							this.setField(loader, field, rs.getObject(columnName));
+							loader.set(field, rs.getObject(columnName));
 					} catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException
 							| IllegalArgumentException | SecurityException | SQLException e) {
-						log.error("sql:"+sql);
+						log.error("sql:" + sql);
 						log.error(e);
 						continue;
 					}
@@ -499,15 +535,18 @@ public class DBTab implements mySqlInterface {
 			rs.close();
 			ps.close();
 		} catch (SQLException e) {
-			log.error("sql:"+sql);
+			log.error("sql:" + sql);
 			log.error(e);
 		}
-		QueryCache.getCache().addQuery(this.getName(),sql, dataTablesObjects);
+		QueryCache.getCache().addQuery(this.getName(), sql, dataTablesObjects);
 		return dataTablesObjects;
 	}
 
 	public List<Object> query(Query query, Connection connection) throws SQLException, InstantiationException,
 			IllegalAccessException, NoSuchFieldException, SecurityException, IllegalArgumentException {
+		if (this.dataBase == null)
+			throw new RuntimeException("DataTable mapping class " + this.dataTablesClass.getName()
+					+ " datatable is null,please try to configure the @Tab attribute DB to declare database ");
 		ResultSet rs = this.dataBase.executeQuery(query.create(), connection);
 		List<Object> dataTablesObjects = new ArrayList<Object>();
 		while (rs.next()) {
@@ -520,7 +559,7 @@ public class DBTab implements mySqlInterface {
 					if (columnName.contains("."))
 						columnName = columnName.substring(columnName.lastIndexOf(".") + 1);
 					if (rs.getObject(columnName) != null)
-						this.setField(loader, field, rs.getObject(columnName));
+						loader.set(field, rs.getObject(columnName));
 				} catch (InvocationTargetException | NoSuchMethodException e) {
 					e.printStackTrace();
 				}
@@ -530,17 +569,6 @@ public class DBTab implements mySqlInterface {
 		rs.close();
 		return dataTablesObjects;
 	}
-	public void setField(ClassLoader loader, Field field, Object value) throws IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
-		field.setAccessible(true);
-		if (loader.hasMethod(ClassLoader.createFieldSetMethod(field), field.getType()))
-			loader.set(field.getName(), field.getType(), ClassLoader.castType(value, field.getType()));
-		else{
-			field.setAccessible(true);
-			field.set(loader.getLoadedObject(),ClassLoader.castType(value, field.getType()));
-		}
-	}
-
 
 	private void setMap(Class<?> dataTablesClass) {
 		DBColumn dbColumn;
@@ -553,10 +581,13 @@ public class DBTab implements mySqlInterface {
 	}
 
 	public List<Object> showTab() {
+		if (this.dataBase == null)
+			throw new RuntimeException("DataTable mapping class " + this.dataTablesClass.getName()
+					+ " datatable is null,please try to configure the @Tab attribute DB to declare database ");
 		String sql = "SELECT * FROM " + this.name;
 		List<Object> objs = new ArrayList<Object>();
 		try {
-			PreparedStatement  ps= this.dataBase.executeQuery(sql);
+			PreparedStatement ps = this.dataBase.executeQuery(sql);
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
 				Object obj = this.dataTablesClass.newInstance();
@@ -582,12 +613,16 @@ public class DBTab implements mySqlInterface {
 
 	@Override
 	public String toString() {
-		return "DBTab [dataTablesObject=" + dataTablesObject + ", name=" + name + ", isMust=" + isMust + ", include=" + include + ", value="
-				+ value + ", DBName=" + DBName + ", autoUpdate=" + autoUpdate + ", dataTablesClass=" + dataTablesClass + ", loader=" + loader
-				+ ", map=" + map + ", columns=" + columns + ", session=" + session + ", AIField=" + AIField + "]";
+		return "DBTab [dataTablesObject=" + dataTablesObject + ", name=" + name + ", isMust=" + isMust + ", include="
+				+ include + ", value=" + value + ", DBName=" + DBName + ", autoUpdate=" + autoUpdate
+				+ ", dataTablesClass=" + dataTablesClass + ", loader=" + loader + ", map=" + map + ", columns="
+				+ columns + ", session=" + session + ", AIField=" + AIField + "]";
 	}
 
 	public int update(Update update) {
+		if (this.dataBase == null)
+			throw new RuntimeException("DataTable mapping class " + this.dataTablesClass.getName()
+					+ " datatable is null,please try to configure the @Tab attribute DB to declare database ");
 		String sql = update.create();
 		sql = FilterSql(sql);
 		int start = 7;
@@ -599,6 +634,9 @@ public class DBTab implements mySqlInterface {
 	}
 
 	public int update(Update update, Connection connection) throws SQLException {
+		if (this.dataBase == null)
+			throw new RuntimeException("DataTable mapping class " + this.dataTablesClass.getName()
+					+ " datatable is null,please try to configure the @Tab attribute DB to declare database ");
 		String sql = update.create();
 		sql = FilterSql(sql);
 		int start = 7;
@@ -608,7 +646,6 @@ public class DBTab implements mySqlInterface {
 		QueryCache.getCache().cleanCache(this.getName());
 		return this.dataBase.executeUpdate(sql, connection);
 	}
-	
 
 	public void setInclude(String include) {
 		log.debug("contain orthers xml file" + include);
@@ -657,7 +694,6 @@ public class DBTab implements mySqlInterface {
 		}
 		DBName = dBName;
 	}
-
 
 	public void setMust(boolean isMust) {
 		this.isMust = isMust;

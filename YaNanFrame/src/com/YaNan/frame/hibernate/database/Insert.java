@@ -67,9 +67,12 @@ public class Insert extends OperateImplement{
 //						&&this.fieldList.add(this.dataTables.getFieldMap().get(field).getName())
 //						&&this.parameters.add(this.dataTables.getLoader().get(field.getName())));
 				
-				if(!this.dataTables.getDBColumn(field).isAuto_Increment()&&this.dataTables.getLoader().get(field.getName())!=null){
-					this.fieldList.add(this.dataTables.getFieldMap().get(field).getName());
-					this.parameters.add(this.dataTables.getLoader().get(field.getName()));
+				if(!this.dataTables.getDBColumn(field).isAuto_Increment()){
+					Object value = this.dataTables.getLoader().get(field);
+					if(value!=null){
+						this.fieldList.add(this.dataTables.getFieldMap().get(field).getName());
+						this.parameters.add(value);
+					}
 				}
 			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
 				log.error(e);

@@ -4,7 +4,7 @@ import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.plugin.annotations.Register;
 import com.YaNan.frame.plugin.interfacer.PlugsListener;
 
-@Register
+@Register(priority=Integer.MIN_VALUE)
 public class PropertyWiredHandlerPlugin implements PlugsListener{
 
 	@Override

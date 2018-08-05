@@ -179,9 +179,13 @@ public class DefaultParameterValidator implements ParameterValidator,ParameterAn
 		return !Boolean.parseBoolean(value.toString());
 	}
 	private boolean checkeGroup(Class<?>[] groups,Class<?>[] vgroups){
-		if(vgroups.length==0)
-			return true;
-		if(groups.length==0)
+		if(vgroups==null||vgroups.length==0){
+			if(groups==null||groups.length==0)
+				return true;
+			else
+				return false;
+		}
+		if(groups==null||groups.length==0)
 			return true;
 		for(Class<?> group : groups)
 			for(Class<?> vgroup:vgroups)

@@ -25,6 +25,10 @@ public class ErrorPlugsHandler implements InvokeHandler{
 	@Override
 	public Object error(MethodHandler methodHandler, Exception e) {
 		Error error = methodHandler.getMethod().getAnnotation(Error.class);
+		if(error==null)
+			error = methodHandler.getPlugsProxy().getProxyClass().getAnnotation(Error.class);
+		if(error==null&&methodHandler.getPlugsProxy().getInterfaceClass()!=null)
+			error =  methodHandler.getPlugsProxy().getInterfaceClass().getAnnotation(Error.class);
 		if(error!=null&&(ClassLoader.implementOf(e.getClass(), error.exception())
 				||ClassLoader.extendsOf(e.getClass(), error.exception()))){
 			if(error.recorder()){
@@ -38,8 +42,10 @@ public class ErrorPlugsHandler implements InvokeHandler{
 			+methodHandler.getMethod()+"\r\nparameter :"
 						+sb.toString(), e);;
 			}
-			return error.value();
+			if(error.value()!="")
+				return error.value();
 		}
+		e.printStackTrace();
 		methodHandler.chain();
 		return null;
 	}

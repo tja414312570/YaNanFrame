@@ -8,13 +8,13 @@ import java.util.List;
 
 import javax.validation.Constraint;
 import javax.validation.ConstraintViolation;
-import javax.validation.groups.Default;
 
 import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.plugin.annotations.Register;
 import com.YaNan.frame.plugin.handler.InvokeHandler;
 import com.YaNan.frame.plugin.handler.MethodHandler;
 import com.YaNan.frame.servlets.ServletBean;
+import com.YaNan.frame.servlets.annotations.Groups;
 import com.YaNan.frame.servlets.parameter.ParameterHandler;
 /**
  * jsr 303 标准验证拦截
@@ -37,6 +37,9 @@ public class ParameterValitationRegister implements InvokeHandler{
 		ServletBean servletBean = parameterHandler.getServletBean();
 		//getParamter获取方法中的参数
 		Object[] params = methodHandler.getParameters();
+		Class<?>[] groups;
+		Groups groupsAnno = servletBean.getMethod().getAnnotation(Groups.class);
+		groups = groupsAnno == null? null:groupsAnno.value();
 		List<Annotation> jsrAnnoList = null;
 		//第一个参数为Field或Parameter类型，获取其含有Constraint注解的集合（验证注解）
 		if(params[0].getClass().equals(Field.class))
@@ -48,7 +51,7 @@ public class ParameterValitationRegister implements InvokeHandler{
 		if(jsrAnnoList!=null)
 		for(Annotation anno : jsrAnnoList){
 			ParameterValidator parameterValidator = PlugsFactory.getPlugsInstanceByAttributeStrict(ParameterValidator.class, anno.annotationType().getName());
-			ConstraintViolation<?> valitation = parameterValidator.validate(params[0],anno,methodHandler.getOriginResult(),Default.class);
+			ConstraintViolation<?> valitation = parameterValidator.validate(params[0],anno,methodHandler.getOriginResult(),groups);
 			if(valitation!=null){
 				try {
 					//如果出现错误   则直接返回错误信息

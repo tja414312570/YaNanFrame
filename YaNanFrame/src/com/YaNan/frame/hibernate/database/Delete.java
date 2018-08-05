@@ -63,16 +63,18 @@ public class Delete extends OperateImplement{
 			this.key.add(f.getName());
 	}
 
-	public void addCondition(Field field, String condition) {
+	public Delete addCondition(Field field, String condition) {
+		if(condition==null)
+			throw new RuntimeException("delete condition is null at column "+field);
 		this.map.put(dbTab.getDBColumn(field).getName(), condition);
+		return this;
 	}
 
-	public void addCondition(String field, String condition) {
-		try {
+	public Delete addCondition(String field, String condition) {
+			if(condition==null)
+				throw new RuntimeException("delete condition is null at column "+field);
 			this.map.put(dbTab.getDBColumn(field).getName(), condition);
-		} catch (NoSuchFieldException | SecurityException e) {
-			log.error(e);
-		}
+			return this;
 	}
 
 	public void addCondition(String field) {

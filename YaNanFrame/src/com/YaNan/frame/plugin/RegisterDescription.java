@@ -18,7 +18,7 @@ import com.YaNan.frame.plugin.handler.InvokeHandler;
 import com.YaNan.frame.plugin.handler.InvokeHandlerSet;
 import com.YaNan.frame.plugin.handler.PlugsHandler;
 import com.YaNan.frame.reflect.ClassLoader;
-import com.YaNan.frame.reflect.cache.CacheContainer;
+import com.YaNan.frame.reflect.cache.ClassInfoCache;
 
 /**
  * 组件描述类 用于创建组件时的组件信息
@@ -283,7 +283,7 @@ public class RegisterDescription {
 	}
 	public Constructor<?> getConstructor(Object...args) throws Exception{
 		Class<?>[] parameterTypes = com.YaNan.frame.reflect.ClassLoader.getParameterTypes(args);
-		Constructor<?> constructor = CacheContainer.getClassInfoCache(this.clzz).getConstructor(parameterTypes);// this.cl.getConstructor(parameterTypes);
+		Constructor<?> constructor = ClassInfoCache.getClassHelper(this.clzz).getConstructor(parameterTypes);// this.cl.getConstructor(parameterTypes);
 		if (constructor == null) {
 			StringBuilder sb = new StringBuilder();
 			for (int i = 0; i < parameterTypes.length; i++) {

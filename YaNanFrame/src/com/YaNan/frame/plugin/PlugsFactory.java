@@ -109,13 +109,13 @@ public class PlugsFactory implements PlugsListener{
 		});
 		this.associate();
 		available=true;
+		this.initRegisterDescriptionHandler();
 		this.inited();
 	}
 	private void inited() {
 		List<PlugsListener> listeners = PlugsFactory.getPlugsInstanceList(PlugsListener.class);
 		for(PlugsListener listen : listeners)
 			listen.excute(this);
-		
 	}
 	/**
 	 * 建立个组件和注册器之间的关联
@@ -256,7 +256,6 @@ public class PlugsFactory implements PlugsListener{
 				throw new Exception("service interface "+impl.getName() +" could not found or not be regist");
 			registerDescription = plug.getDefaultRegisterDescription();
 		}else{
-			
 			registerDescription = instance.getRegisterDescription(impl);
 		}
 		return registerDescription;

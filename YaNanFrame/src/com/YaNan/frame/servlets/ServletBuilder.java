@@ -100,18 +100,23 @@ public class ServletBuilder{
 		scanner.doScanner(new ClassInter(){
 			@Override
 			public void find(Class<?> cls) {
-				Method[] methods = cls.getMethods();
-methodIterator:		for(Method method :methods){
-						List<ServletDispatcher> sds = PlugsFactory.getPlugsInstanceList(ServletDispatcher.class);
-						for(ServletDispatcher sd : sds){
-							Class<? extends Annotation>[] annosType = sd.getDispatcherAnnotation();
-							for(Class<?  extends Annotation> annoType :annosType){
-								if(annosType!=null&&method.getAnnotation(annoType)!=null)
-									if(sd.getBuilder().builder(annoType,method.getAnnotation(annoType),cls,method,servletMannager))
-										continue methodIterator;
-							}
-						}
+				try{
+					Method[] methods = cls.getMethods();
+					methodIterator:		for(Method method :methods){
+											List<ServletDispatcher> sds = PlugsFactory.getPlugsInstanceList(ServletDispatcher.class);
+											for(ServletDispatcher sd : sds){
+												Class<? extends Annotation>[] annosType = sd.getDispatcherAnnotation();
+												for(Class<?  extends Annotation> annoType :annosType){
+													if(annosType!=null&&method.getAnnotation(annoType)!=null)
+														if(sd.getBuilder().builder(annoType,method.getAnnotation(annoType),cls,method,servletMannager))
+															continue methodIterator;
+												}
+											}
+									}
+				}catch (Exception e){
+					log.error("An error occurs when scanning class "+cls.getName(), e);
 				}
+				
 			}
 		});
 	}

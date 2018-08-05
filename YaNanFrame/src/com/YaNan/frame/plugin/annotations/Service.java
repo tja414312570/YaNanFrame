@@ -3,9 +3,8 @@ package com.YaNan.frame.plugin.annotations;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-
 /**
- * 
+ * multi 是否每次调用都残生新的实例
  * 
  * @author Administrator
  *

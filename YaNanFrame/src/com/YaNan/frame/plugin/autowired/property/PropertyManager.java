@@ -80,12 +80,12 @@ public class PropertyManager {
 			if(tempValue==null)
 				tempValue = tempProp.get(tempKey);
 			if(tempValue == null){
-				index = endex+1;
+				endex = endex+1;
 			}else{
 				tempValue = getValues(tempValue,tempProp);
 				propertyPools.put(tempKey, tempValue);
 				orginValue = orginValue.substring(0,index)+tempValue+orginValue.substring(endex+1);
-				index = endex-tempKey.length()-2+tempValue.length();
+				endex = endex-tempKey.length()-2+tempValue.length();
 			}
 		}
 		return orginValue;

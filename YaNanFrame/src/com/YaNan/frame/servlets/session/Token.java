@@ -3,9 +3,11 @@ package com.YaNan.frame.servlets.session;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.servlet.http.Cookie;
@@ -20,11 +22,10 @@ import com.YaNan.frame.servlets.session.entity.TokenCell;
  */
 public class Token {
 	private String tokenId;
-	public final static int MaxTimeout = Integer.MAX_VALUE;
 	private int timeOut=864000;//超时
 	private Map<String, Object> arguments = new HashMap<String, Object>();
 	private Map<String,ArrayList<Object>> listArguments = new HashMap<String,ArrayList<Object>>();
-	private List<String> roles = new ArrayList<String>();
+	private volatile Set<String> roles = new HashSet<String>();
 	private boolean valid;
 	private long lastuse;
 	/************************超时，有效***************/
@@ -83,7 +84,6 @@ public class Token {
 		this.arguments.remove(cls.getName());
 	}
 	/***********************************存储结束*****************/
-	
 	/**
 	 * 默认构造方法
 	 * @param tokenId
@@ -203,8 +203,8 @@ public class Token {
 		return false;
 	}
 	// --------------------------role -----start
-	public Object[] getRoles() {
-		return roles.toArray();
+	public Set<String> getRoles() {
+		return roles;
 	}
 
 	public Iterator<String> getRoleIterator() {
@@ -222,30 +222,40 @@ public class Token {
 		}
 		return roles;
 	}
-
-	public boolean containerRole(String[] role) {
-		for (String key : role) {
-			Iterator<String> rrole = roles.iterator();
-			while (rrole.hasNext()) {
-				if (key.equals(rrole.next()))
-					return true;
-			}
-		}
-		return false;
-	}
-
-	public boolean isRole(String role) {
-		Iterator<String> rrole = roles.iterator();
-		while (rrole.hasNext()) {
-			String r = rrole.next();
-			if (role.equals(r)){
+	/**
+	 * 是否包含角色中某个角色
+	 * @param roles
+	 * @return
+	 */
+	public boolean containerRole(String[] roles) {
+		for (String role : roles) {
+			if(isRole(role)){
 				return true;
 			}
-				
 		}
 		return false;
 	}
-
+	/**
+	 * 是否是某角色
+	 * @param role
+	 * @return
+	 */
+	public boolean isRole(Class<?> role){
+		return isRole(role.getSimpleName());
+	}
+	/**
+	 * 是否是某角色
+	 * @param role
+	 * @return
+	 */
+	public boolean isRole(String role) {
+		return roles.contains(role);
+	}
+	/**
+	 * 是否包含角色
+	 * @param role
+	 * @return
+	 */
 	public String[] containsRole(String[] role) {
 		List<String> ls = new ArrayList<String>();
 		for (String key : role) {
@@ -255,17 +265,101 @@ public class Token {
 		}
 		return ls.toArray(new String[] {});
 	}
-
-	public void delRole(String role) {
+	/**
+	 * 删除角色
+	 * @param roles
+	 */
+	public void delRoles(Class<?>... roles){
+		for(Class<?> role : roles){
+			this.delRole(role);
+		}
+	}
+	/**
+	 * 删除角色
+	 * @param role
+	 */
+	public void delRole(Class<?> role){
+		this.delRole(role.getSimpleName());
+	}
+	/**
+	 * 删除角色
+	 * @param roles
+	 */
+	public void delRole(String... roles){
+		for(String role : roles){
+			this.delRole(role);
+		}
+	}
+	/**
+	 * 删除角色
+	 * @param role
+	 */
+	public synchronized void delRole(String role) {
 		roles.remove(role);
 		if(TokenManager.getHibernateInterface()!=null)
 			TokenManager.getHibernateInterface().removeRole(tokenId,role);
 	}
-
-	public void addRole(String role) {
+	/**
+	 * 添加角色
+	 * @param roles
+	 */
+	public void addRoles(Class<?>... roles){
+		for(Class<?> role : roles){
+			this.addRole(role);
+		}
+	}
+	/**
+	 * 添加角色
+	 * @param role
+	 */
+	public void addRole(Class<?> role){
+		this.addRole(role.getSimpleName());
+	}
+	/**
+	 * 添加角色
+	 * @param roles
+	 */
+	public void addRoles(String... roles){
+		for(String role : roles){
+			this.addRole(role);
+		}
+	}
+	/**
+	 * 添加角色
+	 * @param role
+	 */
+	public synchronized void addRole(String role) {
 		this.roles.add(role);
 		if(TokenManager.getHibernateInterface()!=null)
 			TokenManager.getHibernateInterface().addRole(tokenId,role);
+	}
+	/**
+	 * 重新设置角色
+	 * @param roles
+	 */
+	public void setRoles(Class<?>... roles){
+		this.delAllRole();
+		for(Class<?> role:roles){
+			this.addRole(role);
+		}
+	}
+	/**
+	 * 重新设置角色
+	 * @param roles
+	 */
+	public void setRoles(String... roles) {
+		this.delAllRole();
+		for(String role:roles){
+			this.addRole(role);
+		}
+	}
+	/**
+	 * 删除所有角色
+	 */
+	public synchronized void delAllRole(){
+		this.roles.clear();
+		if(TokenManager.getHibernateInterface()!=null)
+			TokenManager.getHibernateInterface().clearRole(tokenId);
 	}
 
 	// -------------------------------------role ------ end
@@ -274,27 +368,6 @@ public class Token {
 		return TokenPool.tokens;
 	}
 	
-	public void delAllRole(){
-		this.roles.clear();
-		if(TokenManager.getHibernateInterface()!=null)
-			TokenManager.getHibernateInterface().clearRole(tokenId);
-	}
-	
-	public void setRoles(String roles) {
-		this.roles.clear();
-		if(TokenManager.getHibernateInterface()!=null){
-			TokenManager.getHibernateInterface().clearRole(tokenId);
-			String[] role = roles.split(",");
-			for(String str:role){
-				TokenManager.getHibernateInterface().addRole(tokenId, str);
-			}
-		}
-		String[] role = roles.split(",");
-		for(String str:role){
-			this.roles.add(str);
-		}
-			
-	}
 	/**
 	 * 销毁token
 	 */

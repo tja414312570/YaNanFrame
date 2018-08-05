@@ -17,6 +17,7 @@ public class JsonResponseHandler implements ResponseHandler{
 	@Override
 	public void render(HttpServletRequest request, HttpServletResponse response, Object handlerResult,Annotation annotation,
 			ServletBean servletBean) throws ServletException, IOException {
+		response.setContentType("application/json");
 		if(!response.isCommitted())
 			if(handlerResult!=null)
 				response.getWriter().write(new Gson().toJson(handlerResult));

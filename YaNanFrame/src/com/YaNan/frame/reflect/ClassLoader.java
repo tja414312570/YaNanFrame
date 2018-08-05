@@ -4,11 +4,12 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import com.YaNan.frame.reflect.cache.CacheContainer;
+import com.YaNan.frame.reflect.cache.ClassHelper;
 import com.YaNan.frame.reflect.cache.ClassInfoCache;
 
 
@@ -21,10 +22,11 @@ import com.YaNan.frame.reflect.cache.ClassInfoCache;
  *
  */
 public class ClassLoader {
+	private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	private Object loadObject;
 	private Class<?> loadClass;
-	private ClassInfoCache infoCache=null;
-	public ClassInfoCache getInfoCache() {
+	private ClassHelper infoCache=null;
+	public ClassHelper getInfoCache() {
 		return infoCache;
 	}
 
@@ -39,7 +41,7 @@ public class ClassLoader {
 	 */
 	public static boolean exists(String className) {
 		try {
-			CacheContainer.classForName(className);
+			ClassInfoCache.classForName(className);
 			return true;
 		} catch (Exception e) {
 			return false;
@@ -54,7 +56,7 @@ public class ClassLoader {
 	 */
 	public static Field[] getFields(String className) {
 		try {
-			return CacheContainer.getClassInfoCache(CacheContainer.classForName(className)).getFields();
+			return ClassInfoCache.getClassHelper(ClassInfoCache.classForName(className)).getFields();
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -69,7 +71,7 @@ public class ClassLoader {
 	 */
 	public static Field[] getAllFields(String className) {
 			try {
-				return CacheContainer.getClassInfoCache(CacheContainer.classForName(className)).getDeclaredFields();
+				return ClassInfoCache.getClassHelper(ClassInfoCache.classForName(className)).getDeclaredFields();
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
 			}
@@ -88,7 +90,7 @@ public class ClassLoader {
 	public static boolean hasMethod(String className, String methodName,
 			Class<?>... args) {
 			 try {
-				return CacheContainer.getClassInfoCache(CacheContainer.classForName(className)).getMethod(methodName, args)!=null;
+				return ClassInfoCache.getClassHelper(ClassInfoCache.classForName(className)).getMethod(methodName, args)!=null;
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
 			}
@@ -107,7 +109,7 @@ public class ClassLoader {
 	public static boolean hasDeclaredMethod(String className, String methodName,
 			Class<?>... args){
 		try {
-			return CacheContainer.getClassInfoCache(CacheContainer.classForName(className)).getMethod(methodName, args)!=null;
+			return ClassInfoCache.getClassHelper(ClassInfoCache.classForName(className)).getMethod(methodName, args)!=null;
 		} catch ( SecurityException | ClassNotFoundException e) {
 			return false;
 		}
@@ -148,22 +150,24 @@ public class ClassLoader {
 	 * @param name
 	 * @return
 	 */
-	public static String createFieldGetMethod(String name) {
-		return CacheContainer.getFieldGetMethod(name);
+	public static String createFieldGetMethod(String field) {
+		return ClassInfoCache.getFieldGetMethod(field);
 	}
-
+	public static String createFieldGetMethod(Field field) {
+		return ClassInfoCache.getFieldGetMethod(field.getName());
+	}
 	/**
 	 * 创建属性的set方法
 	 * 
 	 * @param name
 	 * @return
 	 */
-	public static String createFieldSetMethod(String name) {
-		return CacheContainer.getFieldSetMethod(name);
+	public static String createFieldSetMethod(String field) {
+		return ClassInfoCache.getFieldSetMethod(field);
 	}
 
 	public static String createFieldSetMethod(Field field) {
-		return CacheContainer.getFieldSetMethod(field.getName());
+		return ClassInfoCache.getFieldSetMethod(field.getName());
 	}
 
 	/**
@@ -173,7 +177,7 @@ public class ClassLoader {
 	 * @return
 	 */
 	public static String createFieldAddMethod(String name) {
-		return CacheContainer.getFieldAddMethod(name);
+		return ClassInfoCache.getFieldAddMethod(name);
 	}
 
 	/**
@@ -188,8 +192,8 @@ public class ClassLoader {
 	 * @throws ClassNotFoundException
 	 */
 	public static Method getMethod(Class<?> cls, String methodName,
-			Class<?>... parameterTypes) throws NoSuchMethodException, SecurityException {
-		return CacheContainer.getClassInfoCache(cls).getMethod(methodName, parameterTypes);
+			Class<?>... parameterTypes) throws NoSuchMethodException{
+		return ClassInfoCache.getClassHelper(cls).getMethod(methodName, parameterTypes);
 	}
 
 	/**
@@ -205,7 +209,7 @@ public class ClassLoader {
 	 */
 	public static Method getDeclaredMethod(Class<?> cls, String methodName,
 			Class<?>... parameterTypes) throws NoSuchMethodException, SecurityException {
-		return CacheContainer.getClassInfoCache(cls).getDeclaredMethod(methodName, parameterTypes);
+		return ClassInfoCache.getClassHelper(cls).getDeclaredMethod(methodName, parameterTypes);
 	}
 
 	/*
@@ -229,7 +233,7 @@ public class ClassLoader {
 	public ClassLoader(Object object) {
 		this.loadObject = object;
 		this.loadClass = this.loadObject.getClass();
-		this.infoCache = CacheContainer.getClassInfoCache(this.loadClass);
+		this.infoCache = ClassInfoCache.getClassHelper(this.loadClass);
 	}
 
 	/**
@@ -241,7 +245,7 @@ public class ClassLoader {
 	 */
 	public ClassLoader(Class<?> cls) {
 		this.loadClass = cls;
-		this.infoCache = CacheContainer.getClassInfoCache(this.loadClass);
+		this.infoCache =ClassInfoCache.getClassHelper(this.loadClass);
 		try {
 			this.loadObject = cls.newInstance();
 		} catch (InstantiationException | IllegalAccessException e) {
@@ -260,7 +264,7 @@ public class ClassLoader {
 	public ClassLoader(Class<?> cls, boolean instance)
 			{
 		this.loadClass = cls;
-		this.infoCache = CacheContainer.getClassInfoCache(this.loadClass);
+		this.infoCache =ClassInfoCache.getClassHelper(this.loadClass);
 		try {
 			if (instance)
 				this.loadObject = cls.newInstance();
@@ -287,7 +291,7 @@ public class ClassLoader {
 	public ClassLoader(String className) throws ClassNotFoundException,
 			InstantiationException, IllegalAccessException {
 		this.loadClass = Class.forName(className);
-		this.infoCache = CacheContainer.getClassInfoCache(this.loadClass);
+		this.infoCache =ClassInfoCache.getClassHelper(this.loadClass);
 		this.loadObject = this.loadClass.newInstance();
 	}
 
@@ -308,7 +312,7 @@ public class ClassLoader {
 	 */
 	public ClassLoader(String className, boolean instance) throws ClassNotFoundException, InstantiationException, IllegalAccessException{
 		this.loadClass = Class.forName(className);
-		this.infoCache = CacheContainer.getClassInfoCache(this.loadClass);
+		this.infoCache =ClassInfoCache.getClassHelper(this.loadClass);
 		if (instance)
 			this.loadObject = this.loadClass.newInstance();
 	}
@@ -333,7 +337,7 @@ public class ClassLoader {
 			ClassNotFoundException, NoSuchMethodException, SecurityException,
 			IllegalArgumentException, InvocationTargetException {
 		this.loadClass = Class.forName(className);
-		this.infoCache = CacheContainer.getClassInfoCache(this.loadClass);
+		this.infoCache =ClassInfoCache.getClassHelper(this.loadClass);
 		if (args.length == 0) {
 			this.loadObject = this.loadClass.newInstance();
 		} else {
@@ -502,8 +506,7 @@ public class ClassLoader {
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	public Object getFieldValue(String fieldName) throws NoSuchFieldException,
-			SecurityException, IllegalArgumentException, IllegalAccessException {
+	public Object getFieldValue(String fieldName) throws IllegalAccessException {
 		Field field = this.infoCache.getField(fieldName);
 		return getFieldValue(field);
 	}
@@ -543,8 +546,7 @@ public class ClassLoader {
 	 * @throws IllegalAccessException
 	 */
 	public void setFieldValue(String field, Object value)
-			throws NoSuchFieldException, SecurityException,
-			IllegalArgumentException, IllegalAccessException {
+			throws IllegalAccessException{
 		Field f = this.infoCache.getDeclaredField(field);
 		setFieldValue(f, value);
 	}
@@ -567,8 +569,7 @@ public class ClassLoader {
 	 * @throws IllegalAccessException
 	 */
 	public void setFieldValue(Field field, Object value)
-			throws NoSuchFieldException, SecurityException,
-			IllegalArgumentException, IllegalAccessException {
+			throws IllegalAccessException {
 		field.setAccessible(true);
 		field.set(this.loadObject, value);
 	}
@@ -577,9 +578,9 @@ public class ClassLoader {
 	 * field set or get,only used by servletDispatcher
 	 */
 	/**
-	 * 该方法用于直接设置某个属性的值，传入String属性，String 值
-	 * 
-	 * @param method
+	 * 该方法用于直接设置某个属性的值，传入field name 和 value
+	 * 优先通过Get方式获取，没有则通过直接获取
+	 * @param field
 	 * @param arg
 	 * @throws IllegalAccessException
 	 * @throws IllegalArgumentException
@@ -587,16 +588,39 @@ public class ClassLoader {
 	 * @throws NoSuchMethodException
 	 * @throws SecurityException
 	 */
-	public void set(String method, Object... arg)
+	public void set(String fieldName, Object arg)
 			throws IllegalAccessException, IllegalArgumentException,
 			InvocationTargetException, NoSuchMethodException, SecurityException {
-		invokeMethod(createFieldSetMethod(method), arg);
+			Field field = this.getDeclaredField(fieldName);
+			this.set(field, arg);
 	}
-
+	/**
+	 * 该方法用于直接设置某个属性的值，传入Field 和 value
+	 * 优先通过Set方式获取，没有则通过直接获取
+	 * @param field
+	 * @param arg
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 * @throws InvocationTargetException
+	 * @throws NoSuchMethodException
+	 * @throws SecurityException
+	 */
+	public void set(Field field, Object arg)
+			throws IllegalAccessException, IllegalArgumentException,
+			InvocationTargetException, NoSuchMethodException, SecurityException{
+		String method = ClassLoader.createFieldSetMethod(field);
+		if(this.hasMethod( method, field.getType())){
+			Class<?>[] parameter = new Class<?>[1];
+			parameter[0]=field.getType();
+			invokeMethod(method,parameter, castType(arg,field.getType()));
+		}else{
+			setFieldValue(field, castType(arg,field.getType()));
+		}
+	}
 	/**
 	 * 该方法用于直接设置某个属性的值，传入String属性，String 值
 	 * 
-	 * @param method
+	 * @param field
 	 * @param arg
 	 * @throws IllegalAccessException
 	 * @throws IllegalArgumentException
@@ -604,16 +628,36 @@ public class ClassLoader {
 	 * @throws NoSuchMethodException
 	 * @throws SecurityException
 	 */
-	public void set(String method, Class<?> parameterType, Object arg)
+	public void set(String field, Class<?> parameterType, Object arg)
 			throws IllegalAccessException, IllegalArgumentException,
 			InvocationTargetException, NoSuchMethodException, SecurityException {
 		Class<?>[] parameter = new Class<?>[1];
 		parameter[0]=parameterType;
-		invokeMethod(createFieldSetMethod(method),parameter, arg);
+		invokeMethod(createFieldSetMethod(field),parameter, arg);
 	}
 
 	/**
-	 * 该方法用于直接获取某个属性的值，传入String属性
+	 * 该方法用于直接获取某个属性的值，传入field name
+	  * 优先通过Get方式获取，没有则通过直接获取
+	 * @param field
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 * @throws InvocationTargetException
+	 * @throws NoSuchMethodException
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException 
+	 */
+	public Object get(String field) throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException{
+		String method = ClassLoader.createFieldGetMethod(field);
+		if(this.hasMethod(method)){
+			return invokeMethod(method);
+		}else{
+			return this.getFieldValue(field);
+		}
+	}
+	/**
+	 * 该方法用于直接获取某个属性的值，传入Field
+	 * 优先通过Get方式获取，没有则通过直接获取
 	 * 
 	 * @param method
 	 * @throws IllegalAccessException
@@ -621,11 +665,15 @@ public class ClassLoader {
 	 * @throws InvocationTargetException
 	 * @throws NoSuchMethodException
 	 * @throws SecurityException
+	 * @throws NoSuchFieldException 
 	 */
-	public Object get(String method) throws IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException,
-			NoSuchMethodException, SecurityException {
-		return invokeMethod(createFieldGetMethod(method));
+	public Object get(Field field) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+		String method = ClassLoader.createFieldGetMethod(field);
+		if(this.hasMethod(method)){
+			return invokeMethod(method);
+		}else{
+			return this.getFieldValue(field);
+		}
 	}
 
 	/*
@@ -669,9 +717,7 @@ public class ClassLoader {
 		return invokeMethod(this.loadObject, methodName,parameterType,args);
 	}
 	public Object invokeMethod(Object object,String methodName, Class<?>[] parameterType,
-			Object... args) throws NoSuchMethodException, SecurityException,
-			IllegalAccessException, IllegalArgumentException,
-			InvocationTargetException {
+			Object... args) throws NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		Method method = this.infoCache.getMethod(methodName, parameterType);
 		if(method==null){
 			StringBuilder ptStr = new StringBuilder(this.loadClass.getName()).append(".").append(methodName).append("(");
@@ -718,7 +764,7 @@ public class ClassLoader {
 			throws NoSuchMethodException, SecurityException,
 			IllegalAccessException, IllegalArgumentException,
 			InvocationTargetException {
-		Method method = CacheContainer.getClassInfoCache(clzz).getMethod(methodName,getParameterBaseType(args));
+		Method method =ClassInfoCache.getClassHelper(clzz).getMethod(methodName,getParameterBaseType(args));
 		return method.invoke(null,args);
 	}
 	/**
@@ -737,7 +783,7 @@ public class ClassLoader {
 			throws NoSuchMethodException, SecurityException,
 			IllegalAccessException, IllegalArgumentException,
 			InvocationTargetException {
-		Method method = CacheContainer.getClassInfoCache(clzz).getMethod(methodName, parameterTypes);
+		Method method =ClassInfoCache.getClassHelper(clzz).getMethod(methodName, parameterTypes);
 		return method.invoke(null,args);
 	}
 	/*
@@ -986,6 +1032,86 @@ public class ClassLoader {
 			return orgin.toString();
 		// 没有匹配到返回源数据
 		return orgin;
+	}
+
+	/**
+	 * 将字符类型转换为目标类型
+	 * 
+	 * @param clzz
+	 * @return
+	 * @throws ParseException
+	 */
+	public static Object parseBaseTypeArray(Class<?> clzz, String[] arg, String format) throws ParseException {
+		if (!clzz.isArray())
+			return parseBaseType(clzz, arg[0], format);
+		if (clzz.equals(String[].class))
+			return arg;
+		Object[] args = new Object[arg.length];
+		for (int i = 0; i < args.length; i++)
+			args[i] = parseBaseType(clzz, arg[i], format);
+		return args;
+	}
+
+	/**
+	 * 将字符类型转换为目标类型
+	 * 
+	 * @param clzz
+	 * @return
+	 * @throws ParseException
+	 */
+	public static Object parseBaseType(Class<?> clzz, String arg, String format) {
+		// 匹配时应该考虑优先级 比如常用的String int boolean应该放在前面 其实 包装类型应该分开
+		if (clzz.equals(String.class))
+			return arg;
+		// 8个基本数据类型及其包装类型
+		if (clzz.equals(int.class))
+			return arg==null?0:Integer.parseInt(arg);
+		if(clzz.equals(Integer.class))
+			return arg==null?null:Integer.valueOf(arg);
+		
+		if (clzz.equals(boolean.class))
+			return arg==null?false:Boolean.parseBoolean(arg);
+		if(clzz.equals(Boolean.class))
+			return arg==null?null:Boolean.valueOf(arg);
+		
+		if (clzz.equals(float.class))
+			return arg==null?0.0f:Float.parseFloat(arg);
+		if(clzz.equals(Float.class))
+			return arg==null?null:Float.valueOf(arg);
+		
+		if (clzz.equals(short.class))
+			return arg==null?0:Short.parseShort(arg);
+		if( clzz.equals(Short.class))
+			return arg==null?null:Short.valueOf(arg);
+					
+		if (clzz.equals(long.class))
+			return arg==null?0l:Long.parseLong(arg);
+		if(clzz.equals(Long.class))
+			return arg==null?null:Long.valueOf(arg);
+		
+		if (clzz.equals(double.class) )
+			return arg==null?0.0f:Double.parseDouble(arg);
+		if(clzz.equals(Double.class))
+			return arg==null?null:Double.valueOf(arg);
+		
+		if (clzz.equals(char.class) )
+			return arg==null?null:arg.charAt(0);
+		if(clzz.equals(Character.class))
+			return arg==null?null:Character.valueOf(arg.charAt(0));
+		
+		if (clzz.equals(char[].class))
+			return arg==null?null:arg.toCharArray();
+		
+		if (clzz.equals(byte.class)||clzz.equals(Byte.class))
+			return arg==null?null:Byte.parseByte(arg);
+		// 日期
+		if (clzz.equals(Date.class))
+			try {
+				return format == null ? DATE_FORMAT.parse(arg) : new SimpleDateFormat(format).parse(arg);
+			} catch (ParseException e) {
+				new RuntimeException(e);
+			}
+		return arg;
 	}
 
 	

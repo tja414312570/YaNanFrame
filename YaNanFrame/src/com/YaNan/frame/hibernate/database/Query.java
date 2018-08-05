@@ -203,9 +203,19 @@ public class Query extends OperateImplement{
 				for (String str : strings){
 					this.key.add(str);
 					try {
-					if(str.contains(" AS ")){
-						String fieldName = str.split(" AS ")[1];
-						Field field = this.queryTab.getDataTablesClass().getDeclaredField(fieldName);
+						int index = str.indexOf("AS ");
+						if(index == -1 ){
+							index = str.indexOf("as ");
+							if(index==-1){
+								index = str.indexOf("As ");
+								if(index==-1){
+									index = str.indexOf("aS ");
+								}
+							}
+						}
+					if(index>0){
+						String fieldName = str.substring(index+3).trim();
+						Field field = this.queryTab.getDataTablesClass().getDeclaredField(fieldName.trim());
 							this.fieldMap.put(field,null);
 						}else if(!str.trim().equals("*")){
 							Field field = this.queryTab.getDataTablesClass().getDeclaredField(str);
@@ -218,6 +228,9 @@ public class Query extends OperateImplement{
 					}
 				}
 			SqlCache.getCache().addAttribute(strHash, this.fieldMap);
+			}else{
+				for (String str : strings)
+					this.key.add(str);
 			}
 		}else{
 			int strHash = dataTablesClass.hashCode() +42804280;
@@ -258,8 +271,18 @@ public class Query extends OperateImplement{
 			for (String str : strings){
 				this.key.add(str);
 				try {
-				if(str.contains(" AS ")){
-					String fieldName = str.split(" AS ")[1];
+					int index = str.indexOf("AS ");
+					if(index == -1 ){
+						index = str.indexOf("as ");
+						if(index==-1){
+							index = str.indexOf("As ");
+							if(index==-1){
+								index = str.indexOf("aS ");
+							}
+						}
+					}
+				if(index>0){
+					String fieldName = str.substring(index+3).trim();
 					Field field = this.queryTab.getDataTablesClass().getDeclaredField(fieldName);
 						this.fieldMap.put(field,null);
 					
@@ -328,8 +351,8 @@ public class Query extends OperateImplement{
 			this.order.add(str+" DESC");
 		return this;
 	}
-	public Query setlimit(int num){
-		this.limit = limit+"";
+	public Query setLimit(int num){
+		this.limit = num+"";
 		return this;
 	}
 	public Query setLimit(int pos,int num){
@@ -349,19 +372,21 @@ public class Query extends OperateImplement{
 	}
 
 	public Query addCondition(Field field, String condition) {
+		if(condition==null)
+			throw new RuntimeException("query condition is null at column "+field);
 		this.map.put(dataTables.getName()+"."+dataTables.getDBColumn(field).getName(), condition.toString());
 		return this;
 	}
 
 	public Query addCondition(String field, Object condition) {
-		try {
-			map.put(dataTables.getName()+"."+dataTables.getDBColumn(field).getName(), condition.toString());
-		} catch (NoSuchFieldException | SecurityException e) {
-			log.error(e);
-		}
+		if(condition==null)
+			throw new RuntimeException("query condition is null at column "+field);
+		map.put(dataTables.getName()+"."+dataTables.getDBColumn(field).getName(), condition.toString());
 		return this;
 	}
 	public Query addColumnCondition(String field, Object condition) {
+		if(condition==null)
+			throw new RuntimeException("query condition is null at column "+field);
 			map.put(field, condition.toString());
 			return this;
 	}
@@ -436,10 +461,13 @@ public class Query extends OperateImplement{
 			return this.query(true);
 	}
 	public <T> T queryOne() {
+		this.setLimit(1);
 		List<T> resultSet = this.query(true);
 		return resultSet.size()>0?resultSet.get(0):null;
 	}
-	public <T> T queryLastOne() {
+	public <T> T queryLastOne(String... column) {
+		this.setLimit(1);
+		this.addOrderByDesc(column);
 		List<T> resultSet = this.query(true);
 		return resultSet.size()>0?resultSet.get(resultSet.size()-1):null;
 	}

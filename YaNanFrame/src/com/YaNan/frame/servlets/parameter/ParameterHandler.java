@@ -20,6 +20,4 @@ public interface ParameterHandler {
 	ServletBean getServletBean();
 	HttpServletRequest getServletRequest();
 	HttpServletResponse getServletResponse();
-	
-	
 }

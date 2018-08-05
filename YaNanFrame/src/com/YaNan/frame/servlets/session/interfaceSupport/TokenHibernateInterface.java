@@ -23,7 +23,7 @@ public interface TokenHibernateInterface {
 	void remove(String tokenId,String key);
 /****************************角色部分*************************/
 
-	void addRole(String tokenId, String role);
+	void addRole(String tokenId, String... role);
 
 	void clearRole(String tokenId);
 

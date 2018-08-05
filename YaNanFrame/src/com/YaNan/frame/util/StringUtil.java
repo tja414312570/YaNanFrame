@@ -11,6 +11,12 @@ import com.YaNan.frame.reflect.ClassLoader;
 public class StringUtil {
 	public static int maxTimes = 10;
 	private static Map<Integer,Boolean> resourceCache = new HashMap<Integer,Boolean>();
+	/**
+	 * 将对象中的变量填充到字符串啊的表达式中
+	 * @param str
+	 * @param obj
+	 * @return
+	 */
 	public static String decodeVar(String str, Object obj) {
 		Pattern var = Pattern.compile("\\$\\{(\\w|_)+\\}");
 		Pattern reVar = Pattern.compile("\\$\\{|\\}");
@@ -385,8 +391,13 @@ public class StringUtil {
 					return true;
 			return false;
 		}
-
-		public static String decodeVar(String src, Object... arguments) {
+		/**
+		 * 重组基础变量，后面依次为参数位置
+		 * @param src
+		 * @param arguments
+		 * @return
+		 */
+		public static String decodeBaseVar(String src, Object... arguments) {
 			StringBuilder sb = new StringBuilder(src);
 			int index,v=0;
 			while((index=sb.indexOf("${"))>=0&&v<arguments.length)

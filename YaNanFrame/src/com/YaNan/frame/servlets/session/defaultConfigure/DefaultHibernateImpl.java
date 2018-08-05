@@ -8,7 +8,6 @@ import java.util.List;
 import com.YaNan.frame.hibernate.database.Delete;
 import com.YaNan.frame.hibernate.database.Insert;
 import com.YaNan.frame.hibernate.database.Query;
-import com.YaNan.frame.plugin.annotations.Register;
 import com.YaNan.frame.servlets.session.entity.TokenCell;
 import com.YaNan.frame.servlets.session.interfaceSupport.TokenHibernateInterface;
  
@@ -104,7 +103,7 @@ public class DefaultHibernateImpl implements TokenHibernateInterface{
 	}
 
 	@Override
-	public void addRole(String tokenId, String role) {
+	public void addRole(String tokenId, String... role) {
 		// TODO Auto-generated method stub
 		
 	}
