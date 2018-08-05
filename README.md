@@ -1,324 +1,214 @@
-# YaNanFrame
-com.yanan.frame
-此框架为M-C（为什么去掉V层？V层都交给前端啊）模式框架，提供持久层和交互层的实现。采用注解方式配置，支持多种交互方式，对象化的数据库层操作，
-我们的理念为，程序员只关心核心业务逻辑，除此之外，全都交给框架吧。
-来吧  一起为美好的明天奋斗
+# YaNanFrame 2.0 
+# 全新PLUGIN组件，带给您高效的开发效率
+
+           PLUGINPLUGIN     PLUG         PLUG       PLUG      PLUGINPLUGIN    PLUGINPLUGIN   PLUG         PLUG
+          PLUG      PLUG   PLUG         PLUG       PLUG    PLUG                  PLUG       PLUGPLUG     PLUG
+         PLUG      PLUG   PLUG         PLUG       PLUG   PLUG                   PLUG       PLUG PLUG    PLUG
+        PLUG      PLUG   PLUG         PLUG       PLUG   PLUG                   PLUG       PLUG  PLUG   PLUG
+       PLUGPLUGPLUGI    PLUG         PLUG       PLUG   PLUG      PLUGINP      PLUG       PLUG   PLUG  PLUG
+      PLUG             PLUG         PLUG       PLUG   PLUG         PLUG      PLUG       PLUG    PLUG PLUG
+     PLUG             PLUG         PLUG       PLUG     PLUG       PLUG      PLUG       PLUG     PLUGINPL
+    PLUG             PLUGINPLUGI   PLUGINPLUGINP        PLUGINPLUGIN    PLUGINPLUGIN  PLUG         PLUG
+    
+基于AOP的编程模式，自带mvc组件，持久层组件，基于AOP的设计模式，用接口规范您的代码，实现团队解耦。用JAVA Bean来做数据库对象，让您无需知道sql就可以实现数据库的CURD，支持子查询，联表查询。将项目的各种模块声明为Service，通过PluginFactory来管理Service的创建，装配，注入。
+
+项目结构：通用父级命名空间,com.YaNan.frame<br>
+  1、hibernate：持久层，用于数据库的CRUD以及事物<br>
+  2、logging:日志,框架的日志记录<br>
+  3、plugin：项目核心组件，其它组件的依赖，实现aop，di，扩展了自动注入，支持方法拦截，自动管理接口，自动装配服务，上下文初始化<br>
+  4、reflect：反射，用于提供框架所需的反射部分的实现<br>
+  5、servlet：servlet组件，提供action、restful等接口的实现，支持可扩展的验证，参数，回调处理器<br>
+  6、servlet.session:web开发的回话管理，权限验证，数据存储等<br>
+  7、util：基础工具类，提供一些框架常用的工具<br>
+  8，web.sercurity：提供XSS请求的包裹，防止JS，SQL等注入< BR >
+
+＃核心组件  plugin
+各组件之间的依赖可以通过最简单的组件实现绑定，也可以通过简单的Property文件进行注册
 
 使用案例:
 <br>
-交互层
-
-1）、action注解的使用（@Action)
+（一）、Plugin
+1、接口：OSS服务接口，提供服务的抽象方法
 ```java
-package com.YaNan.demo;
+package com.BaTu.service.oss;
 
-import java.io.IOException;
+import java.util.Map;
 
-import com.YaNan.frame.core.annotations.Action;
-import com.YaNan.frame.core.annotations.RESPONSE_METHOD;
-import com.YaNan.frame.core.annotations.Validate;
-import com.YaNan.frame.core.servletSupport.DefaultServlet;
-/**
- * 如果需要获取  HttpServletRequest HttpServletRespone等，请继承自各对应Servlet扩展类
- * 对应对象的命名  HttpServletRequest RequestContext，HttpServletResponse ResponseContext ，oken tokenContext
- * 如果只需要get方式请求  无需继承任何扩展类
- * 各扩展类型说明(下面的扩展类依次继承关系）
- * DefaultServlet 默认Servlet扩展，支持get方式传参，支持获取HttpServlet对象
- * MultiFormServlet 表单Servlet扩展 继承自DefalutServlet 支持post请求 
- * TokenServlet tokenServlet扩展，继承自MultiFormServlet 支持获取Token，以及支持@TokenObject注解 依赖组件  com.YaNan.frame.session
- * @author yanan
- */
-public class ActionAnnotationsTest extends DefaultServlet{
-	@Validate(RegExpression="[\\S]{2,}",Failed="请输入字少两个字符"/*,isNull="请输入中文  两个字符以上"*/)
-	private String name;
-	// 以下两个接口测试  action中method（返回内容的方式）
-	@Action(method=RESPONSE_METHOD.FORWARD)
-	public String testForward(){
-		return "index.html";
-	}
-	@Action(method=RESPONSE_METHOD.REDIRCET)
-	public String testRedirect(){
-		return "index.html";
-	}
-	//以下  命名空间的使用 访问路径 项目路径/test/testNamespace.do
-	 * 以下  命名空间的使用
-	@Action(namespace="test")
-	public String testNamespace(){
-		return "你得到了内容";
-	}
-	// 以下   output属性的使用，某些情况下  我们可能不是返回字符类型数据
-	@Action(output=true)
-	public void testOutput(){
-		try {
-			this.ResponseContext.getWriter().write("你得到了你想要的内容".toCharArray());
-			this.ResponseContext.getWriter().flush();
-			this.ResponseContext.getWriter().close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-	//解析返回结果  其中 ${}中为该对象拥有的属性的值，没有则返回原内容
-	@Action(decode=true)
-	public String testDecode(){
-		this.setName("解码内容");
-		return "解码结果：${name}";
-	}
-	//跨域支持
-	@Action(CorssOrgin=true)
-	public String testCO(){
-		return "跨域显示内容";
-	}
-	// args参数  为一个数组,需要验证的参数，必须配合使用注解@Validate。但@Validate可以独立使用，独立使用时仅在请求中含有该参数时有效
-	 * args参数  为一个数组,需要验证的参数，必须配合使用注解@Validate。但@Validate可以独立使用，独立使用时仅在请求中含有该参数时有效
-	@Action(args={"name"})
-	public String testArgs(){
-		return this.name;
-	}
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) {
-		this.name = name;
-	}
+public interface OssService {
+	 public Map<String, String> createUploadEndpoint(String path) throws Exception;
+
+	public String getContextHost();
 }
 
 ```
-2）、result注解的使用（@Result)
+2、实现：接口的具体实现，注册到组件容器，提供OSS接口服务的具体功能
 ```java
-package com.YaNan.demo;
+package com.BaTu.service.oss;
 
-import com.YaNan.frame.core.annotations.Action;
-import com.YaNan.frame.core.annotations.ActionResults.Result;
-import com.YaNan.frame.core.annotations.RESPONSE_METHOD;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.sql.Date;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-/**
- * TokenServlet简单案例
- * @author yanan
- *
- */
-public class ResultAnnotationsTest{
-	private int result;
-	@Result(name = "success", value = "index.html",method=RESPONSE_METHOD.FORWARD)
-	@Result(name = "failed", value = "index.html",method=RESPONSE_METHOD.REDIRCET)
-	@Action
-	public String getResult(){
-		if(result<10)
-			return "你输入的数字是"+this.result;
-		if(result>1000)
-			return "failed";
-		return "success";
-	}
-	public void setResult(int result) {
-		this.result = result;
-	}
-}
-```
-3)、TokenServlet的使用
-```java
-package com.YaNan.demo;
+import com.YaNan.frame.plugin.annotations.Register;
+import com.YaNan.frame.plugin.autowired.property.Property;
+import com.aliyun.oss.OSSClient;
+import com.aliyun.oss.common.utils.BinaryUtil;
+import com.aliyun.oss.model.MatchMode;
+import com.aliyun.oss.model.PolicyConditions;
 
-import com.YaNan.frame.core.annotations.Action;
-import com.YaNan.frame.core.session.Token;
-import com.YaNan.frame.core.session.annotation.TokenObject;
-import com.YaNan.frame.core.session.servletSupport.TokenServlet;
-/**
- * TokenServlet简单案例
- * @author yanan
- *
- */
-public class TokenServletTest extends TokenServlet{
-	@TokenObject
-	private Student student;
-	/**
-	 * 保存学生信息
-	 * @return
-	 */
-	@Action
-	public String saveStudentInfo(){
-		Student student = new Student();
-		student.name="java";
-		student.age = 22;
-		this.TokenContext.set(student);
-		//or this.TokenContext.set(Student.class,student);
-		return "保存学生信息成功";
-	}
-	/**
-	 * 获取学生信息
-	 * @return
-	 */
-	@Action
-	public String getStudentInfo(){
-		return this.student.toString();
-	}
-	@Action
-	public String saveStudentInfo2(){
-		Student student = new Student();
-		student.name="php";
-		student.age =5;
-		Token token = this.TokenContext;
-		token.set(Student.class, student);
-		return "保存学生信息成功";
-	}
-	@Action
-	public String getStudentInfo2(){
-		return this.TokenContext.get(Student.class).toString();
-	}
-	public Student getStudent() {
-		return student;
-	}
-	public void setStudent(Student student) {
-		this.student = student;
-	}
-}
-class Student{
+@Register
+public class DefaultOssService implements OssService{
+	@Property("oss.api.endpoint")
+	private String endpoint;
+	@Property("oss.api.accessId")
+    private String accessId;
+	@Property("oss.api.accessKey")
+    private String accessKey;
+	@Property("oss.api.bucket")
+    private String bucket;
+	@Property("oss.api.user_dir")
+    private String user_dir;
+	@Property("oss.api.conf_dir")
+    private String roolsDir;
+	@Property("oss.api.scheme")
+	private String scheme;
+	@Property("oss.api.expire_time")
+	private long expireTime;
 	@Override
-	public String toString() {
-		return "Student [name=" + name + ", age=" + age + "]";
+    public Map<String, String> createUploadEndpoint(String path) throws UnsupportedEncodingException{
+    	 String host = getContextHost();
+         OSSClient client = new OSSClient(endpoint, accessId, accessKey);
+     	long expireEndTime = System.currentTimeMillis() + expireTime * 1000;
+         Date expiration = new Date(expireEndTime);
+         PolicyConditions policyConds = new PolicyConditions();
+         policyConds.addConditionItem(PolicyConditions.COND_CONTENT_LENGTH_RANGE, 0, 1048576000);
+         policyConds.addConditionItem(MatchMode.StartWith, PolicyConditions.COND_KEY, path);
+         String postPolicy = client.generatePostPolicy(expiration, policyConds);
+         byte[] binaryData = postPolicy.getBytes("utf-8");
+         String encodedPolicy = BinaryUtil.toBase64String(binaryData);
+         String postSignature = client.calculatePostSignature(postPolicy);
+         Map<String, String> respMap = new LinkedHashMap<String, String>();
+         respMap.put("accessid", accessId);
+         respMap.put("policy", encodedPolicy);
+         respMap.put("signature", postSignature);
+         respMap.put("dir",path);
+         respMap.put("host", host);
+         respMap.put("endpoint",endpoint);
+         respMap.put("bucket",bucket);
+         respMap.put("expire", String.valueOf(expireEndTime / 1000));
+         return respMap;
+    }
+	public String UploadStream(final String path,final String fileName,InputStream is){
+		OSSClient ossClient = new OSSClient(endpoint, accessId, accessKey);
+		ossClient.putObject(bucket,path, new ByteArrayInputStream(new byte[0]));
+		ossClient.putObject(bucket, path+fileName, is);
+		ossClient.shutdown();
+		return getContextHost()+path+fileName;
 	}
-	String name;
-	int age;
+	@Override
+	public String getContextHost() {
+		return scheme + bucket + "." + endpoint;
+	}
 }
+
 ```
-持久层：
+3、消费：使用OSS服务
 
 ```java
-package com.YaNan.demo;
+package com.BaTu.control.source;
 
-import com.UFO.model.user.TestUser2;
-import com.YaNan.frame.core.annotations.Action;
-import com.YaNan.frame.hibernate.database.Delete;
+import javax.validation.constraints.NotNull;
+
+import com.BaTu.model.user.WXUserModel;
+import com.BaTu.plugs.servlet.response.AppResponse;
+import com.BaTu.service.oss.OssService;
+import com.YaNan.frame.plugin.annotations.Service;
+import com.YaNan.frame.plugin.autowired.exception.Error;
+import com.YaNan.frame.plugin.autowired.property.Property;
+import com.YaNan.frame.servlets.annotations.GetMapping;
+import com.YaNan.frame.servlets.annotations.RequestMapping;
+import com.YaNan.frame.servlets.session.parameter.TokenAttribute;
+import com.YaNan.frame.util.StringUtil;
+@Error("{\"ret\":5,\"msg\":\"服务器异常\"}")
+@RequestMapping("/app/oss")
+public class AppOSSControler {
+	@Service
+	private OssService ossService;
+	@Property("oss.dir.image.auth")
+	private String authOssDir;
+	@GetMapping("/auth")
+	public String useAuthOssToken(@NotNull(message="{\"ret\":5,\"msg\":\"请先登录\"}")@TokenAttribute WXUserModel user) throws Exception{
+		return AppResponse.success(ossService.createUploadEndpoint(StringUtil.decodeBaseVar(authOssDir, user.getUserID())));
+	}
+}
+
+```
+（二）、高度可扩展的Restful Servlet组件
+```java
+package com.BaTu.control.Instrument;
+
+import javax.validation.groups.Default;
+
+import com.BaTu.model.Instrument.InstrumentTypeModel;
+import com.BaTu.plugs.servlet.response.DataTables;
 import com.YaNan.frame.hibernate.database.Insert;
 import com.YaNan.frame.hibernate.database.Query;
 import com.YaNan.frame.hibernate.database.Update;
-import com.google.gson.Gson;
+import com.YaNan.frame.hibernate.database.DBInterface.LOGIC_STATUS;
+import com.YaNan.frame.servlets.annotations.DeleteMapping;
+import com.YaNan.frame.servlets.annotations.GetMapping;
+import com.YaNan.frame.servlets.annotations.Groups;
+import com.YaNan.frame.servlets.annotations.PostMapping;
+import com.YaNan.frame.servlets.annotations.PutMapping;
+import com.YaNan.frame.servlets.annotations.RequestMapping;
+import com.YaNan.frame.servlets.response.annotations.ResponseJson;
+import com.YaNan.frame.servlets.session.annotation.Authentication;
 
-/**  
-* 创建时间：2017年12月12日 下午4:33:19  
-* @version 1.0   
-* @since JDK 1.7.0_21  
-* 文件名称：DaoTest.java  
-* 类说明：  框架的使用
-*/
-public class DaoTestUser2 extends TestUser2{
-	
-	/*
-	 * 增加
-	 */
-	@Action
-	public String add(){
-		this.setName("女神");
-		this.setAge(18);
-		this.setTiphone("15656565656");
-		
-		Insert insert = new Insert(this);
-		return insert.insert()?"{status:'success',message:'信息提交成功'}":"{status:'failed',reason:'InnerErr',message:'服务器内部错误！'}";
+@Authentication(roles="root",message="{\"error\":\"登录超时，请刷新页面\"}")
+@RequestMapping("/Instrument/Type")
+public class InstrumentTypeControler {
+	@GetMapping
+	@ResponseJson
+	public DataTables getInstrumentType(){
+		Query query = new Query(InstrumentTypeModel.class);
+		return DataTables.success(query.query());
 	}
-	
-	/*
-	 * 查询   通过Tid来查看所在行
-	 */
-	@Action
-	public String select(){
-		Query query = new Query(this);
-		query.addCondition("Tid", this.Tid=1);
-		return "{\"data\":"+new Gson().toJson(query.query())+"}";
+	@Groups(Default.class)
+	@PostMapping
+	@ResponseJson
+	public DataTables createInstrumentType(InstrumentTypeModel ins){
+		ins.setStatus(LOGIC_STATUS.NORMAL);
+		Insert insert =  new Insert(ins);
+		if(insert.insert()){
+			Query q = new Query(InstrumentTypeModel.class);
+			q.addCondition("name", ins.getName());
+			ins = q.queryOne();
+			if(ins!=null)
+				return DataTables.success(ins);
+		}
+		return DataTables.error("分类添加失败，可能是因为分类名已经存在");
 	}
-	
-	/*
-	 * 修改
-	 */
-	@Action
-	public String up(){
-		this.name = "hh";
-		this.Tid = 2;
-		Update update = new Update(this,"name");
-		//条件，通过id来修改name属性
-		update.addCondition("Tid",this.Tid);
-		
-		return update.update()>0?"{status:'success',message:'数据修改成功'}":"{status:'failed',reason:'InnerErr',message:'服务器内部错误！'}";
+	@ResponseJson
+	@PutMapping
+	public DataTables updateInstrumentType(InstrumentTypeModel ins){
+		Update update = new Update(ins);
+		update.addColumnCondition("id", ins.getId());
+		update.removeColumn("id");
+		if (update.update() > 0)
+			return DataTables.success(ins);
+		return DataTables.error("编辑失败");
 	}
-	
-	/*
-	 * 删除
-	 */
-	@Action
-	public String delete(){
-		Delete delete = new Delete(this);
-		delete.addCondition("Tid", this.Tid = 2);
-		return delete.delete() >0?"{status:'success',message:'数据修改成功'}":"{status:'failed',reason:'InnerErr',message:'服务器内部错误！'}";
+	@ResponseJson
+	@DeleteMapping
+	public DataTables deleteInstrumentType(int ID){
+		Update update = new Update(InstrumentTypeModel.class,"status");
+		update.setColumn("status", LOGIC_STATUS.REMOVE);
+		update.addCondition("id", ID);
+		return update.update()>0?DataTables.success(null):DataTables.error("编辑失败");
 	}
 }
-```
-2）、使用main方法进行数据库调试
-```java
-package com.YaNan.demo;
 
-import java.io.File;
-
-import com.UFO.model.user.Record;
-import com.YaNan.frame.core.annotations.Action;
-import com.YaNan.frame.hibernate.database.DBFactory;
-import com.YaNan.frame.hibernate.database.Delete;
-import com.YaNan.frame.hibernate.database.Insert;
-import com.YaNan.frame.hibernate.database.Query;
-import com.YaNan.frame.hibernate.database.Update;
-import com.google.gson.Gson;
-
-public class text extends Record {
-	
-	
-	
-	//添加信息
-	@Action
-	public String add(){
-		this.name = "张三";
-		Insert insert = new Insert(this);
-		return insert.insert()?"{status:'success',message:'信息提交成功'}":"{status:'failed',reason:'InnerErr',message:'服务器内部错误！'}";
-			
-	}
-	
-	
-	//查询信息
-	public String select(){
-		
-		Query query = new Query(this);
-		return new Gson().toJson(query.query());
-		
-		
-	}
-	
-	
-	
-	//修改信息
-	public String update(){
-		this.name = "魏六";
-		this.id = 1;
-		Update update = new Update(this,"name");
-		update.addCondition("id",this.id);
-		return update.update()>0?"{status:'success',message:'数据修改成功'}":"{status:'failed',reason:'InnerErr',message:'服务器内部错误！'}";
-	}
-
-	
-	
-	 //删除信息
-	public String delete(){
-		
-		Delete delete = new Delete(this);
-		delete.addCondition("id","2");
-		
-		return delete.delete()>0?"{status:'success',message:'数据删除成功'}":"{status:'failed',reason:'InnerErr',message:'服务器内部错误！'}";
-		
-		
-		
-	}
-	
-	public static void main(String[] args) {
-		File file = new File("src/Hibernate.xml");
-		DBFactory.getDBFactory().init(file);
-		text text = new text();
-		System.out.println(text.delete());
-		 
-	}
-
-}
 ```
