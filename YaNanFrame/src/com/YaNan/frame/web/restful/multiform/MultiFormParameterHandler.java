@@ -27,7 +27,7 @@ import com.YaNan.frame.servlets.ParameterHandlerCache;
 import com.YaNan.frame.servlets.ServletBean;
 import com.YaNan.frame.servlets.parameter.ParameterHandler;
 
-@Register(attribute={"java.io.File","org.apache.commons.fileupload.FileItem"})
+@Register(attribute={"java.io.File","org.apache.commons.fileupload.FileItem"},signlTon = false)
 public class MultiFormParameterHandler  implements ParameterHandler{
 	private HttpServletRequest servletRequest;
 	private HttpServletResponse servletResponse;
