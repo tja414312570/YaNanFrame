@@ -1,13 +1,12 @@
 import com.YaNan.frame.hibernate.database.DBFactory;
-import com.YaNan.frame.plugin.PlugsFactory;
-import com.YaNan.frame.plugin.autowired.exception.Error;
-import com.YaNan.frame.reflect.ClassLoader;;
+import com.YaNan.frame.servlets.annotations.GetMapping;;
 public class Main {
 	public static void main(String[] args) throws Exception {
-		Main main = PlugsFactory.getPlugsInstance(Main.class);
-		System.out.println(main.hello(null));
+		DBFactory.getDBFactory().init();
+		
 	}
-	public String hello(String name){
-		return name.toString();
+	@GetMapping("hello")
+	public int hello(String[] name){
+		return name.length;
 	}
 }

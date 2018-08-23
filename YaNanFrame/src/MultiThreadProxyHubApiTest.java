@@ -59,20 +59,18 @@ public class MultiThreadProxyHubApiTest {
                     //URLConnection urlconn = ConnectionManager.openUrlConnection(currentObj.url, currentObj.postData);  
                     HttpURLConnection urlconn = (HttpURLConnection) ConnectionManager.openUrlConnection(currentObj.url, currentObj.postData);  
                     //URLConnection =new URLConnection();
-                    urlconn.setRequestMethod("POST");
+                    urlconn.setRequestMethod("GET");
                     urlconn.setReadTimeout(50000);  
-                        
                     BufferedReader reader = new BufferedReader(new InputStreamReader(urlconn.getInputStream(),"UTF-8"));  
-                          
                         String src = "";  
                         String line = null;   
                         while ((line = reader.readLine()) != null) {  
                             src = src + line;  
                         }  
-                        System.out.println(src);  
+//                        System.out.println(src);  
   
                     } catch (Exception e) {   
-//                        e.printStackTrace();   
+                        e.printStackTrace();   
                     }  
                       
                     records.put(index, new ThreadRecord(st, System.currentTimeMillis()));  
@@ -121,12 +119,12 @@ public class MultiThreadProxyHubApiTest {
     public static void main(String[] args) { 
     	
         //总访问量和并发量两重循环，依次增大访问  
-        for(int j=500; j<800; j+= 100){  
-            for(int i=10; i<150; i+=10){  
+        for(int j=500; j<600; j+= 100){  
+            for(int i=10; i<50; i+=10){  
                 //要测试的URL  
 //                String url= "http://localhost:8080/YaNanFrame/sayHello";   
 //                new MultiThreadProxyHubApiTest(i, j, url, "","YaNan").run();  
-                String url= "http://192.168.176.129/YLROBOT/regist";//http://localhost:8080/SpringMVCH/";//
+                String url= "http://batu.bchltech.cn/app/question?page=1&pageShow=20";//http://localhost:8080/SpringMVCH/";//
                 new MultiThreadProxyHubApiTest(i, j, url,"", "DeskRest").run();  
                 System.out.println("********************************************************************");
             }  

@@ -1,4 +1,4 @@
-package com.YaNan.frame.web.restful.multiform;
+package com.YaNan.frame.servlet.restful.request.multiform;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,7 +11,7 @@ import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
-import com.YaNan.frame.web.restful.RestfulRequestWrapper;
+import com.YaNan.frame.servlet.restful.RestfulRequestWrapper;
 
 
 /**

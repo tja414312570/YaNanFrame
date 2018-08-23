@@ -144,7 +144,9 @@ public class PlugsHandler implements InvocationHandler, PlugsListener, MethodInt
 			}
 		}
 		try {
+			method.setAccessible(true);
 			Object result = method.invoke(this.proxyObject, args);
+			method.setAccessible(false);
 			if (handler != null) {
 				mh.setOriginResult(result);
 				Iterator<InvokeHandlerSet> iterator = handler.iterator();

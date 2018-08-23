@@ -1,4 +1,4 @@
-package com.YaNan.frame.web.restful.multiform;
+package com.YaNan.frame.servlet.restful;
 
 import java.io.IOException;
 
@@ -12,27 +12,16 @@ import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.fileupload.FileUploadException;
-
-import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugin.PlugsFactory;
-
-@WebFilter(filterName = "restful_upload_filter", urlPatterns = "/*")
-public class RestfulMultiFormRequestFilter  extends HttpServlet implements Filter {
-	Log log = PlugsFactory.getPlugsInstanceAllowNull(Log.class, this.getClass());
+@WebFilter(filterName = "restful_request_filter", urlPatterns = "/*")
+public class RestfulRequestFilter  extends HttpServlet implements Filter {
 	/**
 	 */
 	private static final long serialVersionUID = -3877282673186471728L;
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response,
 			FilterChain chain) throws IOException, ServletException {
-		try {
-			chain.doFilter(new RestfulMultiFormRequestWrapper((HttpServletRequest) request),
-					response);
-		} catch (FileUploadException e) {
-			e.printStackTrace();
-			log.error(e);
-		}
+		chain.doFilter(new RestfulRequestWrapper((HttpServletRequest) request),
+				response);
 	}
 	@Override
 	public void init(FilterConfig arg0) throws ServletException {

@@ -1,4 +1,4 @@
-package com.YaNan.frame.web.restful.multiform;
+package com.YaNan.frame.servlet.restful.request.multiform;
 
 import java.io.File;
 import java.io.FileOutputStream;

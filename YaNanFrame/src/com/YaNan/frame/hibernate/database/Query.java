@@ -460,6 +460,22 @@ public class Query extends OperateImplement{
 	public <T> List<T> query() {
 			return this.query(true);
 	}
+//	public Map<String,Object> queryMap() {
+//		Object object = this.queryOne();
+//		if(object==null)
+//			return null;
+//		Map<String,Object> result = new HashMap<String,Object>(this.fieldMap.size());
+//		for(Field field : this.fieldMap.keySet()){
+//			try {
+//				field.setAccessible(true);
+//				result.put(field.getName(),field.get(object));
+//				field.setAccessible(false);
+//			} catch (IllegalArgumentException | IllegalAccessException e) {
+//				log.error(e);
+//			}
+//		}
+//		return result;
+//	}
 	public <T> T queryOne() {
 		this.setLimit(1);
 		List<T> resultSet = this.query(true);
@@ -472,10 +488,10 @@ public class Query extends OperateImplement{
 		return resultSet.size()>0?resultSet.get(resultSet.size()-1):null;
 	}
 	public <T> List<T> query(boolean mapping){
-	this.queryTab.setDataBase(this.dataTables.getDataBase());
-	this.queryTab.setName(this.dataTables.getName());
-	return this.queryTab.query(this,mapping);
-}
+		this.queryTab.setDataBase(this.dataTables.getDataBase());
+		this.queryTab.setName(this.dataTables.getName());
+		return this.queryTab.query(this,mapping);
+	}
 	public Map<Field, DBColumn> getFieldMap(){
 		return this.fieldMap;
 	}

@@ -226,7 +226,7 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 	 * @return
 	 * @throws Exception
 	 */
-	protected Object invokeProxyMethhod(HttpServletRequest request, HttpServletResponse response,
+	public Object invokeProxyMethhod(HttpServletRequest request, HttpServletResponse response,
 			ServletBean servletBean, Object proxyObject, List<Object> parameters) throws Exception {
 		Object[] parameter = null;
 		// 判断需要的参数是否与获得的参数匹配
@@ -239,8 +239,7 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 				int i = 0;
 				Iterator<Object> paraEn = parameters.iterator();
 				while (paraEn.hasNext()) {
-					parameter[i] = paraEn.next();
-					i++;
+					parameter[i++] = paraEn.next();
 				}
 			}
 		}
