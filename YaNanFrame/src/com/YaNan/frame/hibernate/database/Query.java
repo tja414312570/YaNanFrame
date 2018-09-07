@@ -381,7 +381,7 @@ public class Query extends OperateImplement{
 	public Query addCondition(String field, Object condition) {
 		if(condition==null)
 			throw new RuntimeException("query condition is null at column "+field);
-		map.put(dataTables.getName()+"."+dataTables.getDBColumn(field).getName(), condition.toString());
+		map.put(field.indexOf(".")>-1?field:dataTables.getName()+"."+dataTables.getDBColumn(field).getName(), condition.toString());
 		return this;
 	}
 	public Query addColumnCondition(String field, Object condition) {
@@ -458,7 +458,7 @@ public class Query extends OperateImplement{
 		return sb.toString();
 	}
 	public <T> List<T> query() {
-			return this.query(true);
+			return this.query(false);
 	}
 //	public Map<String,Object> queryMap() {
 //		Object object = this.queryOne();
@@ -478,13 +478,13 @@ public class Query extends OperateImplement{
 //	}
 	public <T> T queryOne() {
 		this.setLimit(1);
-		List<T> resultSet = this.query(true);
+		List<T> resultSet = this.query(false);
 		return resultSet.size()>0?resultSet.get(0):null;
 	}
 	public <T> T queryLastOne(String... column) {
 		this.setLimit(1);
 		this.addOrderByDesc(column);
-		List<T> resultSet = this.query(true);
+		List<T> resultSet = this.query(false);
 		return resultSet.size()>0?resultSet.get(resultSet.size()-1):null;
 	}
 	public <T> List<T> query(boolean mapping){

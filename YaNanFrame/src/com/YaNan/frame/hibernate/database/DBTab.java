@@ -740,12 +740,18 @@ public class DBTab implements mySqlInterface {
 	public String getName() {
 		return name;
 	}
-
+	public String getSimpleName() {
+		return name==null?null:name.substring(0, name.indexOf("."));
+	}
 	public Field getPrimary_key() {
 		return Primary_key;
 	}
 
 	public String getValue() {
 		return value;
+	}
+
+	public void setLoaderObject(Object object) {
+		this.loader = new ClassLoader(object);
 	}
 }

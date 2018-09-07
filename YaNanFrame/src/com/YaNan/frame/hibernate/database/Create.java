@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.YaNan.frame.hibernate.database.DBInterface.OperateImplement;
 import com.YaNan.frame.logging.Log;
 import com.YaNan.frame.plugin.PlugsFactory;
 
@@ -18,10 +19,9 @@ import com.YaNan.frame.plugin.PlugsFactory;
  * @author Administrator
  *
  */
-public class Create {
+public class Create extends OperateImplement{
 	private String PrimaryKey;
 	private List<String> uniques = new ArrayList<String>();
-	private DBTab tab;
 	private Map<String, String> columns = new LinkedHashMap<String, String>();
 	private Log log = PlugsFactory.getPlugsInstance(Log.class,Create.class);
 	/**
@@ -29,15 +29,24 @@ public class Create {
 	 * @param tab
 	 */
 	public Create(DBTab tab) {
-		this.tab = tab;
+		this.dataTables = tab;
 		init();
 	}
 	
 	private void init() {
-		Iterator<Field> iterator = this.tab.iterator();
+		Iterator<Field> iterator = this.dataTables.iterator();
 		while (iterator.hasNext()) {
 			Field field = iterator.next();
-			DBColumn db = this.tab.getDBColumn(field);
+			DBColumn db = this.dataTables.getDBColumn(field);
+					String columnName=db.getName();
+			if(columnName!=null){
+				int point = columnName.indexOf(".");
+				if(point>-1){
+					columnName = columnName.substring(0, point);
+					if(!columnName.equals(this.dataTables.getSimpleName()))
+						continue;
+				}
+			}
 			this.columns.put(db.getName(), db.Constraints());
 			if (db.isPrimary_Key())
 				this.PrimaryKey= db.getName();
@@ -50,7 +59,7 @@ public class Create {
 	 * @param tab
 	 */
 	public Create(Class<?> cls) {
-		this.tab = new DBTab(cls);
+		this.dataTables = new DBTab(cls);
 		init();
 	}
 	/**
@@ -58,7 +67,7 @@ public class Create {
 	 * @param tab
 	 */
 	public Create(Object object) {
-		this.tab = new DBTab(object);
+		this.dataTables = new DBTab(object);
 		init();
 	}
 	
@@ -78,14 +87,14 @@ public class Create {
 
 	public void addField(Field... strings) {
 		for (Field f : strings) {
-			DBColumn dbc = tab.getDBColumn(f);
+			DBColumn dbc = dataTables.getDBColumn(f);
 			this.columns.put(dbc.getName(), dbc.Constraints());
 		}
 
 	}
 
 	public String create() {
-		String sql = "CREATE TABLE " + this.tab.getName();
+		String sql = "CREATE TABLE " + this.dataTables.getName();
 		Iterator<String> iterator = this.columns.keySet().iterator();
 		if (iterator.hasNext())
 			sql += " (";
@@ -111,12 +120,12 @@ public class Create {
 			}
 		}
 
-		if(this.tab.getCharset()!=null||this.tab.getCollate()!=null)
+		if(this.dataTables.getCharset()!=null||this.dataTables.getCollate()!=null)
 			sql+=" DEFAULT";
-		if(this.tab.getCharset()!=null)
-			sql += " CHARACTER SET " + this.tab.getCharset();
-		if(this.tab.getCollate()!=null)
-			sql += " COLLATE "+ this.tab.getCollate();
+		if(this.dataTables.getCharset()!=null)
+			sql += " CHARACTER SET " + this.dataTables.getCharset();
+		if(this.dataTables.getCollate()!=null)
+			sql += " COLLATE "+ this.dataTables.getCollate();
 		return sql;
 	}
 

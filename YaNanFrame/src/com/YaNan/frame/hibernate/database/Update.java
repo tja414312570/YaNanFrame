@@ -27,8 +27,36 @@ public class Update extends OperateImplement {
 
 	public Update(DBTab dataTables, Object object) {
 		this.setDbTab(dataTables);
+		dataTables.setLoaderObject(object);
+		this.preparedUpdateColumn();
 	}
-
+	/**
+	 * prepared updates columns data
+	 */
+	public void preparedUpdateColumn(){
+		Iterator<Field> fI = this.getDbTab().getFieldMap().keySet().iterator();
+		while (fI.hasNext()) {
+			Field field = fI.next();
+			try {
+				Object value = this.dataTables.getLoader().get(field);
+				if (value != null){
+					String columnName=this.dataTables.getFieldMap().get(field).getName();
+					if(columnName!=null){
+						int point = columnName.indexOf(".");
+						if(point>-1){
+							columnName = columnName.substring(0, point);
+							if(!columnName.equals(this.dataTables.getSimpleName()))
+								continue;
+						}
+						this.updateList.put(columnName, "'"+value+"'");
+					}
+				}
+			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException | SecurityException
+					| NoSuchMethodException e) {
+				log.error(e);
+			}
+		}
+	}
 	/**
 	 * 更新所有域(不包括null字段)
 	 * 
@@ -36,18 +64,7 @@ public class Update extends OperateImplement {
 	 */
 	public Update(Object object) {
 		this.setDbTab(new DBTab(object));
-		Iterator<Field> fI = this.getDbTab().getFieldMap().keySet().iterator();
-		while (fI.hasNext()) {
-			Field field = fI.next();
-			try {
-				Object value = this.dataTables.getLoader().get(field);
-				if (value != null)
-					this.updateList.put(this.getDbTab().getDBColumn(field).getName(), "'"+value+"'");
-			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException | SecurityException
-					| NoSuchMethodException e) {
-				log.error(e);
-			}
-		}
+		this.preparedUpdateColumn();
 	}
 
 	/**
@@ -56,18 +73,7 @@ public class Update extends OperateImplement {
 	 */
 	public Update(Object object, boolean updateNull) {
 		this.setDbTab(new DBTab(object));
-		Iterator<Field> fI = this.getDbTab().getFieldMap().keySet().iterator();
-		while (fI.hasNext()) {
-			Field field = fI.next();
-			try {
-				Object value = this.dataTables.getLoader().get(field);
-				if (value != null || updateNull)
-					this.updateList.put(this.getDbTab().getDBColumn(field).getName(), "'"+value+"'");
-			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException | SecurityException
-					| NoSuchMethodException e) {
-				log.error(e);
-			}
-		}
+		this.preparedUpdateColumn();
 	}
 
 	/**
