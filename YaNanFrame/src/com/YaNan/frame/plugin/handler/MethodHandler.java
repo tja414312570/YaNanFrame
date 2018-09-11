@@ -8,9 +8,18 @@ import com.YaNan.frame.plugin.handler.PlugsHandler.ProxyType;
 
 import net.sf.cglib.proxy.MethodProxy;
 
+/**
+ * 方法处理器
+ * v1.0 支持方法信息的传递
+ * v1.1 20180910 新增每个MethodHandler进入InvokeHandler处理时、
+ * 		对应的InvokeHandler的获取
+ * @author yanan
+ *
+ */
 public class MethodHandler {
 	private PlugsHandler plugsProxy; 
 	private Method method;
+	private InvokeHandlerSet invokeHandlerSet;
 	private MethodProxy methodProxy;
 	private Object[] parameters;
 	private boolean chain=false;
@@ -80,7 +89,7 @@ public class MethodHandler {
 		return headerResult;
 	}
 
-	public void setHeaderResult(Object headerResult) {
+	void setHeaderResult(Object headerResult) {
 		if(this.headerResult==null)
 			this.headerResult = headerResult;
 	}
@@ -110,5 +119,11 @@ public class MethodHandler {
 
 	public void addAttribute(String key,Object value) {
 		this.attribute.put(key, value);
+	}
+	public InvokeHandlerSet getInvokeHandlerSet() {
+		return invokeHandlerSet;
+	}
+	public void setInvokeHandlerSet(InvokeHandlerSet invokeHandlerSet) {
+		this.invokeHandlerSet = invokeHandlerSet;
 	}
 }

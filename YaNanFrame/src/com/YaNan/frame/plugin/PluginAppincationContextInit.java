@@ -27,14 +27,14 @@ public class PluginAppincationContextInit implements ServletContextListener {
 	public void contextInitialized(ServletContextEvent servletContextEvent) {
 		long t = System.currentTimeMillis();
 		log.debug("");
-		log.debug("       PLUGINPLUGIN     PLUG         PLUG       PLUG      PLUGINPLUGIN    PLUGINPLUGIN   PLUG         PLUG");
-		log.debug("      PLUG      PLUG   PLUG         PLUG       PLUG    PLUG                  PLUG       PLUGPLUG     PLUG");
-		log.debug("     PLUG      PLUG   PLUG         PLUG       PLUG   PLUG                   PLUG       PLUG PLUG    PLUG");
-		log.debug("    PLUG      PLUG   PLUG         PLUG       PLUG   PLUG                   PLUG       PLUG  PLUG   PLUG");
+		log.debug("       PLUGINPLUGID     PLUE         PLUA       PLUR      PLUGINPLUGIY    PLUGINPLUGIN   PLUG         PLUG");
+		log.debug("      PLUG      PLUW   PLUA         PLUN       PLUG    PLUG                  PLUG       PLUGPLUG     PLUG");
+		log.debug("     PLUG      PLUH   PLUO         PLUN       PLUG   PLUG                   PLUG       PLUG PLUG    PLUG");
+		log.debug("    PLUG      PLUY   PLUA         PLUN       PLUG   PLUG                   PLUG       PLUG  PLUG   PLUG");
 		log.debug("   PLUGPLUGPLUGI    PLUG         PLUG       PLUG   PLUG      PLUGINP      PLUG       PLUG   PLUG  PLUG");
-		log.debug("  PLUG             PLUG         PLUG       PLUG   PLUG         PLUG      PLUG       PLUG    PLUG PLUG");
-		log.debug(" PLUG             PLUG         PLUG       PLUG     PLUG       PLUG      PLUG       PLUG     PLUGINPL");
-		log.debug("PLUG             PLUGINPLUGI   PLUGINPLUGINP        PLUGINPLUGIN    PLUGINPLUGIN  PLUG         PLUG");
+		log.debug("  PLUN             PLUE         PLUV       PLUE   PLUR         PLUG      PLUG       PLUG    PLUG PLUG");
+		log.debug(" PLUG             PLUI         PLUV       PLUE     PLUU       PLUP      PLUG       PLUG     PLUGINPL");
+		log.debug("PLUY             PLUGINPLUGO   PLUGINPLUGINU        PLUGINPLUGIG    PLUGINPLUGIE  PLUG         PLUG");
 		log.debug("");
 		contextListernerList = PlugsFactory.getPlugsInstanceList(ServletContextListener.class);
 		log.debug("Context Init Plug number:"+contextListernerList.size());

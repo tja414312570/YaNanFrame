@@ -1,12 +1,15 @@
 package com.YaNan.frame.plugin.autowired.exception;
 
+
 import com.YaNan.frame.logging.DefaultLog;
 import com.YaNan.frame.logging.Log;
 import com.YaNan.frame.plugin.annotations.Register;
+import com.YaNan.frame.plugin.annotations.Support;
 import com.YaNan.frame.plugin.handler.InvokeHandler;
 import com.YaNan.frame.plugin.handler.MethodHandler;
 import com.YaNan.frame.reflect.ClassLoader;
 
+@Support(Error.class)
 @Register(attribute="*",priority=Integer.MAX_VALUE)
 public class ErrorPlugsHandler implements InvokeHandler{
 	private static Log log = new DefaultLog(ErrorPlugsHandler.class);
@@ -24,11 +27,7 @@ public class ErrorPlugsHandler implements InvokeHandler{
 
 	@Override
 	public Object error(MethodHandler methodHandler, Exception e) {
-		Error error = methodHandler.getMethod().getAnnotation(Error.class);
-		if(error==null)
-			error = methodHandler.getPlugsProxy().getProxyClass().getAnnotation(Error.class);
-		if(error==null&&methodHandler.getPlugsProxy().getInterfaceClass()!=null)
-			error =  methodHandler.getPlugsProxy().getInterfaceClass().getAnnotation(Error.class);
+		Error error = methodHandler.getInvokeHandlerSet().getAnnotation(Error.class);
 		if(error!=null&&(ClassLoader.implementOf(e.getClass(), error.exception())
 				||ClassLoader.extendsOf(e.getClass(), error.exception()))){
 			if(error.recorder()){

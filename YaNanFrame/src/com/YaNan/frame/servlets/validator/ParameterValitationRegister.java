@@ -73,6 +73,7 @@ public class ParameterValitationRegister implements InvokeHandler{
 
 	@Override
 	public Object error(MethodHandler methodHandler, Exception e) {
+		methodHandler.chain();
 		return null;
 	}
 
