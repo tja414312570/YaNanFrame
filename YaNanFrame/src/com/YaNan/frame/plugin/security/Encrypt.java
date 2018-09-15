@@ -12,7 +12,7 @@ public @interface Encrypt {
 	 * 秘钥服务接口
 	 * @return
 	 */
-	Class<?> interfacer();
+	Class<? extends EncryptService> interfacer();
 	/**
 	 * 参数
 	 * @return
