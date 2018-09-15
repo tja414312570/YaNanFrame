@@ -23,7 +23,7 @@ public class TokenManager{
 	 */
 	public static String TokenMark = "TUID"; 
 	public static String RoleMark = "ROLES";
-	public static int Timeout=3600;
+	public static int Timeout=3000;
 	private final Log log = PlugsFactory.getPlugsInstance(Log.class, TokenManager.class);
 	/**
 	 * token 数据持久层接口
@@ -39,7 +39,7 @@ public class TokenManager{
 	private File file;
 	private TokenManager() {
 		tokenLifeTask = new TokenLifeDeamon();
-		tokenDeamon = new Thread();
+		tokenDeamon = new Thread(tokenLifeTask);
 		tokenDeamon.setPriority(1);
 		tokenDeamon.start();
 	};

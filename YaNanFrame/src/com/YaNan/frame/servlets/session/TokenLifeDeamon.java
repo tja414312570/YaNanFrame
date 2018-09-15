@@ -5,7 +5,7 @@ import java.util.Map.Entry;
 
 class TokenLifeDeamon implements Runnable{
 	private volatile boolean available;
-	private int Intervals = 60000;
+	private int Intervals = 60*1000;
 	public TokenLifeDeamon(){
 		available = true;
 	}
