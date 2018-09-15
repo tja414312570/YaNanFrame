@@ -212,3 +212,58 @@ public class InstrumentTypeControler {
 }
 
 ```
+（三）、方法级别的加密服务
+```java
+package com.BaTu.control.account;
+
+
+import com.YaNan.frame.plugin.PlugsFactory;
+import com.YaNan.frame.plugin.annotations.Register;
+import com.YaNan.frame.plugin.annotations.Service;
+import com.YaNan.frame.plugin.autowired.exception.Error;
+import com.YaNan.frame.plugin.security.Encrypt;
+import com.YaNan.frame.plugin.security.EncryptService;
+import com.YaNan.frame.servlets.session.annotation.Authentication;
+import com.a.encrypt.EncryptUtil;
+@Register
+public class Main implements Say{
+	@Service
+	private Say main;
+	public static void main(String[] args) throws Exception {
+		//测试方法级别加密
+		Say say = PlugsFactory.getPlugsInstance(Say.class);
+		EncryptService service = PlugsFactory.getPlugsInstance(EncryptService.class);
+		String message = "hello java";
+		String cryptmsg = service.encrypt(message).toString();
+		System.out.println(cryptmsg);
+		
+		String result = say.say(cryptmsg);
+		long c = 10000000;
+		long t = System.currentTimeMillis();
+		System.out.println("执行"+c+"次耗时："+(System.currentTimeMillis()-t)/1000+"s"+",平均tps:"+(c/((System.currentTimeMillis()-t)/1000)));
+		System.out.println("原始返回数据："+result);
+		System.out.println(service.descrypt(result));
+			
+	}
+	/**
+	 * 调用某个接口用于加密或解密  实现方法级别数据加密传输
+	 */
+	@Encrypt(interfacer = EncryptUtil.class)
+	public String say(String content){
+		return "获得内容:"+content.toString();
+	}
+}
+
+interface Say{
+	@Error("出现错误")
+	String say(String content);
+}
+
+```
+```java
+aGVsbG8gamF2YQ==
+执行10000000次耗时：15s,平均tps:666666
+原始返回数据：6I635b6X5YaF5a65OmhlbGxvIGphdmE=
+获得内容:hello java
+
+```
