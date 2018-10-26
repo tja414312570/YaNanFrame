@@ -25,4 +25,10 @@ public @interface Property {
 	 * @return
 	 */
 	String defaultValue() default "";
+	/**
+	 * 非空，默认false
+	 * @return
+	 */
+	boolean notNull() default false;
+	
 }

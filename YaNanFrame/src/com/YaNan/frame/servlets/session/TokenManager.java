@@ -7,15 +7,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-
-import com.YaNan.frame.hibernate.beanSupport.BeanFactory;
-import com.YaNan.frame.hibernate.beanSupport.XMLBean;
 import com.YaNan.frame.logging.Log;
 import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.servlets.session.entity.Result;
 import com.YaNan.frame.servlets.session.entity.TokenEntity;
 import com.YaNan.frame.servlets.session.interfaceSupport.TokenHibernateInterface;
 import com.YaNan.frame.util.StringUtil;
+import com.YaNan.frame.util.beans.BeanFactory;
+import com.YaNan.frame.util.beans.XMLBean;
 
 public class TokenManager{
 	/**
@@ -43,6 +42,9 @@ public class TokenManager{
 		tokenDeamon.setPriority(1);
 		tokenDeamon.start();
 	};
+	/**
+	 * shutdown the token life cycle manager thread
+	 */
 	public void destory(){
 		tokenLifeTask.shutdown();
 		tokenDeamon.interrupt();
@@ -86,7 +88,6 @@ public class TokenManager{
 				,"Token.xml");
 		manager.index();
 	}
-
 	public static void init(TokenManager tokenManager) {
 		manager = tokenManager;
 		manager.file = new File(TokenManager.class.getClassLoader().getResource("").getPath().replace("%20"," ")

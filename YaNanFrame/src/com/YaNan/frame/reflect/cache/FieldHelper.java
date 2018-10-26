@@ -4,7 +4,11 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
-
+/**
+ * Field的缓存，提供Field的注解等获取
+ * @author yanan
+ *
+ */
 public class FieldHelper {
 	private Field field;
 	private int modifiers;

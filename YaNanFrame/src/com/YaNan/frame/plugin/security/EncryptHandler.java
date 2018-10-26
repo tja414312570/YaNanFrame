@@ -17,33 +17,28 @@ public class EncryptHandler implements InvokeHandler {
 	private EncryptService encryptService = PlugsFactory.getPlugsInstance(EncryptService.class);
 
 	@Override
-	public Object before(MethodHandler methodHandler) {
+	public void before(MethodHandler methodHandler) {
 		Object[] parameters = methodHandler.getParameters();
 		try {
 			for (int i = 0; i < parameters.length; i++)
 				parameters[i] = encryptService.descrypt(parameters[i]);
-			methodHandler.chain();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return null;
 	}
 
 	@Override
-	public Object after(MethodHandler methodHandler) {
+	public void after(MethodHandler methodHandler) {
 		Object result = methodHandler.getOriginResult();
 		try {
-			return encryptService.encrypt(result);
+			methodHandler.interrupt(encryptService.encrypt(result));
 		} catch (Exception e) {
 			e.printStackTrace();
-			return null;
 		}
 	}
 
 	@Override
-	public Object error(MethodHandler methodHandler, Exception e) {
-		methodHandler.chain();
-		return null;
+	public void error(MethodHandler methodHandler, Throwable e) {
 	}
 
 }

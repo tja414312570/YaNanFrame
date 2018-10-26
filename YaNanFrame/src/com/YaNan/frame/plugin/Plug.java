@@ -12,10 +12,15 @@ import com.YaNan.frame.util.StringUtil;
  *
  */
 public class Plug {
-	//组件的描述类型 0==>注解   1==>配置
+	/**
+	 * 组件的描述类型 0==>注解   1==>配置
+	 */
 	private PlugsDescription description;
-	//默认的实现类，用于提高默认获取组件的效率
+	/**
+	 * 默认的实现类，用于提高默认获取组件的效率
+	 */
 	private RegisterDescription defaultRegisterDescription;
+	
 	private List<RegisterDescription> registerList = new ArrayList<RegisterDescription>();
 	public Plug(PlugsDescription descrption){
 		this.description = descrption;

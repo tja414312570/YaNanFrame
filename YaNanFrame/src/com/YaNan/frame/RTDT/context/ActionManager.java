@@ -14,11 +14,11 @@ import com.YaNan.frame.RTDT.entity.NotifyEntity;
 import com.YaNan.frame.RTDT.entity.RTDTAction;
 import com.YaNan.frame.RTDT.entity.annotations.RAction;
 import com.YaNan.frame.RTDT.entity.annotations.RNotify;
-import com.YaNan.frame.hibernate.beanSupport.BeanFactory;
-import com.YaNan.frame.hibernate.beanSupport.XMLBean;
 import com.YaNan.frame.path.PackageScanner;
 import com.YaNan.frame.path.PackageScanner.ClassInter;
 import com.YaNan.frame.reflect.ClassLoader;
+import com.YaNan.frame.util.beans.BeanFactory;
+import com.YaNan.frame.util.beans.XMLBean;
 
 /**
  * RTDT框架 通过websocket进行服务器与客户端数据交互

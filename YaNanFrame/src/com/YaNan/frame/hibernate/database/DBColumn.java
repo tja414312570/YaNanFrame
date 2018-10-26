@@ -10,6 +10,7 @@ import com.YaNan.frame.logging.Log;
 import com.YaNan.frame.plugin.PlugsFactory;
 
 public class DBColumn implements mySqlInterface {
+	private Field field;
 	private String name;
 	private Object value;
 	private String type;
@@ -29,6 +30,7 @@ public class DBColumn implements mySqlInterface {
 	private final transient Log log = PlugsFactory.getPlugsInstance(Log.class,DBColumn.class);
 
 	public DBColumn(Field field, Column column) {
+		setField(field);
 		setAuto_Fill(column.Auto_Fill());
 		setAuto_Increment(column.Auto_Increment());
 		setLength(column.length() > 0 ? column.length() : 255);
@@ -49,6 +51,7 @@ public class DBColumn implements mySqlInterface {
 	}
 
 	public DBColumn(Field field) {
+		setField(field);
 		log.debug("this Field [" + field.getName() + "] is not annotion,all attribute set default");
 		setAuto_Fill(false);
 		setAuto_Increment(false);
@@ -271,5 +274,13 @@ public class DBColumn implements mySqlInterface {
 
 	public void setCollate(String collate) {
 		this.collate = collate;
+	}
+
+	public Field getField() {
+		return field;
+	}
+
+	public void setField(Field field) {
+		this.field = field;
 	}
 }

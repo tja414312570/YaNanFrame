@@ -1,6 +1,7 @@
 package com.YaNan.frame.plugin;
 
 import java.text.SimpleDateFormat;
+
 import java.util.Date;
 import java.util.List;
 
@@ -9,6 +10,12 @@ import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
 
 import com.YaNan.frame.logging.Log;
+
+/**
+ * Web容器的Plug组件的初始化
+ * @author yanan
+ *
+ */
 @WebListener
 public class PluginAppincationContextInit implements ServletContextListener {
 	private final Log log = PlugsFactory.getPlugsInstance(Log.class,PluginAppincationContextInit.class);
@@ -36,14 +43,20 @@ public class PluginAppincationContextInit implements ServletContextListener {
 		log.debug(" PLUG             PLUI         PLUV       PLUE     PLUU       PLUP      PLUG       PLUG     PLUGINPL");
 		log.debug("PLUY             PLUGINPLUGO   PLUGINPLUGINU        PLUGINPLUGIG    PLUGINPLUGIE  PLUG         PLUG");
 		log.debug("");
-		contextListernerList = PlugsFactory.getPlugsInstanceList(ServletContextListener.class);
-		log.debug("Context Init Plug number:"+contextListernerList.size());
-		for(ServletContextListener contenxtInitListener :contextListernerList){
-			log.debug("Plug Instance:"+contenxtInitListener);
-			contenxtInitListener.contextInitialized(servletContextEvent);
+		try{
+			contextListernerList = PlugsFactory.getPlugsInstanceList(ServletContextListener.class);
+			log.debug("Context Init Plug number:"+contextListernerList.size());
+			for(ServletContextListener contenxtInitListener :contextListernerList){
+				log.debug("Plug Instance:"+contenxtInitListener);
+				contenxtInitListener.contextInitialized(servletContextEvent);
+			}
+			log.debug("Plugin conetxt init has completed in "+(System.currentTimeMillis()-t)+"ms");
+			System.gc();//通过gc清除启动时创建的对象
+		}catch (Throwable e){
+			log.error(e);
+			System.exit(1);
 		}
-		log.debug("Plugin conetxt init has completed in "+(System.currentTimeMillis()-t)+"ms");
-		System.gc();//通过gc清除启动时创建的对象
+		
 	}
 
 }

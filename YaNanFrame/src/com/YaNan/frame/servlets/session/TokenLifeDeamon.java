@@ -16,8 +16,10 @@ class TokenLifeDeamon implements Runnable{
 			Token token = null;
 			while(tokenEntryIterator.hasNext()){
 				token = tokenEntryIterator.next().getValue();
-				if((int) (System.currentTimeMillis()/1000-token.getLastuse()/1000)>token.getTimeOut())
+				if((int) (System.currentTimeMillis()/1000-token.getLastuse()/1000)>token.getTimeOut()){
+					tokenEntryIterator.remove();
 					token.destory();
+				}
 			}
 			try {
 				Thread.sleep(Intervals);

@@ -9,6 +9,8 @@ import java.lang.annotation.Target;
  * @author yanan
  *
  */
+
+import com.YaNan.frame.plugin.ProxyModel;
 @Target({ElementType.TYPE} )
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Register {
@@ -42,5 +44,10 @@ public @interface Register {
 	 * @return
 	 */
 	Class<?> declare() default Object.class;
+	/**
+	 * 代理模式
+	 * @return
+	 */
+	ProxyModel model() default ProxyModel.DEFAULT;
 	
 }

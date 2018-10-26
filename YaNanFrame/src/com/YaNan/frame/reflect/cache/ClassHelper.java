@@ -5,9 +5,19 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+/**
+ * 为程序在框架中方便高效调用反射提供缓存支持</br>
+ * 作为{@link com.YaNan.frame.reflect.ClassLoader}的底层,为其提供访问Class文件缓存</br>
+ * 支持获取Field,Method,Annotation等常用方法，和系统反射方法名相同</br>
+ * 我们建议使用helper来获取Class文件的Field、Method等等信息。</br>
+ * @author yanan
+ * 20181011 提供获取类及其父类中所有的Field，方法getAllFields();
+ */
 public class ClassHelper {
 	private Class<?> cacheClass;
 	private Map<Integer,Method> methodMap=new HashMap<Integer,Method>();//方法缓存
@@ -15,6 +25,7 @@ public class ClassHelper {
 	private Map<Method,MethodHelper> methodHelpers = new HashMap<Method,MethodHelper>();
 	private Map<String,Field> fieldMap=new HashMap<String,Field>();//域缓存
 	private Map<String,Field> declaredFieldMap=new HashMap<String,Field>();//域缓存
+	private Map<String,Field> allFieldMap;//所有的域缓存
 	private Map<Field,FieldHelper> fieldHelpers = new HashMap<Field,FieldHelper>();
 	private Map<Integer,Constructor<?>> declaredConstructorMap = new HashMap<Integer,Constructor<?>>();
 	private Map<Integer,Constructor<?>> constructorMap = new HashMap<Integer,Constructor<?>>();
@@ -27,6 +38,7 @@ public class ClassHelper {
 	private Method[] declaredMethods;
 	private Field[] fields;//域缓存
 	private Field[] declaredFields;//域缓存
+	private Field[] allFields;//所有Field缓存
 	private Constructor<?>[] declaredConstructors;
 	private Constructor<?>[] constructors ;
 	private Annotation[] declaredAnnotations;
@@ -71,11 +83,67 @@ public class ClassHelper {
 		//declaredAnnotationMap
 		declaredAnnotations= cls.getDeclaredAnnotations();
 		for(Annotation annotation : declaredAnnotations)
-			this.declaredAnnotationMap.put(annotation.getClass(), annotation);
+			this.declaredAnnotationMap.put(annotation.annotationType(), annotation);
 		//annotationMap
 		annotations=cls.getAnnotations();
 		for(Annotation annotation : annotations)
-			this.annotationMap.put(annotation.getClass(), annotation);
+			this.annotationMap.put(annotation.annotationType(), annotation);
+	}
+	/**
+	 * 获取所有的Field，包括该类所有Field及其父类所有的Field
+	 * 包括protected，private，public，default修饰的Field
+	 * @param endClass
+	 * @return
+	 */
+	public Field[] getAllFields(Class<?> endClass){
+		if(endClass==null)
+			endClass = Object.class;
+		Class<?> tempClass = this.cacheClass;
+		List<Field> fieldList = new ArrayList<Field>();
+		boolean find=tempClass.equals(endClass)?true:false;
+		while(!find){
+			Field[] fields = ClassInfoCache.getClassHelper(tempClass).getDeclaredFields();
+			for(Field field : fields)
+				fieldList.add(field);
+			if((tempClass = tempClass.getSuperclass()).equals(endClass))
+					find = true;
+		}
+		return fieldList.toArray(new Field[]{});
+	}
+	/**
+	 * 获取所有的Field，包括该类所有Field及其父类所有的Field
+	 * 包括protected，private，public，default修饰的Field
+	 * @return
+	 */
+	public Field[] getAllFields(){
+		if(this.allFields==null)
+			allFields = this.buildAllFields();
+		return this.allFields;
+	}
+	/**
+	 * 获取所有的Field，包括该类所有Field及其父类所有的Field
+	 * 包括protected，private，public，default修饰的Field
+	 * @param target
+	 * @param endClass
+	 * @return
+	 */
+	private Field[] buildAllFields(){
+		this.allFieldMap = new HashMap<String,Field>();
+		Class<?> endClass = Object.class;
+		Class<?> tempClass = this.cacheClass;
+		List<Field> fieldList = new ArrayList<Field>();
+		boolean find=tempClass.equals(endClass)?true:false;
+		while(!find){
+			Field[] fields = ClassInfoCache.getClassHelper(tempClass).getDeclaredFields();
+			for(Field field : fields){
+				fieldList.add(field);
+				fieldHelpers.put(field,new FieldHelper(field));
+				allFieldMap.put(field.getName(), field);
+			}
+			if((tempClass = tempClass.getSuperclass()).equals(endClass))
+					find = true;
+		}
+		return fieldList.toArray(new Field[]{});
 	}
 	@SuppressWarnings("unchecked")
 	public <T extends Annotation> T getAnnotation(Class<T> cls){
@@ -93,6 +161,16 @@ public class ClassHelper {
 	}
 	public Field getField(String fieldName){
 		return this.fieldMap.get(fieldName);
+	}
+	/**
+	 * 获取一个Field，包括其父类包含的所有的Field
+	 * @param fieldName
+	 * @return
+	 */
+	public Field getAnyField(String fieldName){
+		if(this.allFieldMap==null)
+			this.buildAllFields();
+		return this.allFieldMap.get(fieldName);
 	}
 	public Field getDeclaredField(String fieldName){
 		return this.declaredFieldMap.get(fieldName);

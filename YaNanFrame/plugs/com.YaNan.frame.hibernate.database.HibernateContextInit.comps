@@ -1,0 +1,6 @@
+comps.class=com.a.encrypt.HibernateContextInit
+comps.priority=0
+comps.signlton=true
+comps.attribute=RESTFUL_STYLE
+comps.register=javax.servlet.Servlet,*
+comps.field.location@Resource=classpath:hibernate.xml

@@ -24,13 +24,11 @@ import com.YaNan.frame.servlets.parameter.ParameterHandler;
 @Register(attribute="com.YaNan.frame.servlets.parameter.ParameterHandler.getParameter")
 public class ParameterValitationRegister implements InvokeHandler{
 	@Override
-	public Object before(MethodHandler methodHandler) {
-		methodHandler.chain();
-		return null;
+	public void before(MethodHandler methodHandler) {
 	}
 
 	@Override
-	public Object after(MethodHandler methodHandler) {
+	public void after(MethodHandler methodHandler) {
 		//获取ParamterHandler对象
 		ParameterHandler parameterHandler= methodHandler.getPlugsProxy().getProxyObject();
 		//获得ServletBean
@@ -64,17 +62,13 @@ public class ParameterValitationRegister implements InvokeHandler{
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-				return methodHandler.getOriginResult();
+				methodHandler.interrupt(methodHandler.getOriginResult());
 			}
 		}
-		methodHandler.chain();
-		return null;
 	}
 
 	@Override
-	public Object error(MethodHandler methodHandler, Exception e) {
-		methodHandler.chain();
-		return null;
+	public void error(MethodHandler methodHandler, Throwable e) {
 	}
 
 }

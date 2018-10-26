@@ -33,7 +33,7 @@ public class PropertyManager {
 	public void scanAllProperty(){
 		File dir = new File(this.getClass().getClassLoader().getResource("").getPath().replace("%20"," "));
 		Path path = new Path(dir);
-		path.filter(".properties");
+		path.filter("**.properties");
 		path.scanner(new PathInter() {
 			@Override
 			public void find(File file) {

@@ -506,8 +506,15 @@ public class Query extends OperateImplement{
 		}
 		return this;
 	}
-	public Query setGroup(String group) {
-		this.group = group;
+	public Query setGroup(String... groups) {
+		for(int i =0;i<groups.length;i++){
+			if(this.group==null)
+				this.group= groups[i];
+			else
+				this.group += groups[i];
+			if(i<groups.length-1)
+				this.group+=",";
+		}
 		return this;
 	}
 	public Query setSubQuery(Query subQuery){

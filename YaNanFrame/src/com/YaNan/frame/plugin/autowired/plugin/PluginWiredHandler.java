@@ -14,10 +14,10 @@ import com.YaNan.frame.plugin.handler.MethodHandler;
 
 @Register(attribute="*",description="Property文件的属性的注入")
 public class PluginWiredHandler implements InvokeHandler{
-	private static Log log = PlugsFactory.getPlugsInstanceWithDefault(Log.class, DefaultLog.class);
+	private static Log log = PlugsFactory.getPlugsInstanceWithDefault(Log.class, DefaultLog.class,PluginWiredHandler.class);
 
 	@Override
-	public Object before(MethodHandler methodHandler) {
+	public void before(MethodHandler methodHandler) {
 		//遍历所有Field
 		Field[] fields = methodHandler.getPlugsProxy().getProxyClass().getDeclaredFields();
 		Object instance = methodHandler.getPlugsProxy().getProxyObject();
@@ -68,20 +68,14 @@ public class PluginWiredHandler implements InvokeHandler{
 				}
 			}
 		}
-		methodHandler.chain();
-		return null;
 	}
 
 	@Override
-	public Object after(MethodHandler methodHandler) {
-		methodHandler.chain();
-		return null;
+	public void after(MethodHandler methodHandler) {
 	}
 
 	@Override
-	public Object error(MethodHandler methodHandler, Exception e) {
-		methodHandler.chain();
-		return null;
+	public void error(MethodHandler methodHandler, Throwable e) {
 	}
 
 }

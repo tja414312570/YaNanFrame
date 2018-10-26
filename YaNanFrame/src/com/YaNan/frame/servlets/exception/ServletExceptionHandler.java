@@ -5,6 +5,6 @@ import javax.servlet.http.HttpServletResponse;
 
 public interface ServletExceptionHandler {
 
-	void exception(Exception e, HttpServletRequest request, HttpServletResponse response);
+	void exception(Throwable e, HttpServletRequest request, HttpServletResponse response);
 	
 }

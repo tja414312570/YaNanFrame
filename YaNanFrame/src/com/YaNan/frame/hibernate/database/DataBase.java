@@ -8,9 +8,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.YaNan.frame.hibernate.beanSupport.DecodeBean;
 import com.YaNan.frame.logging.Log;
 import com.YaNan.frame.plugin.PlugsFactory;
+import com.YaNan.frame.util.beans.DecodeBean;
 import com.mysql.jdbc.Connection;
 import com.mysql.jdbc.PreparedStatement;
 
@@ -102,8 +102,7 @@ public class DataBase {
 			 ps.execute();
 			 this.available =true;
 		} catch (SQLException | ClassNotFoundException e) {
-			e.printStackTrace();
-			log.error(e);
+			throw new RuntimeException(e);
 		}finally{
 			if(connect!=null){
 				try {
@@ -213,10 +212,8 @@ public class DataBase {
 			this.releaseConnection(connection);
 			return ps.executeUpdate();
 		} catch (SQLException e) {
-			log.error("error sql:"+sql);
-			log.error(e);
+			throw new RuntimeException("error sql:"+sql,e);
 		}
-		return 0;
 	}
 	public PreparedStatement execute(String sql,int... statement){
 		try{

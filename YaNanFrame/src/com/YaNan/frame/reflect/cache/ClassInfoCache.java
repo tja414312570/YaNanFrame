@@ -3,7 +3,12 @@ package com.YaNan.frame.reflect.cache;
 import java.lang.reflect.Method;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
+/**
+ * 类信息缓存类，提供ClassHelper的缓存。
+ * 支持ClassLoader的部分方法缓存
+ * @author yanan
+ *
+ */
 public class ClassInfoCache {
 	private static Map<Class<?>,ClassHelper> classCache = new LinkedHashMap<Class<?>,ClassHelper>();
 	private static Map<String,String> fieldAddMethodCache = new LinkedHashMap<String,String>();
@@ -13,6 +18,11 @@ public class ClassInfoCache {
 //	public static ClassHelpers getClassHelpers(Class<?> clzz){
 //		return classCache.get(clzz);
 //	}
+	/**
+	 * 获取一个类的ClassHelper
+	 * @param clzz
+	 * @return
+	 */
 	public static ClassHelper getClassHelper(Class<?> clzz){
 		if(classCache.get(clzz)!=null)
 			return classCache.get(clzz);

@@ -17,6 +17,7 @@ import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 
+
 /**
  * 组件实例处理器，用于对代理对象的处理，采用jdk方式
  * v1.1 支持cglib代理方式
@@ -126,14 +127,6 @@ public class PlugsHandler implements InvocationHandler, PlugsListener, MethodInt
 	@Override
 	public Object invoke(Object proxy, Method method, Object[] args) {
 		// if the interface class is InvokeHandler class ,jump the method filter
-		if (this.interfaceClass.equals(InvokeHandler.class))
-			try {
-				return method.invoke(this.proxyObject, args);
-			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-				e.printStackTrace();
-				return null;
-			}
-		Object handlerResult;
 		InvokeHandlerSet handler = null;
 		if (registerDescription != null && registerDescription.getHandlerMapping() != null) {
 			handler = registerDescription.getHandlerMapping().get(method);
@@ -146,10 +139,9 @@ public class PlugsHandler implements InvocationHandler, PlugsListener, MethodInt
 			while (iterator.hasNext()) {
 				hs = iterator.next();
 				mh.setInvokeHandlerSet(hs);
-				handlerResult = hs.getInvokeHandler().before(mh);
+				((InvokeHandler)hs.getInvokeHandler()).before(mh);
 				if (!mh.isChain())
-					return handlerResult;
-				mh.setChain(false);
+					return mh.getInterruptResult();
 			}
 		}
 		try {
@@ -163,30 +155,34 @@ public class PlugsHandler implements InvocationHandler, PlugsListener, MethodInt
 				while (iterator.hasNext()) {
 					hs = iterator.next();
 					mh.setInvokeHandlerSet(hs);
-					handlerResult = hs.getInvokeHandler().after(mh);
+					((InvokeHandler)hs.getInvokeHandler()).after(mh);
 					if (!mh.isChain())
-						return handlerResult;
-					mh.setChain(false);
+						return mh.getInterruptResult();
 				}
 			}
 			return result;
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			if (handler != null) {
 				Iterator<InvokeHandlerSet> iterator = handler.iterator();
 				InvokeHandlerSet hs;
 				while (iterator.hasNext()) {
 					hs = iterator.next();
 					mh.setInvokeHandlerSet(hs);
-					handlerResult = hs.getInvokeHandler().error(mh, e);
+					((InvokeHandler)hs.getInvokeHandler()).error(mh, e);
 					if (!mh.isChain())
-						return handlerResult;
-					mh.setChain(false);
+						return mh.getInterruptResult();
 				}
-				e.printStackTrace();
-			} else {
-				log.error(e);
 			}
-			return null;
+			log.error(e);
+			if(com.YaNan.frame.reflect.ClassLoader.extendsOf(e.getClass(), InvocationTargetException.class)){
+				InvocationTargetException exc = (InvocationTargetException) e;
+				if(exc.getTargetException()!=null)
+					e = exc.getTargetException();
+			}
+			if(com.YaNan.frame.reflect.ClassLoader.extendsOf(e.getClass(), RuntimeException.class))
+				throw (RuntimeException)e;
+			else
+				throw new RuntimeException(e);
 		}
 	}
 
@@ -200,7 +196,7 @@ public class PlugsHandler implements InvocationHandler, PlugsListener, MethodInt
 		return (T) Proxy.newProxyInstance(classLoader, interfaces, plugsHandler);
 	}
 
-	public static Object newCglibProxy(Class<?> proxyClass, RegisterDescription registerDescription,
+	public static <T> T newCglibProxy(Class<?> proxyClass, RegisterDescription registerDescription,
 			Object... parameters) {
 		return new PlugsHandler(proxyClass, parameters, registerDescription).getProxyObject();
 	}
@@ -213,7 +209,6 @@ public class PlugsHandler implements InvocationHandler, PlugsListener, MethodInt
 	@Override
 	public Object intercept(Object object, Method method, Object[] parameters, MethodProxy methodProxy)
 			throws Throwable {
-		Object handlerResult;
 		InvokeHandlerSet handler = null;
 		if (registerDescription != null && registerDescription.getHandlerMapping() != null) {
 			handler = registerDescription.getHandlerMapping().get(method);
@@ -226,10 +221,9 @@ public class PlugsHandler implements InvocationHandler, PlugsListener, MethodInt
 			while (iterator.hasNext()) {
 				hs = iterator.next();
 				mh.setInvokeHandlerSet(hs);
-				handlerResult = hs.getInvokeHandler().before(mh);
+				((InvokeHandler)hs.getInvokeHandler()).before(mh);
 				if (!mh.isChain())
-					return handlerResult;
-				mh.setChain(false);
+					return mh.getInterruptResult();
 			}
 		}
 		try {
@@ -241,30 +235,27 @@ public class PlugsHandler implements InvocationHandler, PlugsListener, MethodInt
 				while (iterator.hasNext()) {
 					hs = iterator.next();
 					mh.setInvokeHandlerSet(hs);
-					handlerResult = hs.getInvokeHandler().after(mh);
+					((InvokeHandler)hs.getInvokeHandler()).after(mh);
 					if (!mh.isChain())
-						return handlerResult;
-					mh.setChain(false);
+						return mh.getInterruptResult();
 				}
 
 			}
 			return result;
-		} catch (Exception e) {
+		}catch (Exception e) {
 			if (handler != null) {
 				Iterator<InvokeHandlerSet> iterator = handler.iterator();
 				InvokeHandlerSet hs;
 				while (iterator.hasNext()) {
 					hs = iterator.next();
 					mh.setInvokeHandlerSet(hs);
-					handlerResult = hs.getInvokeHandler().error(mh, e);
+					((InvokeHandler)hs.getInvokeHandler()).error(mh, e);
 					if (!mh.isChain())
-						return handlerResult;
-					mh.setChain(false);
+						return mh.getInterruptResult();
 				}
-			} else {
-				log.error(e);
 			}
-			return null;
+			log.error(e);
+			throw e;
 		}
 	}
 

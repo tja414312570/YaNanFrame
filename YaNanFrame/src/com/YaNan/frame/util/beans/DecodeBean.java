@@ -1,4 +1,4 @@
-package com.YaNan.frame.hibernate.beanSupport;
+package com.YaNan.frame.util.beans;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

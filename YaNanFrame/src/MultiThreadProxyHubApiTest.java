@@ -124,7 +124,7 @@ public class MultiThreadProxyHubApiTest {
                 //要测试的URL  
 //                String url= "http://localhost:8080/YaNanFrame/sayHello";   
 //                new MultiThreadProxyHubApiTest(i, j, url, "","YaNan").run();  
-                String url= "http://batu.bchltech.cn/app/question?page=1&pageShow=20";//http://localhost:8080/SpringMVCH/";//
+                String url= "http://localhost:8080/WX/app/apps?lat=106.690409&lon=26.57093";//http://localhost:8080/SpringMVCH/";//
                 new MultiThreadProxyHubApiTest(i, j, url,"", "DeskRest").run();  
                 System.out.println("********************************************************************");
             }  

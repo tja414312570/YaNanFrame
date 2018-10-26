@@ -22,13 +22,13 @@ public class MethodHandler {
 	private InvokeHandlerSet invokeHandlerSet;
 	private MethodProxy methodProxy;
 	private Object[] parameters;
-	private boolean chain=false;
+	private boolean chain=true;
 	private Object originResult;
 	private Object headerResult;
 	private Object footResult;
 	private Map<String,Object> attribute = new HashMap<String,Object>();
+	private Object interruptResult;
 
-	
 	public boolean isChain() {
 		return chain;
 	}
@@ -73,10 +73,10 @@ public class MethodHandler {
 		return null;
 	}
 
-	public void chain() {
-		this.chain = true;
+	public void interrupt(Object result){
+		this.chain = false;
+		this.setInterruptResult(result) ;
 	}
-
 	public void setOriginResult(Object result) {
 		this.originResult = result;
 		
@@ -125,5 +125,11 @@ public class MethodHandler {
 	}
 	public void setInvokeHandlerSet(InvokeHandlerSet invokeHandlerSet) {
 		this.invokeHandlerSet = invokeHandlerSet;
+	}
+	public Object getInterruptResult() {
+		return interruptResult;
+	}
+	public void setInterruptResult(Object interruptResult) {
+		this.interruptResult = interruptResult;
 	}
 }

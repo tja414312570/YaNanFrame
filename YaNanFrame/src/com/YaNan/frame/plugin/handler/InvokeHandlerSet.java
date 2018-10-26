@@ -15,7 +15,7 @@ import java.util.Map;
  * @date 2018-07-12
  */
 public class InvokeHandlerSet {
-	private InvokeHandler invokeHandler;
+	private Object invokeHandler;
 	private Map<Class<?>,Object> annotations;
 	private InvokeHandlerSet first;
 	private InvokeHandlerSet before;
@@ -41,7 +41,7 @@ public class InvokeHandlerSet {
 		return this.annotations==null?null:
 			(Collection<T>)this.annotations.values();
 	}
-	public InvokeHandlerSet(InvokeHandler handler){
+	public InvokeHandlerSet(Object handler){
 		this.invokeHandler=handler;
 		this.first = this;
 		this.last = this;    
@@ -63,8 +63,9 @@ public class InvokeHandlerSet {
 	void setBefore(InvokeHandlerSet before) {
 		this.before = before;
 	}
-	public InvokeHandler getInvokeHandler() {
-		return invokeHandler;
+	@SuppressWarnings("unchecked")
+	public <T> T getInvokeHandler() {
+		return (T) invokeHandler;
 	}
 	public void setInvokeHandler(InvokeHandler invokeHandler) {
 		this.invokeHandler = invokeHandler;

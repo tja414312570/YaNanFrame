@@ -9,18 +9,31 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.YaNan.frame.hibernate.beanSupport.BeanFactory;
-import com.YaNan.frame.hibernate.beanSupport.XMLBean;
+import com.YaNan.frame.hibernate.database.Create;
+import com.YaNan.frame.hibernate.database.DBTab;
+import com.YaNan.frame.hibernate.database.DataBase;
+import com.YaNan.frame.hibernate.database.DataBaseConfigure;
 import com.YaNan.frame.hibernate.database.cache.Class2TabMappingCache;
+import com.YaNan.frame.hibernate.database.entity.BaseMapping;
 import com.YaNan.frame.hibernate.database.entity.Package;
+import com.YaNan.frame.hibernate.database.entity.SqlFragmentManger;
 import com.YaNan.frame.hibernate.database.entity.Tab;
 import com.YaNan.frame.hibernate.database.entity.Tabs;
+import com.YaNan.frame.hibernate.database.entity.WrapperConfgureMapping;
+import com.YaNan.frame.hibernate.database.entity.WrapperMapping;
 import com.YaNan.frame.hibernate.database.exception.DATABASES_EXCEPTION;
 import com.YaNan.frame.hibernate.database.exception.DataBaseException;
+import com.YaNan.frame.hibernate.database.fragment.FragmentBuilder;
+import com.YaNan.frame.hibernate.database.fragment.SqlFragment;
 import com.YaNan.frame.logging.Log;
 import com.YaNan.frame.path.PackageScanner;
+import com.YaNan.frame.path.ResourceManager;
 import com.YaNan.frame.path.PackageScanner.ClassInter;
 import com.YaNan.frame.plugin.PlugsFactory;
+import com.YaNan.frame.plugin.handler.PlugsHandler;
+import com.YaNan.frame.util.beans.BeanFactory;
+import com.YaNan.frame.util.beans.XMLBean;
+import com.YaNan.frame.util.beans.xml.XMLHelper;
 import com.mysql.jdbc.Driver;
 /**
  * v2.0 增加连接池对连接进行管理，重构DBTab和DataBase功能
@@ -30,14 +43,20 @@ import com.mysql.jdbc.Driver;
  */
 public class DBFactory {
 	private static DBFactory dbFactory;
+	//数据库存储对象   数据库名 ==》  数据库
 	private Map<String,DataBase> dbMap = new HashMap<String,DataBase>();
 	private DataBase defaultDB = null;
 	private File xmlFile;//new File("src/hibernate.xml");//
 	private String classPath;
 	private final Log log = PlugsFactory.getPlugsInstance(Log.class,DBFactory.class);
 	public static DBFactory getDBFactory(){
-		if (dbFactory ==null)
-				dbFactory=new DBFactory();
+		if (dbFactory ==null){
+			synchronized (DBFactory.class) {
+				if (dbFactory ==null){
+					dbFactory=new DBFactory();
+				}
+			}
+		}
 		return dbFactory;
 	}
 	public Map<Class<?>, DBTab> getTabMappingCaches(){
@@ -48,34 +67,69 @@ public class DBFactory {
 	 * 用于初始化hibernate.xml，创建对应的对应DataBase和连接池等
 	 * @throws Exception
 	 */
-	public void init() throws Exception{
+	public void init(){
 		if(xmlFile==null)
 			xmlFile =new File(this.getClass().getClassLoader().getResource("").getPath().replace("%20"," "),"hibernate.xml");
-		if(!xmlFile.exists())throw new Exception("hibernate.xml is not exist!");
-		XMLBean xmlBean = BeanFactory.getXMLBean();
-		xmlBean.addXMLFile(xmlFile);
-		xmlBean.addElementPath("//Hibernate");
-		xmlBean.setNodeName("dataBase");
-		xmlBean.addNameMaping("default", "defaulted");
-		xmlBean.setBeanClass(DataBaseConfigure.class);
-		List<Object> lists = xmlBean.execute();
-		Iterator<Object> iterator = lists.iterator();
-		while(iterator.hasNext()){
-			this.builder((DataBaseConfigure)iterator.next());
+		if(!xmlFile.exists())throw new DataBaseException(DATABASES_EXCEPTION.NOT_CONF,"database configure file \""+xmlFile+"\" is not exist!");
+		XMLHelper help = new XMLHelper();
+		help.setFile(this.xmlFile);
+		help.setMapping(WrapperConfgureMapping.class);
+		List<WrapperConfgureMapping> list = help.read();
+		if(list.size()==0)
+			throw new DataBaseException(DATABASES_EXCEPTION.NOT_CONF,"database configure file \""+xmlFile+"\" could not container Hibernate tags!");
+		WrapperConfgureMapping wrapper = list.get(0);
+		//获取数据库配置
+		DataBaseConfigure[] dataBases = wrapper.getDataBases();
+		for(DataBaseConfigure dataBaseConf : dataBases){
+			//构建数据库
+			this.builder(dataBaseConf);
 		}
+		//获取mapper配置
+		String[] wrappers = wrapper.getWrapper();
+		//获取所有的wrapper xml文件
+		List<File> files = ResourceManager.getResource(wrappers[0]);
+		Iterator<File> fileIterator = files.iterator();
+		while(fileIterator.hasNext()){
+			File file = fileIterator.next();
+			XMLHelper helper = new XMLHelper(file,WrapperMapping.class);
+			List<WrapperMapping> wrapps = helper.read();
+			if(wrapps!=null&&wrapps.size()!=0){
+				List<BaseMapping> baseMapping = wrapps.get(0).getBaseMappings();
+				Iterator<BaseMapping> mappingIterator = baseMapping.iterator();
+				while(mappingIterator.hasNext()){
+					BaseMapping mapping = mappingIterator.next();
+					PlugsHandler handler = PlugsFactory.getPlugsHandler(mapping);
+					FragmentBuilder fragmentBuilder = PlugsFactory.getPlugsInstanceByAttributeStrict(FragmentBuilder.class,handler.getProxyClass().getName()+".root");
+					mapping.setWrapperMapping(wrapps.get(0));
+					fragmentBuilder.build(mapping);
+					SqlFragment sqlFragment = (SqlFragment) fragmentBuilder;
+					SqlFragmentManger.addWarp(sqlFragment);
+				}
+			}
+		}
+		
+//		XMLBean xmlBean = BeanFactory.getXMLBean();
+//		xmlBean.addXMLFile(xmlFile);
+//		xmlBean.addElementPath("//Hibernate");
+//		xmlBean.setNodeName("dataBase");
+//		xmlBean.addNameMaping("default", "defaulted");
+//		xmlBean.setBeanClass(DataBaseConfigure.class);
+//		List<Object> lists = xmlBean.execute();
+//		Iterator<Object> iterator = lists.iterator();
+//		while(iterator.hasNext()){
+//			this.builder((DataBaseConfigure)iterator.next());
+//		}
 	}
 	public void init(File xmlFile){
 		this.xmlFile = xmlFile;
-		try {
-			this.init();
-		} catch (Exception e) {
-			log.error(e);
-		}
+		this.init();
 	}
 	private void addDB(String id, DataBase dbi) {
 		this.dbMap.put(id,dbi);
 	}
 	public static DataBase getDataBase(String dbName){
+		if(dbFactory==null)
+			throw new RuntimeException("DataBase Is Not Init!");
 		return dbFactory.getDataBaseByName(dbName);
 	}
 	private DataBase getDataBaseByName(String Id){
@@ -157,16 +211,16 @@ public class DBFactory {
 			}
 		}
 	}
-	public static DataBase getDefaultDB() throws DataBaseException{
+	public static DataBase getDefaultDB(){
 		if(dbFactory==null) throw new DataBaseException(DATABASES_EXCEPTION.NOT_INIT);
 		return dbFactory.defaultDB;
 	}
-	public static boolean HasDB(String dbName) throws DataBaseException{
+	public static boolean HasDB(String dbName){
 		if(dbFactory==null) throw new DataBaseException(DATABASES_EXCEPTION.NOT_INIT);
 		return dbFactory.dbMap.containsKey(dbName);
 	}
 	public void destory() {
-		ConnectionPools.getConnectionpoolRefreshService().destory();
+//		ConnectionPools.getConnectionpoolRefreshService().destory();
 		Iterator<DataBase> iterator = this.dbMap.values().iterator();
 		while(iterator.hasNext()){
 			iterator.next().destory();

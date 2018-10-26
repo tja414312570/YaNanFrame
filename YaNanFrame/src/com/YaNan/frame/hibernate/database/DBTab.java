@@ -36,6 +36,7 @@ public class DBTab implements mySqlInterface {
 	private boolean isMust;
 	private ClassLoader loader;
 	private Map<Field, DBColumn> map = new LinkedHashMap<Field, DBColumn>();
+	private Map<String, DBColumn> nameMap = new HashMap<String, DBColumn>();
 	private String name;
 	private Object dataTablesObject;
 	private Field Primary_key;
@@ -178,6 +179,7 @@ public class DBTab implements mySqlInterface {
 		this.charset = tab.charset;
 		this.collate = tab.collate;
 		this.exist = tab.exist;
+		this.nameMap = tab.nameMap;
 
 	}
 
@@ -283,10 +285,12 @@ public class DBTab implements mySqlInterface {
 				this.Primary_key = field;
 			DBColumn db = new DBColumn(field, column);
 			this.map.put(field, db);
+			this.nameMap.put(db.getName(), db);
 			return db;
 		}
 		DBColumn db = new DBColumn(field);
 		this.map.put(field, db);
+		this.nameMap.put(db.getName(), db);
 		return db;
 	}
 
@@ -295,6 +299,9 @@ public class DBTab implements mySqlInterface {
 		if (f == null)
 			throw new RuntimeException("could not find field "+field+" at class" + this.dataTablesClass.getName());
 		return getDBColumn(f);
+	}
+	public DBColumn getDBColumnByColumn(String column){
+		return this.nameMap.get(column);
 	}
 
 	public int insert(Insert insert) {

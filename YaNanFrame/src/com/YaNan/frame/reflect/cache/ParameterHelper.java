@@ -4,7 +4,11 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Parameter;
 import java.util.HashMap;
 import java.util.Map;
-
+/**
+ * Parameter的缓存，用于提供参数的注解等获取 
+ * @author yanan
+ *
+ */
 public class ParameterHelper {
 	private Parameter parameter;
 	private Map<Class<? extends Annotation>,Annotation> declaredAnnotationMap = new HashMap<Class<? extends Annotation>,Annotation>();

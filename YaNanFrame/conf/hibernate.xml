@@ -10,18 +10,19 @@
 		password 数据库密码
 		start 服务器启动时就初始化
 	 -->
+	<wrapper>classpath:wrapper/**.xml</wrapper>
 	<dataBase name="YaNan_SYSTEM">
 		<driver>com.mysql.jdbc.Driver</driver>
 		<host>localhost</host>
 		<port>3306</port>
 		<username>root</username>
-		<password>123</password>
+		<password>tja950233140710W</password>
 	</dataBase>
 	<dataBase name="YaNan_Demo">
 		<driver>com.mysql.jdbc.Driver</driver>
 		<host>localhost</host>
 		<port>3306</port>
 		<username>root</username>
-		<password>123</password>
+		<password>tja950233140710W</password>
 	</dataBase>
 </Hibernate>

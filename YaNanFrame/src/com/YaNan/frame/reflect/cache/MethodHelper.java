@@ -6,7 +6,11 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
-
+/**
+ * Method的缓存，用于提供方法的各种信息的获取
+ * @author yanan
+ *
+ */
 public class MethodHelper {
 	private Method method;
 	private Map<Class<? extends Annotation>,Annotation> declaredAnnotationMap = new HashMap<Class<? extends Annotation>,Annotation>();

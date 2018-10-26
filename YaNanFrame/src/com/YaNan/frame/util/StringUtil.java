@@ -1,7 +1,9 @@
 package com.YaNan.frame.util;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -405,5 +407,81 @@ public class StringUtil {
 						.append(arguments[v++])
 						.append(sb.substring(sb.indexOf("}", index+1)+1));
 			return sb.toString();
+		}
+		
+		public static List<String> find(String regex, String prefix, String suffix,String replace) {
+			List<String> result = new ArrayList<String>();
+			StringBuffer buffer = new StringBuffer("");
+			if(regex!=null){
+				int index = regex.indexOf(prefix);
+				int endex = regex.indexOf(suffix,index+prefix.length());
+				int lastIndex = 0;
+				while(index>-1&&endex>index){
+					String stmp = regex.substring(index+prefix.length(),endex);
+					result.add(stmp);
+					buffer.append(regex.substring(lastIndex, index)).append(replace);
+					lastIndex = endex+suffix.length();
+					index = regex.indexOf(prefix,endex);
+					endex = regex.indexOf(suffix,index+prefix.length());
+				}
+				buffer.append(regex.substring(lastIndex));
+				result.add(buffer.toString());
+			}
+			return result;
+		}
+		public static List<String> find(String regex, String prefix, String suffix) {
+			List<String> result = new ArrayList<String>();
+			if(regex!=null){
+				int index = regex.indexOf(prefix);
+				int endex = regex.indexOf(suffix,index+prefix.length());
+				while(index>-1&&endex>index){
+					String stmp = regex.substring(index+prefix.length(),endex);
+					result.add(stmp);
+					index = regex.indexOf(prefix,endex);
+					endex = regex.indexOf(suffix,index+prefix.length());
+				}
+			}
+			return result;
+		}
+
+		public static List<String> findAllVars(String str, String...strings) {
+			List<String> result = new ArrayList<String>();
+			if(str!=null&&strings!=null&&strings.length>0){
+				String suffix = "";
+				String prefix = "";
+				int index = Integer.MAX_VALUE;
+				for(String reg :strings){
+					String[] fixs = reg.split(" ");
+					if(fixs.length<2)
+						throw new RuntimeException("express \""+reg+"\" could not found suffix");
+					int tIndex = str.indexOf(fixs[0]);
+					if(tIndex>-1 && tIndex<index){
+						index = tIndex;
+						suffix = fixs[1];
+						prefix = fixs[0];
+					}
+				}
+				int endex = str.indexOf(suffix,index+prefix.length());
+				while(index!=Integer.MAX_VALUE&&endex>index){
+					String stmp = str.substring(index+prefix.length(),endex);
+					if(!result.contains(stmp))
+						result.add(stmp);
+					index = Integer.MAX_VALUE;
+					for(String reg :strings){
+						String[] fixs = reg.split(" ");
+						if(fixs.length<2)
+							throw new RuntimeException("express \""+reg+"\" could not found suffix");
+						int tIndex = str.indexOf(fixs[0],endex+suffix.length());
+						if(tIndex>-1 && tIndex<index){
+							index = tIndex;
+							suffix = fixs[1];
+							prefix = fixs[0];
+						}
+					}
+					endex = str.indexOf(suffix,index+prefix.length());
+				}
+				
+			}
+			return result;
 		}
 }

@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+import com.YaNan.frame.util.StringUtil;
+
 /*
  * encoding = "utf-8"
  * 用于路径的批量操作，目前只用于 删除，复制，移动
@@ -113,13 +115,17 @@ public class Path {
 			for (File f : list)
 				doScanner(p, f,file);
 		}
+		this.find(p,file);
+	}
+	
+	private void find(PathInter p, File file) {
 		if(filter.isEmpty())
 			p.find(file);
 		else for(String word : filter)
-			if(file.getName().contains(word))
+			if(StringUtil.matchURI(file.getAbsolutePath(), word))
 				p.find(file);
 	}
-	
+
 	private void doScanner(PathInter p, File file,File currentPath) {
 		if(this.file.getAbsolutePath().equals(file.getAbsolutePath()))
 			this.currentScanLevel=0;
@@ -142,18 +148,10 @@ public class Path {
 				if(currentScanLevel<=scanLevel||scanLevel==-1)
 				doScanner(p, f,file);
 				else{
-					if(filter.isEmpty())
-						p.find(file);
-					else for(String word : filter)
-						if(file.getName().contains(word))
-							p.find(file);
+					this.find(p,file);
 				}
 		}
-		if(filter.isEmpty())
-			p.find(file);
-		else for(String word : filter)
-			if(file.getName().contains(word))
-				p.find(file);
+		this.find(p,file);
 	}
 
 	public int getCurrentScanLevel() {

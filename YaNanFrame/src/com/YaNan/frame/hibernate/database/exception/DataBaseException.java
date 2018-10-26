@@ -1,6 +1,6 @@
 package com.YaNan.frame.hibernate.database.exception;
 
-public class DataBaseException extends Exception{
+public class DataBaseException extends RuntimeException{
 	/**
 	 * 
 	 */
@@ -8,6 +8,20 @@ public class DataBaseException extends Exception{
 	private int code;
 	public DataBaseException(int code){
 		this.setCode(code);
+	}
+	public DataBaseException(int code,String message,Throwable t){
+		super(message,t);
+		this.code = code;
+	}
+	public DataBaseException(String message,Throwable t){
+		super(message,t);
+	}
+	public DataBaseException(int code,String message){
+		super(message);
+		this.code = code;
+	}
+	public DataBaseException(String message){
+		super(message);
 	}
 	public int getCode() {
 		return code;

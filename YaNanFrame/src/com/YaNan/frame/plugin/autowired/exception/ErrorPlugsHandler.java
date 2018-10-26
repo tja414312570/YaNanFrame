@@ -14,19 +14,15 @@ import com.YaNan.frame.reflect.ClassLoader;
 public class ErrorPlugsHandler implements InvokeHandler{
 	private static Log log = new DefaultLog(ErrorPlugsHandler.class);
 	@Override
-	public Object before(MethodHandler methodHandler) {
-		methodHandler.chain();
-		return null;
+	public void before(MethodHandler methodHandler) {
 	}
 
 	@Override
-	public Object after(MethodHandler methodHandler) {
-		methodHandler.chain();
-		return null;
+	public void after(MethodHandler methodHandler) {
 	}
 
 	@Override
-	public Object error(MethodHandler methodHandler, Exception e) {
+	public void error(MethodHandler methodHandler, Throwable e) {
 		Error error = methodHandler.getInvokeHandlerSet().getAnnotation(Error.class);
 		if(error!=null&&(ClassLoader.implementOf(e.getClass(), error.exception())
 				||ClassLoader.extendsOf(e.getClass(), error.exception()))){
@@ -42,11 +38,8 @@ public class ErrorPlugsHandler implements InvokeHandler{
 						+sb.toString(), e);;
 			}
 			if(error.value()!="")
-				return error.value();
+				methodHandler.interrupt(error.value());
 		}
 		e.printStackTrace();
-		methodHandler.chain();
-		return null;
 	}
-
 }

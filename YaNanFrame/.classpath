@@ -11,21 +11,17 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.launching.macosx.MacOSXType/Java SE 8 [1.8.0_152]"/>
-	<classpathentry exported="true" kind="lib" path="WebRoot/WEB-INF/lib/asm-3.3.1.jar"/>
-	<classpathentry exported="true" kind="lib" path="WebRoot/WEB-INF/lib/catalina.jar"/>
-	<classpathentry exported="true" kind="lib" path="WebRoot/WEB-INF/lib/cglib-docs-2.2.3.jar"/>
-	<classpathentry exported="true" kind="lib" path="WebRoot/WEB-INF/lib/cglib-nodep-3.2.6.jar"/>
-	<classpathentry exported="true" kind="lib" path="WebRoot/WEB-INF/lib/commons-codec-1.10.jar"/>
-	<classpathentry exported="true" kind="lib" path="WebRoot/WEB-INF/lib/commons-fileupload-1.2.2.jar"/>
-	<classpathentry exported="true" kind="lib" path="WebRoot/WEB-INF/lib/commons-io-2.0.1.jar"/>
-	<classpathentry exported="true" kind="lib" path="WebRoot/WEB-INF/lib/dom4j-1.6.1.jar"/>
-	<classpathentry exported="true" kind="lib" path="WebRoot/WEB-INF/lib/gson-2.5.jar"/>
-	<classpathentry exported="true" kind="lib" path="WebRoot/WEB-INF/lib/jasper.jar"/>
-	<classpathentry exported="true" kind="lib" path="WebRoot/WEB-INF/lib/jaxen-1.1-beta-6.jar"/>
-	<classpathentry exported="true" kind="lib" path="WebRoot/WEB-INF/lib/jsp-api.jar"/>
-	<classpathentry exported="true" kind="lib" path="WebRoot/WEB-INF/lib/mysql-connector-java-5.1.26-bin.jar"/>
-	<classpathentry exported="true" kind="lib" path="WebRoot/WEB-INF/lib/servlet-api.jar"/>
-	<classpathentry exported="true" kind="lib" path="WebRoot/WEB-INF/lib/validation-api-1.1.0.Final.jar"/>
-	<classpathentry exported="true" kind="lib" path="WebRoot/WEB-INF/lib/websocket-api.jar"/>
+	<classpathentry kind="lib" path="WebRoot/WEB-INF/lib/asm-4.2.jar"/>
+	<classpathentry kind="lib" path="WebRoot/WEB-INF/lib/cglib-3.1.jar"/>
+	<classpathentry kind="lib" path="WebRoot/WEB-INF/lib/commons-codec-1.10.jar"/>
+	<classpathentry kind="lib" path="WebRoot/WEB-INF/lib/commons-fileupload-1.2.2.jar"/>
+	<classpathentry kind="lib" path="WebRoot/WEB-INF/lib/commons-io-2.0.1.jar"/>
+	<classpathentry kind="lib" path="WebRoot/WEB-INF/lib/dom4j-1.6.1.jar"/>
+	<classpathentry kind="lib" path="WebRoot/WEB-INF/lib/gson-2.5.jar"/>
+	<classpathentry kind="lib" path="WebRoot/WEB-INF/lib/mysql-connector-java-5.1.26-bin.jar"/>
+	<classpathentry kind="lib" path="WebRoot/WEB-INF/lib/servlet-api.jar"/>
+	<classpathentry kind="lib" path="WebRoot/WEB-INF/lib/validation-api-1.1.0.Final.jar"/>
+	<classpathentry kind="lib" path="WebRoot/WEB-INF/lib/websocket-api.jar"/>
+	<classpathentry kind="lib" path="WebRoot/WEB-INF/lib/jaxen-1.1-beta-6.jar"/>
 	<classpathentry kind="output" path="WebRoot/WEB-INF/classes"/>
 </classpath>

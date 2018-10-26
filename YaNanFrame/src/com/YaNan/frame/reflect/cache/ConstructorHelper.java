@@ -5,7 +5,11 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Parameter;
 import java.util.HashMap;
 import java.util.Map;
-
+/**
+ * 构造器缓存类，用于提供构造器的各种属性的获取
+ * @author yanan
+ *
+ */
 public class ConstructorHelper {
 	private Constructor<?> constructor;
 	private Map<Class<? extends Annotation>,Annotation> declaredAnnotationMap = new HashMap<Class<? extends Annotation>,Annotation>(4);

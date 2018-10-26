@@ -9,7 +9,7 @@ import com.YaNan.frame.plugin.annotations.Register;
 public class ExceptionHandler implements ServletExceptionHandler{
 
 	@Override
-	public void exception(Exception e, HttpServletRequest request, HttpServletResponse response) {
+	public void exception(Throwable e, HttpServletRequest request, HttpServletResponse response) {
 		
 	}
 	

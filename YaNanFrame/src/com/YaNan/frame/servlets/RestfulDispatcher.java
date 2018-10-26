@@ -2,6 +2,7 @@ package com.YaNan.frame.servlets;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Parameter;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -22,6 +23,7 @@ import com.YaNan.frame.logging.Log;
 import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.servlets.annotations.restful.ParameterType;
 import com.YaNan.frame.servlets.exception.ServletExceptionHandler;
+import com.YaNan.frame.servlets.exception.ServletRuntimeException;
 import com.YaNan.frame.servlets.parameter.ParameterHandler;
 import com.YaNan.frame.servlets.response.ResponseHandler;
 import com.YaNan.frame.servlets.response.annotations.ResponseType;
@@ -86,10 +88,24 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 			// 获取参数,参数验证通过拦截里面的方法完成
 			List<Object> parameters = null;
 			if (servletBean.getParameters() != null)
-				parameters = this.urlencodedParameterBind(request, response, servletBean, model);
+				try {
+					parameters = this.urlencodedParameterBind(request, response, servletBean, model);
+				} catch (Throwable e) {
+					throw new ServletRuntimeException("failed to processing request paramter !\r\n at class : "
+							+servletBean.getServletClass().getName()
+							+"\r\n at method : "+servletBean.getMethod(),e);
+				}
 			// 执行完之后，判断是否已将response提交，如果为提交，则判断返回结果
 			if (!response.isCommitted()) {
-				Object handlerResult = invokeProxyMethhod(request, response, servletBean, proxyObject, parameters);
+				Object handlerResult;
+				try {
+					handlerResult = invokeProxyMethhod(request, response, servletBean, proxyObject, parameters);
+				}catch (Throwable e) {
+					throw new ServletRuntimeException("failed to invoke servlet bean !\r\n at class : "
+							+servletBean.getServletClass().getName()
+							+"\r\n at method : "+servletBean.getMethod()
+							+"\r\n"+parameters,e);
+				}
 				// 执行完之后，判断是否已将response提交，如果为提交，则判断返回结果
 				if (!response.isCommitted()) {
 					// 判断返回结果是否为null,不为null则进行处理
@@ -101,7 +117,6 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 							response.setStatus(200);
 							response.getWriter().flush();
 							response.getWriter().close();
-
 						} else {
 							Class<?> handlerResultType = handlerResult.getClass();
 							ResponseHandler responseHandler = PlugsFactory.getPlugsInstanceByAttributeStrict(
@@ -130,13 +145,28 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 			}
 			proxyObject = null;
 			parameters = null;
-		} catch (Exception e) {
-			e.printStackTrace();
+		}catch(ServletRuntimeException e){
 			ServletExceptionHandler servletExceptionHandler = PlugsFactory
 					.getPlugsInstance(ServletExceptionHandler.class);
-			servletExceptionHandler.exception(e, request, response);
-			log.error(e);
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			if(servletExceptionHandler!=null)
+				servletExceptionHandler.exception(e, request, response);
+			if(log!=null)
+				log.error(e);
+			else
+				e.printStackTrace();
+			if (!response.isCommitted())
+				response.sendError(e.getStatus(),e.getMessage());
+		}catch (Throwable e) {
+			ServletExceptionHandler servletExceptionHandler = PlugsFactory
+					.getPlugsInstance(ServletExceptionHandler.class);
+			if(servletExceptionHandler!=null)
+				servletExceptionHandler.exception(e, request, response);
+			if(log!=null)
+				log.error(e);
+			else
+				e.printStackTrace();
+			if (!response.isCommitted())
+				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,e.getMessage());
 		}
 	}
 
@@ -186,7 +216,7 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 	 * @throws Exception
 	 */
 	protected List<Object> urlencodedParameterBind(HttpServletRequest request, HttpServletResponse response,
-			ServletBean servletBean, Map<String, ?> model) throws Exception {
+			ServletBean servletBean, Map<String, ?> model) throws Throwable {
 		// 创建一个ParameterHandler的集合
 		ParameterHandlerCache parameterHandlerCache = new ParameterHandlerCache(request, response, servletBean);
 		// 获得servletBean中的参数 该集合类型为 参数 ==》注解类型 ==》注解
@@ -224,10 +254,14 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 	 * 
 	 * @param model
 	 * @return
+	 * @throws ServletException 
+	 * @throws InvocationTargetException 
+	 * @throws IllegalArgumentException 
+	 * @throws IllegalAccessException 
 	 * @throws Exception
 	 */
 	public Object invokeProxyMethhod(HttpServletRequest request, HttpServletResponse response,
-			ServletBean servletBean, Object proxyObject, List<Object> parameters) throws Exception {
+			ServletBean servletBean, Object proxyObject, List<Object> parameters) throws ServletException, IllegalAccessException, IllegalArgumentException, InvocationTargetException{
 		Object[] parameter = null;
 		// 判断需要的参数是否与获得的参数匹配
 		if (servletBean.getParameters() != null) {
@@ -243,7 +277,8 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 				}
 			}
 		}
-		return servletBean.getMethod().invoke(proxyObject, parameter);
+		Object result = servletBean.getMethod().invoke(proxyObject, parameter);
+		return result;
 	}
 
 	@Override

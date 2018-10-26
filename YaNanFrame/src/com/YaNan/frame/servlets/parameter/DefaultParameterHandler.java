@@ -32,6 +32,7 @@ import com.YaNan.frame.servlets.ServletBean;
 import com.YaNan.frame.servlets.URLSupport;
 import com.YaNan.frame.servlets.annotations.Groups;
 import com.YaNan.frame.servlets.annotations.restful.ParameterType;
+import com.YaNan.frame.servlets.exception.ServletRuntimeException;
 import com.YaNan.frame.servlets.parameter.annotations.CookieValue;
 import com.YaNan.frame.servlets.parameter.annotations.PathVariable;
 import com.YaNan.frame.servlets.parameter.annotations.RequestBody;
@@ -171,12 +172,14 @@ public class DefaultParameterHandler implements ParameterHandler {
 					// ;
 				}
 			}
-		} catch (Exception e) {
-			log.error("An error occurred while processing the parameters,\r\nClass :"+servletBean.getServletClass().getName()
-					+",\r\nMehod :"+servletBean.getMethod().getName()
-					+",\r\nParamter:"+paras.getName(),e);
+		} catch (Throwable e) {
+			log.error("An error occurred while processing the parameters !\r\nat class : "+servletBean.getServletClass().getName()
+					+",\r\nat method : "+servletBean.getMethod().getName()
+					+",\r\nat parameter : "+paras.getName(),e);
+			throw new ServletRuntimeException(HttpServletResponse.SC_BAD_REQUEST,"An error occurred while processing the parameters !\r\nat class : "+servletBean.getServletClass().getName()
+					+",\r\nat method : "+servletBean.getMethod().getName()
+					+",\r\nat parameter : "+paras.getName(),e);
 		}
-		return null;
 	}
 
 	private Object service(com.YaNan.frame.plugin.annotations.Service parameterAnnotation, Parameter paras) {
@@ -420,7 +423,9 @@ public class DefaultParameterHandler implements ParameterHandler {
 				}
 				return parseBaseType(paras.getType(), null, null);
 			} catch (Exception e) {
-				e.printStackTrace();
+				log.error("An error occurred while processing the parameters !\r\nat class : "+servletBean.getServletClass().getName()
+						+",\r\nat method : "+servletBean.getMethod().getName()
+						+",\r\nat parameter : "+paras.getName(),e);
 			}
 		} else {
 			// 处理特殊参数 如 pojo session cookie model request response write header
@@ -446,9 +451,9 @@ public class DefaultParameterHandler implements ParameterHandler {
 					return this.pojoParameterBind(paras.getType(), null, servletRequest, servletResponse, servletBean,
 							pathParameter);
 				} catch (Exception e) {
-					log.error("An error occurred while processing the parameters,\r\nClass :"+servletBean.getServletClass().getName()
-							+",\r\nMehod :"+servletBean.getMethod().getName()
-							+",\r\nParamter:"+paras.getName(),e);
+					log.error("An error occurred while processing the parameters !\r\nat class : "+servletBean.getServletClass().getName()
+							+",\r\nat method : "+servletBean.getMethod().getName()
+							+",\r\nat parameter : "+paras.getName(),e);
 				}
 				// return
 				// this.pojoParameterBind(paras.getType(),paramEntry.getValue().getName(),
@@ -513,7 +518,7 @@ public class DefaultParameterHandler implements ParameterHandler {
 	 * @param clzz
 	 * @return
 	 */
-	protected static boolean isBaseType(Class<?> clzz) {
+	public static boolean isBaseType(Class<?> clzz) {
 		if (clzz.equals(String.class))
 			return true;
 		if (clzz.equals(boolean.class))
@@ -756,7 +761,9 @@ public class DefaultParameterHandler implements ParameterHandler {
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error("An error occurred while processing the parameters !\r\nat class : "+servletBean.getServletClass().getName()
+					+",\r\nat method : "+servletBean.getMethod().getName()
+					+",\r\nat field : "+field.getName(),e);
 		}
 		return null;
 	}
@@ -790,7 +797,9 @@ public class DefaultParameterHandler implements ParameterHandler {
 				}
 
 			} catch (Exception e) {
-				e.printStackTrace();
+				log.error("An error occurred while processing the parameters !\r\nat class : "+servletBean.getServletClass().getName()
+						+",\r\nat method : "+servletBean.getMethod().getName()
+						+",\r\nat field : "+field.getName(),e);
 			}
 		} else {
 			// 处理特殊参数 如 pojo session cookie model request response write header
@@ -816,7 +825,9 @@ public class DefaultParameterHandler implements ParameterHandler {
 					return this.pojoParameterBind(field.getType(), null, servletRequest, servletResponse, servletBean,
 							pathParameter);
 				} catch (Exception e) {
-					log.error("An error occurred while processing the parameters at "+field,e);
+					log.error("An error occurred while processing the parameters !\r\nat class : "+servletBean.getServletClass().getName()
+							+",\r\nat method : "+servletBean.getMethod().getName()
+							+",\r\nat field : "+field.getName(),e);
 				}
 				// return
 				// this.pojoParameterBind(paras.getType(),paramEntry.getValue().getName(),

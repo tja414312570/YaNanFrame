@@ -17,7 +17,7 @@ public class PlugsDescription {
 		this.service = service;
 	}
 
-	public PlugsDescription(File file) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+	public PlugsDescription(File file) throws ClassNotFoundException, InstantiationException, IllegalAccessException{
 		String fileName = file.getName();
 		String clzzStr = fileName.substring(0,fileName.lastIndexOf("."));
 		this.clzz= new ClassLoader(clzzStr,false).getLoadedClass();
