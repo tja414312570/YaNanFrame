@@ -90,7 +90,9 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 			if (servletBean.getParameters() != null)
 				try {
 					parameters = this.urlencodedParameterBind(request, response, servletBean, model);
-				} catch (Throwable e) {
+				} catch ( ServletRuntimeException servletRuntimeException){
+					throw servletRuntimeException;
+				}catch (Throwable e) {
 					throw new ServletRuntimeException("failed to processing request paramter !\r\n at class : "
 							+servletBean.getServletClass().getName()
 							+"\r\n at method : "+servletBean.getMethod(),e);
@@ -100,6 +102,8 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 				Object handlerResult;
 				try {
 					handlerResult = invokeProxyMethhod(request, response, servletBean, proxyObject, parameters);
+				} catch ( ServletRuntimeException servletRuntimeException){
+					throw servletRuntimeException;
 				}catch (Throwable e) {
 					throw new ServletRuntimeException("failed to invoke servlet bean !\r\n at class : "
 							+servletBean.getServletClass().getName()
