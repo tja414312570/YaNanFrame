@@ -45,7 +45,7 @@ public class Path {
 		if (file.exists()) {
 			this.file = file;
 		} else {
-			dialog("源路径：" + file.toString() + "无效");
+			throw new RuntimeException("源路径：" + file.toString() + "无效");
 		}
 	}
 
@@ -54,7 +54,7 @@ public class Path {
 		if (file.exists()) {
 			this.file=file;
 		} else {
-			dialog("源路径：" + file.toString() + "无效");
+			throw new RuntimeException("源路径：" + file.toString() + "无效");
 		}
 	}
 
