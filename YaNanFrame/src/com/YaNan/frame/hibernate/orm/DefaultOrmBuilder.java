@@ -7,6 +7,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -45,13 +46,14 @@ public class DefaultOrmBuilder implements OrmBuilder{
 			//可以使用PlugsHandler代理类，实现aop。但对Gson序列化有影响
 //			Object beanInstance = PlugsFactory.getPlugsInstance(resultType);
 			ClassLoader loader = new ClassLoader(resultType);
-			ResultSetMetaData metaData = resultSet.getMetaData();
-			String[] colNameArray = this.getColumnName(metaData);
-			for(int i =0;i<colNameArray.length;i++){
-				String column = colNameArray[i];
-				DBColumn dbColumn = tab.getDBColumnByColumn(column);
+			Iterator<DBColumn> columnIterator = tab.getDBColumns().values().iterator();
+			while(columnIterator.hasNext()){
+				DBColumn dbColumn = columnIterator.next();
 				Field field = dbColumn.getField();
-				loader.set(field,ClassLoader.castType(resultSet.getObject(column),field.getType()));
+				Object object = resultSet.getObject(dbColumn.getName());
+				if(object==null)
+					continue;
+				loader.set(field,ClassLoader.castType(object,field.getType()));
 			}
 			result.add(loader.getLoadedObject());
 		}
