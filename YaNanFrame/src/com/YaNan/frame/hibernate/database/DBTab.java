@@ -44,6 +44,7 @@ public class DBTab implements mySqlInterface {
 	private String value;
 	private boolean exist;
 	private final Log log = PlugsFactory.getPlugsInstance(Log.class, DBTab.class);
+	private String[] columnsArray;
 
 	public Object getDataTablesObject() {
 		return dataTablesObject;
@@ -180,7 +181,7 @@ public class DBTab implements mySqlInterface {
 		this.collate = tab.collate;
 		this.exist = tab.exist;
 		this.nameMap = tab.nameMap;
-
+		this.columnsArray = tab.columnsArray;
 	}
 
 	public boolean create() {
@@ -585,8 +586,16 @@ public class DBTab implements mySqlInterface {
 				this.map.put(field, dbColumn);
 			}
 		}
+		this.columnsArray = new String[this.map.size()];
+		Iterator<DBColumn> iterator = this.map.values().iterator();
+		int i = 0;
+		while(iterator.hasNext()){
+			this.columnsArray[i++] = iterator.next().getName();
+		}
 	}
-
+	public String[] getColumnNameArray(){
+		return this.columnsArray;
+	}
 	public List<Object> showTab() {
 		if (this.dataBase == null)
 			throw new RuntimeException("DataTable mapping class " + this.dataTablesClass.getName()
