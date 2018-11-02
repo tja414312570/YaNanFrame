@@ -21,8 +21,29 @@ public interface Symbol {
 		public static JAVASCRIPT match(String condition) {
 			JAVASCRIPT[] jsSymbol = JAVASCRIPT.values();
 			for(JAVASCRIPT js : jsSymbol){
-				if(condition.contains(js.value))
-					return js;
+					if(js.value.equals("in") || js.value.equals("not in")){
+						int index=condition.indexOf(js.value);
+						while(index >-1){
+							if(index==condition.length())
+								return js;
+							else{
+								String after = condition.substring(index+js.value.length(),index+1+js.value.length());
+								if(index==0){
+									if(after.equals("(")||after.equals(" "))
+										return js;
+								}else{
+									String before = condition.substring(index-1,index);
+									if((after.equals("(")||after.equals(" "))
+											&&(before.equals(")")||before.equals(" ")))
+										return js;
+								}
+							}
+							index=condition.indexOf(js.value,index+1);
+						}
+					}else{
+						if(condition.indexOf(js.value)>0)
+							return js;
+					}
 			}
 			return null;
 		}
