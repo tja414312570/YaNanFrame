@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.YaNan.frame.util.beans.xml.AsXml;
 import com.YaNan.frame.util.beans.xml.Attribute;
-import com.YaNan.frame.util.beans.xml.Ignore;
 import com.YaNan.frame.util.beans.xml.Mapping;
 import com.YaNan.frame.util.beans.xml.Value;
 import com.YaNan.frame.util.beans.xml.XmlFile;

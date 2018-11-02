@@ -14,7 +14,6 @@ import java.util.Vector;
 
 import javax.validation.Constraint;
 
-import com.YaNan.frame.hibernate.database.entity.TagSupport;
 import com.YaNan.frame.path.PackageScanner;
 import com.YaNan.frame.path.Path;
 import com.YaNan.frame.path.PackageScanner.ClassInter;

@@ -86,6 +86,8 @@ public class DBFactory {
 		}
 		//获取mapper配置
 		String[] wrappers = wrapper.getWrapper();
+		if(wrappers==null||wrappers.length==0)
+			return;
 		//获取所有的wrapper xml文件
 		List<File> files = ResourceManager.getResource(wrappers[0]);
 		Iterator<File> fileIterator = files.iterator();
