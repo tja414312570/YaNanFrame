@@ -23,8 +23,8 @@ import com.YaNan.frame.util.beans.BeanFactory;
 import com.YaNan.frame.util.beans.XMLBean;
 import com.mysql.jdbc.Driver;
 /**
- * v2.0 增加连接池对连接进行管理，重构DBTab和DataBase功能
- *      修复连接慢，内存泄漏问题
+ * v2.0 增加连接池对连接进行管理，重构DBTab和DataBase功能</br>
+ *      修复连接慢，内存泄漏问题</br>
  * @author tja41
  *
  */

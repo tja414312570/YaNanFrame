@@ -30,6 +30,9 @@ public class MethodHelper {
 	public Method getMethod() {
 		return method;
 	}
+	public static MethodHelper getMethodHelper(Method method){
+		return ClassInfoCache.getClassHelper(method.getDeclaringClass()).getMethodHelper(method);
+	}
 	public Map<String, Parameter> getParameterMap() {
 		return parameterMap;
 	}

@@ -18,6 +18,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -445,6 +446,8 @@ public class DefaultParameterHandler implements ParameterHandler {
 				return this.servletRequest.getCookies();
 			else if (paras.getType().equals(Locale.class))// Locale
 				return this.servletRequest.getLocale();
+			else if (paras.getType().equals(ServletContext.class))// ServletContext
+				return this.servletRequest.getServletContext();
 			else {
 				// pojo 类型 异常部分可能需要处理
 				try {
@@ -819,6 +822,8 @@ public class DefaultParameterHandler implements ParameterHandler {
 				return this.servletRequest.getCookies();
 			else if (field.getType().equals(Locale.class))// Locale
 				return this.servletRequest.getLocale();
+			else if (field.getType().equals(ServletContext.class))// ServletContext
+				return this.servletRequest.getServletContext();
 			else {
 				// pojo 类型 异常部分可能需要处理
 				try {

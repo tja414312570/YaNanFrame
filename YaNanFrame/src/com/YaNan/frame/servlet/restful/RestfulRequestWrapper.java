@@ -43,7 +43,7 @@ public class RestfulRequestWrapper extends HttpServletRequestWrapper {
 			this.readRequestBody(bodyData, len,servletRequest);
 		}
 		if (servletRequest.getParameterMap().size() > 0) {
-			this.parameters = servletRequest.getParameterMap();
+			this.parameters.putAll(servletRequest.getParameterMap());
 		} else if (len >= 0 && servletRequest.getContentType()!=null&&servletRequest.getContentType().toLowerCase().indexOf("boundary")==-1) {
 			this.processParameters(bodyData, 0, len, charset);
 		}

@@ -4,6 +4,11 @@ import java.util.List;
 
 import com.YaNan.frame.plugin.annotations.Service;
 
+/**
+ * sql会话即接口，未完善
+ * @author yanan
+ *
+ */
 @Service
 public interface SqlSession {
 

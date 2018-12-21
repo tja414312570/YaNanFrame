@@ -276,17 +276,18 @@ public class XMLHelper {
 			return null;
 		if (helper.getAnnotation(XmlFile.class) != null)
 			return fieldType.equals(String.class) ? this.xmlFile.getAbsolutePath() : this.xmlFile;
-		// 获取数组名称
+		// get the node info from Element annotation
 		com.YaNan.frame.util.beans.xml.Element element = helper
 				.getAnnotation(com.YaNan.frame.util.beans.xml.Element.class);
 		String nodeName = this.getNodeName(field, element);
 		if (ClassLoader.isBaseType(fieldType)) {
+			// if the field is base java data array or String array , need another method to proccess
 			if (fieldType.isArray()) {
-				// 获取数组的类型
+				// get the array's origin type
 				Class<?> arrayType = fieldType.getComponentType();
-				// 获取节点的数据
+				// get the node from document
 				List<?> nodes = node.selectNodes(nodeName);
-				// 获取数组数据
+				// call nodes array method to process the field
 				object = getNodesValues(nodes, arrayType);
 			} else {
 				com.YaNan.frame.util.beans.xml.Attribute attribute = helper
@@ -324,23 +325,27 @@ public class XMLHelper {
 				}
 			}
 		} else {
-			// 重组节点名称
-			// LIST的处理
+			// rename node name
 			if (ClassLoader.implementsOf(fieldType, List.class)) {
+				//process List node
+				//if the node is multiple mapping node ,use reverse scan document node 
 				MappingGroup groups = helper.getAnnotation(MappingGroup.class);
 				if (groups == null)
 					object = this.buildListNode(helper, field, node, level, nodeName);
 				else
 					object = this.buildGroupListNode(helper, field, node, level, groups);
 			} else if (ClassLoader.implementsOf(fieldType, Map.class)) {
+				//process Map node
 				MappingGroup groups = helper.getAnnotation(MappingGroup.class);
 				if (groups == null)
 					object = this.buildMapNode(helper, field, node, level, nodeName);
 				else
 					object = this.buildGroupMapNode(helper, field, node, level, groups);
-			} else if (fieldType.isArray()) {// pojo数组
+			} else if (fieldType.isArray()) {
+				//process pojo array
 				object = this.buildPojoArrayNode(helper, field, node, level, element, fieldType, nodeName);
-			} else {// 简单pojo
+			} else {
+				//process simple pojo
 				object = this.buildPojoNode(helper, field, node, level, fieldType, nodeName);
 			}
 		}
@@ -366,13 +371,13 @@ public class XMLHelper {
 	private Object buildGroupListNode(FieldHelper helper, Field field, Node node, int level, MappingGroup mappGroup)
 			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException,
 			SecurityException {
-		// 获取Type注解
+		// get type annotation
 		com.YaNan.frame.util.beans.xml.Type typeAnno = helper.getAnnotation(com.YaNan.frame.util.beans.xml.Type.class);
 		Class<?> listClass;
-		// 获取集合的实例
+		// get the set object
 		listClass = typeAnno != null ? typeAnno.value() : ArrayList.class;
 		List realList = (List) PlugsFactory.getPlugsInstanceNew(listClass);
-		// 获取所有的标签
+		// get all tag
 		if(node==null)
 			return realList;
 		Iterator<?> elementIterator = ((Element) node).elementIterator();

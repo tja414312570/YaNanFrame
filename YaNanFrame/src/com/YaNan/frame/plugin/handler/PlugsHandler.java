@@ -4,6 +4,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -33,7 +34,7 @@ public class PlugsHandler implements InvocationHandler, PlugsListener, MethodInt
 	public static enum ProxyType {
 		JDK, CGLIB
 	}
-
+	private Map<String,Object> attribute = new HashMap<String,Object>();
 	private RegisterDescription registerDescription;// 注册描述类
 	private Object proxyObject;// 代理对象
 	private Class<?> proxyClass;// 代理类
@@ -261,5 +262,18 @@ public class PlugsHandler implements InvocationHandler, PlugsListener, MethodInt
 
 	public ProxyType getProxyType() {
 		return proxyType;
+	}
+
+	public Map<String,Object> getAttributes() {
+		return attribute;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public <T> T getAttribute(String key) {
+		return (T) attribute.get(key);
+	}
+
+	public void setAttribute(String key,Object value) {
+		this.attribute.put(key, value);
 	}
 }

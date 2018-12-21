@@ -340,7 +340,7 @@ public class ActionDispatcher extends HttpServlet implements ServletDispatcher,S
 				.getInstance();
 		Map<String, ServletBean> servletMapping = servletManager.getServletMappingByStype("ACTION_STYLE");
 		if(servletMapping==null){
-			log.debug("RESTFUL Servlet num:0");
+			log.debug("Action Servlet num:0");
 			return;
 		}
 		log.debug("Action Servlet num:"+servletMapping.size());
@@ -351,7 +351,7 @@ public class ActionDispatcher extends HttpServlet implements ServletDispatcher,S
 			ServletBean bean = key.getValue();
 			log.debug("---------------------------------------------------------");
 			log.debug("url mapping:" + key.getKey() + ",servlet method:" + bean.getMethod()
-					+ ",servlet type:" +bean.getType());
+					+ ",servlet type:" +ActionStyle);
 			log.debug("---------------------------------------------------------");
 
 		}

@@ -27,9 +27,9 @@ import com.YaNan.frame.reflect.cache.ClassInfoCache;
 import com.YaNan.frame.reflect.ClassLoader;
 
 /**
- * 组件工厂类，用于初始化所有组件注册，管理，以及提供组件获取 2018 7-27
- * 修改MethodHandler初始化时间为RegisterDescription的初始化时间，降低代理执行时的方法开销 2018 7-12
- * 新增多个方法拦截器，更改拦截器规则，添加一个拦截器链表，实现迭代器
+ * 组件工厂类，用于初始化所有组件注册，管理，以及提供组件获取 2018 7-27</br>
+ * 修改MethodHandler初始化时间为RegisterDescription的初始化时间，降低代理执行时的方法开销 2018 7-12</br>
+ * 新增多个方法拦截器，更改拦截器规则，添加一个拦截器链表，实现迭代器</br>
  * 
  * @author yanan
  *

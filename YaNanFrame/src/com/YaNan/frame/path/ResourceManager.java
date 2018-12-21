@@ -13,6 +13,11 @@ import com.YaNan.frame.path.Path.PathInter;
  */
 public class ResourceManager {
 	final static String CLASSPATH = "classpath:";
+	/**
+	 * 通过路径表达式获取符合该路劲的所有资源
+	 * @param pathExpress
+	 * @return
+	 */
 	public static List<File> getResource(String pathExpress){
 		if(pathExpress==null)
 			throw new RuntimeException("path express is null");

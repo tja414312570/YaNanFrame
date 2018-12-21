@@ -11,15 +11,16 @@ import com.YaNan.frame.logging.Log;
 import com.YaNan.frame.plugin.PlugsFactory;
 import com.mysql.jdbc.Connection;
 /**
- * 数据库连接池，用于管理数据库连接，提供数据库连接的初始化、获取、释放
- * 注意！！数据库连接获取并使用之后，记得关闭PreparedStatement和ResultSet，否则导致连接池刷新逻辑失效，Connection不需要关闭
- * 注意！！数据库使用完毕后，记得关闭ConnectionPoolRefreshService服务，否则导致ConnectionPoolRefreshService服务延迟关闭
- * 具体关闭时间和设置的连接池空闲时等待时间有关（参数timeout）
- * 通过ConnectionPoolRefreshService.destory()或DBFactory.getDBFactory().destory()可销毁该线程
- * 2018-6-20~2018-6-21 把连接池刷新从释放中独立出来，新添加一个连接池刷新逻辑服务，该服务使得连接刷新
- * 从连接释放中独立出来，提高数据吞吐能力，同时该服务会自动启动和销毁。
- * 2018-6-18 ~ 2018-6-20 优化连接池刷新、释放、获取、添加逻辑，降低各种锁的粒度，提高运行速度，降低运行内存，
- * 2016-?-？~ 2018-6-17 添加数据库连接池用于管理所有DataBase中的数据连接
+ * 数据库连接池，用于管理数据库连接，提供数据库连接的初始化、获取、释放</br>
+ * 注意！！数据库连接获取并使用之后，记得关闭PreparedStatement和ResultSet，否则导致连接池刷新逻辑失效，Connection不需要关闭</br>
+ * 注意！！数据库使用完毕后，记得关闭ConnectionPoolRefreshService服务，否则导致ConnectionPoolRefreshService服务延迟关闭</br>
+ * 具体关闭时间和设置的连接池空闲时等待时间有关（参数timeout）</br>
+ * 通过ConnectionPoolRefreshService.destory()或DBFactory.getDBFactory().destory()可销毁该线程</br>
+ * 2018-6-20~2018-6-21 把连接池刷新从释放中独立出来，新添加一个连接池刷新逻辑服务，该服务使得连接刷新</br>
+ * 从连接释放中独立出来，提高数据吞吐能力，同时该服务会自动启动和销毁。</br>
+ * 2018-6-18 ~ 2018-6-20 优化连接池刷新、释放、获取、添加逻辑，降低各种锁的粒度，提高运行速度，降低运行内存，</br>
+ * 2016-?-？~ 2018-6-17 添加数据库连接池用于管理所有DataBase中的数据连接</br>
+ * 
  * @author yanan
  *
  */

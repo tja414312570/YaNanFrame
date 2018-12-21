@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
@@ -17,9 +18,11 @@ import com.YaNan.frame.logging.Log;
  *
  */
 @WebListener
-public class PluginAppincationContextInit implements ServletContextListener {
-	private final Log log = PlugsFactory.getPlugsInstance(Log.class,PluginAppincationContextInit.class);
+public class PluginAppincationContext implements ServletContextListener {
+	private final Log log = PlugsFactory.getPlugsInstance(Log.class,PluginAppincationContext.class);
+	private ServletContextEvent servletContextEvent;
 	private List<ServletContextListener> contextListernerList;
+	private ServletContext servletContext;
 	@Override
 	public void contextDestroyed(ServletContextEvent arg0) {
 		if(contextListernerList!=null)
@@ -33,6 +36,8 @@ public class PluginAppincationContextInit implements ServletContextListener {
 	@Override
 	public void contextInitialized(ServletContextEvent servletContextEvent) {
 		long t = System.currentTimeMillis();
+		this.servletContextEvent = servletContextEvent;
+		this.servletContext = servletContextEvent.getServletContext();
 		log.debug("");
 		log.debug("       PLUGINPLUGID     PLUE         PLUA       PLUR      PLUGINPLUGIY    PLUGINPLUGIN   PLUG         PLUG");
 		log.debug("      PLUG      PLUW   PLUA         PLUN       PLUG    PLUG                  PLUG       PLUGPLUG     PLUG");
@@ -57,6 +62,14 @@ public class PluginAppincationContextInit implements ServletContextListener {
 			System.exit(1);
 		}
 		
+	}
+
+	public ServletContextEvent getServletContextEvent() {
+		return servletContextEvent;
+	}
+
+	public ServletContext getServletContext() {
+		return servletContext;
 	}
 
 }

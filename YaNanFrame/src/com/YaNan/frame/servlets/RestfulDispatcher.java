@@ -317,8 +317,8 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 			Entry<String, ServletBean> key = iterator.next();
 			ServletBean servletBean = key.getValue();
 			log.debug("---------------------------------------------------------");
-			log.debug("url mapping:" + key.getKey() + ",servlet method:" + servletBean.getMethod() + ",servlet type:"
-					+ servletBean.getType());
+			log.debug("url mapping:" + REQUEST_METHOD.getRequest(key.getKey()) + ",servlet method:" + servletBean.getMethod() + ",servlet type:"
+					+ActionStyle);
 			if (servletBean.getParameters() != null) {
 				Iterator<Entry<Parameter, Map<Class<Annotation>, List<Annotation>>>> iterator1 = servletBean
 						.getParameters().entrySet().iterator();

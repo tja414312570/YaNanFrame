@@ -17,6 +17,7 @@ import java.util.Map;
  * 我们建议使用helper来获取Class文件的Field、Method等等信息。</br>
  * @author yanan
  * 20181011 提供获取类及其父类中所有的Field，方法getAllFields();
+ * 20181221 新增getClassHelper方法
  */
 public class ClassHelper {
 	private Class<?> cacheClass;
@@ -44,6 +45,9 @@ public class ClassHelper {
 	private Annotation[] declaredAnnotations;
 	private Annotation[] annotations;
 	
+	public static ClassHelper getClassHelper(Class<?> clzz){
+		return ClassInfoCache.getClassHelper(clzz);
+	}
 	public ClassHelper(Class<?> cls){
 		this.setCacheClass(cls);
 		//DeclaredMethod

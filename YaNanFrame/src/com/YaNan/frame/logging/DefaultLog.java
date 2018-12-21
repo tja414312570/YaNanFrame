@@ -5,6 +5,11 @@ import java.util.Date;
 
 import com.YaNan.frame.plugin.annotations.Register;
 
+/**
+ * 默认日志工具，未完善
+ * @author yanan
+ *
+ */
 @Register
 public class DefaultLog implements Log{
 	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");

@@ -9,6 +9,11 @@ import com.YaNan.frame.hibernate.database.annotation.Column;
 import com.YaNan.frame.logging.Log;
 import com.YaNan.frame.plugin.PlugsFactory;
 
+/**
+ * java字段与数据库的列的映射实体类</br>
+ * @author yanan
+ *
+ */
 public class DBColumn implements mySqlInterface {
 	private Field field;
 	private String name;
