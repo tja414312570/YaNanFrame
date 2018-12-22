@@ -221,7 +221,8 @@ public class RegisterDescription {
 			checkPlugs(this.plugs);
 			PlugsFactory.getInstance().addRegisterHandlerQueue(this);
 		} catch (Exception e) {
-			throw new Exception("plugin " + file.getName() + " init failed", e);
+			if(PluginAppincationContext.isWebContext())
+				throw new Exception("plugin " + file.getName() + " init failed", e);
 		}
 	}
 
