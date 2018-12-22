@@ -183,12 +183,11 @@ public class FragmentSet implements FragmentBuilder{
 			//如果有多个参数
 			if(objects.length>1){
 				//需要参数的数量是否与传入参数的数量相同
-				if(argument.size()<=objects.length)
-					for(int i = 0 ;i<argument.size();i++)
-						binder.put(argument.get(i), objects[this.sqlFragment.getArguments().indexOf(argument.get(i))]);
-				else
-					throw new RuntimeException("failed to execute js \""+express+"\" expression because the need parameter \""
-				+argument.size()+"\" get the parameter \""+objects.length+"\"! at mapping file '"+this.sqlFragment.baseMapping.getXmlFile()+"' at id '"+this.sqlFragment.baseMapping.getId()+"'");
+				for(int i = 0 ;i<argument.size();i++){
+					int pos = this.sqlFragment.getArguments().indexOf(argument.get(i));
+					binder.put(argument.get(i),pos>=objects.length?null:objects[pos]);
+				}
+					
 			//单个参数
 			}else if(objects.length==1){
 				Object object = objects[0];
@@ -218,6 +217,9 @@ public class FragmentSet implements FragmentBuilder{
 							throw new RuntimeException("failed to get need parameter \""+argument.get(i)+"\" at express \""+express+"\" at parameterType "+loader.getLoadedClass(),e);
 						}
 				}
+			}else{
+				for(int i = 0 ;i<argument.size();i++)
+					binder.put(argument.get(i),null);
 			}
 		}
 		Object result = null;
