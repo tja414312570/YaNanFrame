@@ -200,8 +200,10 @@ public abstract class SqlFragment implements FragmentBuilder {
 			// 需要参数的数量是否与传入参数的数量相同
 			if (parameter.length > 1) {
 				if (SqlFragment.removeDuplicate(variables).size() <= parameter.length)
-					for (int i = 0; i < variables.size(); i++)
-						arguments.add(parameter[this.getArguments().indexOf(variables.get(i))]);
+					for (int i = 0; i < variables.size(); i++){
+						int pos = this.getArguments().indexOf(variables.get(i));
+						arguments.add(pos>=parameter.length?null:parameter[pos]);
+					}
 				else
 					throw new RuntimeException("failed to prepared parameter \"" + variables
 							+ "\"because the need parameter \"" + variables.size() + "\" get the parameter \""
