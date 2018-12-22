@@ -73,7 +73,7 @@ public class DefaultOrmBuilder implements OrmBuilder{
 		int colCount = metaData.getColumnCount();
 		String[] colNameArray = new String[colCount];
 		for(int i = 0;i<colCount;i++)
-			colNameArray[i] = metaData.getColumnName(i+1);
+			colNameArray[i] = metaData.getColumnLabel(i+1);
 		return colNameArray;
 	}
 }
