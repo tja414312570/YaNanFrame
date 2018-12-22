@@ -9,4 +9,8 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD,ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ResponseJson {
+
+	String prefix() default "";
+
+	String suffix() default "";
 }
