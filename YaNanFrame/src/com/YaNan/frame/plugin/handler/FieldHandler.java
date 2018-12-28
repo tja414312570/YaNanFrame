@@ -1,7 +1,7 @@
 package com.YaNan.frame.plugin.handler;
 
+import com.YaNan.frame.plugin.FieldDesc;
 import com.YaNan.frame.plugin.RegisterDescription;
-import com.YaNan.frame.plugin.RegisterDescription.FieldDesc;
 /**
  * 字段拦截器
  * 当实例初始化之后立刻调用
