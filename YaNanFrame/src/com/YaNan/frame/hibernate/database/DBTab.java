@@ -207,8 +207,33 @@ public class DBTab implements mySqlInterface {
 		if (this.dataBase == null)
 			throw new RuntimeException("DataTable mapping class " + this.dataTablesClass.getName()
 					+ " datatable is null,please try to configure the @Tab attribute DB to declare database ");
-		QueryCache.getCache().cleanCache(this.getName());
-		return this.dataBase.executeUpdate(delete.create());
+		PreparedStatement ps  = null;
+		try {
+			ps= this.dataBase.execute(delete.create());
+			if (ps != null) {
+				Iterator<Object> iterator = delete.getParameters().iterator();
+				int i = 0;
+				while (iterator.hasNext())
+					ps.setObject(++i, iterator.next());
+				ps.execute();
+				QueryCache.getCache().cleanCache(this.getName());// 清理查询缓存
+			}
+			return ps.executeUpdate();
+		} catch (SQLException | SecurityException e) {
+			log.error("error to execute sql:" + delete.create());
+			log.error("parameter:" + delete.getParameters());
+			log.error(e);
+		}finally {
+			if(ps!=null)
+				try {
+					ps.close();
+				} catch (SQLException e) {
+					log.error("error to close preparesStatement at sql:" + delete.create());
+					log.error("parameter:" + delete.getParameters());
+					log.error(e);
+				}
+		}
+		return 0;
 	}
 
 	public boolean delete(Delete delete, Connection connection) throws SQLException {

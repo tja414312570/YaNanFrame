@@ -101,7 +101,8 @@ public class Delete extends OperateImplement{
 			Iterator<String> i = this.map.keySet().iterator();
 			while (i.hasNext()) {
 				String s = i.next();
-				sb.append( s ).append("='").append(this.map.get(s)).append(i.hasNext() ? "' AND " : "'");
+				sb.append( s ).append(" = ?").append(i.hasNext() ? " AND " : "");
+				this.parameters.add(this.map.get(s));
 			}
 		} 
 		if (this.condition.size() != 0) {
