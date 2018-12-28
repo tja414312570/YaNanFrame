@@ -26,7 +26,7 @@ public class DataBase {
 	private Map<String, DBTab> tabMapping = new HashMap<String, DBTab>();
 	private DataBaseConfigure dbConfigure;
 	private boolean available=false;
-	private final String SUFFIX = "autoReconnect=true&failOverReadOnly=false";
+	private final String SUFFIX = "autoReconnect=true&failOverReadOnly=false&rewriteBatchedStatements=true";
 	private ConnectionPools connectionPools;
 	private final Log log = PlugsFactory.getPlugsInstance(Log.class,DataBase.class);
 	private String connetionURL;

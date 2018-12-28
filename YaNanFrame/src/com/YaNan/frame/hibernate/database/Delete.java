@@ -95,6 +95,7 @@ public class Delete extends OperateImplement{
 
 	@Override
 	public String create() {
+		this.parameters.clear();
 		StringBuilder sb = new StringBuilder( "DELETE FROM ").append(this.dbTab.getName());
 		if (this.map.size() != 0) {
 			sb.append(" WHERE ");

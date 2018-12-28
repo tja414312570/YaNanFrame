@@ -211,10 +211,7 @@ public class DBTab implements mySqlInterface {
 		try {
 			ps= this.dataBase.execute(delete.create());
 			if (ps != null) {
-				Iterator<Object> iterator = delete.getParameters().iterator();
-				int i = 0;
-				while (iterator.hasNext())
-					ps.setObject(++i, iterator.next());
+				this.preparedParameter(ps,delete.getParameters());
 				ps.execute();
 				QueryCache.getCache().cleanCache(this.getName());// 清理查询缓存
 			}
@@ -338,10 +335,7 @@ public class DBTab implements mySqlInterface {
 		try {
 			PreparedStatement ps = this.dataBase.execute(insert.create(), java.sql.Statement.RETURN_GENERATED_KEYS);
 			if (ps != null) {
-				Iterator<Object> iterator = insert.getParameters().iterator();
-				int i = 0;
-				while (iterator.hasNext())
-					ps.setObject(++i, iterator.next());
+				this.preparedParameter(ps,insert.getParameters());
 				ps.execute();
 				QueryCache.getCache().cleanCache(this.getName());// 清理查询缓存
 				ResultSet rs = ps.getGeneratedKeys();
@@ -359,6 +353,58 @@ public class DBTab implements mySqlInterface {
 		}
 		return gk;
 	}
+	
+	public Object batchInsert(BatchInsert insert,boolean large) {
+		if (this.dataBase == null)
+			throw new RuntimeException("DataTable mapping class " + this.dataTablesClass.getName()
+					+ " datatable is null,please try to configure the @Tab attribute DB to declare database ");
+		Object executeResult = null;
+		try {
+			PreparedStatement ps = this.dataBase.execute(insert.create(), java.sql.Statement.RETURN_GENERATED_KEYS);
+			if (ps != null) {
+				this.preparedBatchParameter(ps,insert.getParameters(),insert.getColumns().size());
+				if(!large)
+					executeResult = ps.executeBatch();
+				else
+					executeResult = ps.executeLargeBatch();
+				QueryCache.getCache().cleanCache(this.getName());// 清理查询缓存
+				ps.close();
+			}
+		} catch (SQLException | SecurityException e) {
+			log.error("error to execute sql:" + insert.create());
+			log.error("parameter:" + insert.getParameters());
+			log.error(e);
+		}
+		return executeResult;
+	}
+	/**
+	 * 尊卑参数
+	 * @param preparedStatement
+	 * @param parameters
+	 * @param columnNum 
+	 * @throws SQLException
+	 */
+	private void preparedBatchParameter(PreparedStatement preparedStatement, List<Object> parameters, int columnNum) throws SQLException {
+		Iterator<Object> iterator = parameters.iterator();
+		while (iterator.hasNext()){
+			Object[] columnValues = (Object[]) iterator.next();
+			for(int j = 0;j < (columnNum<columnValues.length?columnNum:columnValues.length);j++)
+				preparedStatement.setObject(j+1, j<columnValues.length?columnValues[j]:null);
+			preparedStatement.addBatch();
+		}
+	}
+	/**
+	 * 准备参数
+	 * @param preparedStatement
+	 * @param parameters
+	 * @throws SQLException
+	 */
+	private void preparedParameter(PreparedStatement preparedStatement,List<Object> parameters) throws SQLException {
+		Iterator<Object> iterator = parameters.iterator();
+		int i = 0;
+		while (iterator.hasNext())
+			preparedStatement.setObject(++i, iterator.next());
+	}
 
 	public int insert(Insert insert, Connection connection)
 			throws IllegalArgumentException, IllegalAccessException, SecurityException, SQLException {
@@ -369,10 +415,7 @@ public class DBTab implements mySqlInterface {
 		PreparedStatement ps = this.dataBase.execute(insert.create(), connection,
 				java.sql.Statement.RETURN_GENERATED_KEYS);
 		if (ps != null) {
-			Iterator<Object> iterator = insert.getParameters().iterator();
-			int i = 0;
-			while (iterator.hasNext())
-				ps.setObject(++i, iterator.next());
+			this.preparedParameter(ps,insert.getParameters());
 			ps.execute();
 			QueryCache.getCache().cleanCache(this.getName());// 清理查询缓存
 			ResultSet rs = ps.getGeneratedKeys();
@@ -674,10 +717,7 @@ public class DBTab implements mySqlInterface {
 		try {
 			ps= this.dataBase.execute(sql);
 			if (ps != null) {
-				Iterator<Object> iterator = update.getParameters().iterator();
-				int i = 0;
-				while (iterator.hasNext())
-					ps.setObject(++i, iterator.next());
+				this.preparedParameter(ps,update.getParameters());
 				ps.execute();
 				QueryCache.getCache().cleanCache(this.getName());// 清理查询缓存
 			}
