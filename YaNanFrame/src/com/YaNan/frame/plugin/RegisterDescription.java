@@ -15,34 +15,35 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
+
 import com.YaNan.frame.plugin.annotations.Register;
 import com.YaNan.frame.plugin.annotations.Support;
+import com.YaNan.frame.plugin.beans.BeanContext;
 import com.YaNan.frame.plugin.handler.FieldHandler;
 import com.YaNan.frame.plugin.handler.InstanceHandler;
 import com.YaNan.frame.plugin.handler.InvokeHandler;
 import com.YaNan.frame.plugin.handler.InvokeHandlerSet;
 import com.YaNan.frame.plugin.handler.PlugsHandler;
 import com.YaNan.frame.reflect.ClassLoader;
+import com.YaNan.frame.reflect.cache.ClassHelper;
 import com.YaNan.frame.reflect.cache.ClassInfoCache;
+import com.typesafe.config.Config;
 
 /**
- * 组件描述类 用于创建组件时的组件信息
- * v1.0 支持通过Class的Builder方式 
- * v1.1 支持通过Comp文件的Builder方式 
- * v1.2 支持创建默认的Builder方式 
- * v1.3 支持描述器的属性 
- * v1.4 将InvokeHandler的创建迁移到组件初始化时，大幅度提高代理执行效率
- * v1.5 20180910 重新构建InvokeHandler的逻辑，提高aop的效率
- * v1.6 20180921 添加FieldHandler和ConstructorHandler 实现方法拦截与构造器拦截
+ * 组件描述类 用于创建组件时的组件信息 v1.0 支持通过Class的Builder方式 v1.1 支持通过Comp文件的Builder方式 v1.2
+ * 支持创建默认的Builder方式 v1.3 支持描述器的属性 v1.4 将InvokeHandler的创建迁移到组件初始化时，大幅度提高代理执行效率
+ * v1.5 20180910 重新构建InvokeHandler的逻辑，提高aop的效率 v1.6 20180921
+ * 添加FieldHandler和ConstructorHandler 实现方法拦截与构造器拦截
  * 
  * 
  * @author yanan
  *
  */
 public class RegisterDescription {
-	private Map<Integer, Object> proxyContainer = new HashMap<Integer, Object>();
+	private Map<Integer, Object> proxyContainer;
 	/**
 	 * 组件类
 	 */
@@ -91,6 +92,11 @@ public class RegisterDescription {
 	 * 方法拦截器 映射
 	 */
 	private Map<Method, InvokeHandlerSet> handlerMapping;
+	/**
+	 * Config
+	 */
+	private Config config;
+
 	public ClassLoader getLoader() {
 		return loader;
 	}
@@ -144,6 +150,14 @@ public class RegisterDescription {
 		this.proxyModel = register.model();
 		checkPlugs(this.plugs);
 		PlugsFactory.getInstance().addRegisterHandlerQueue(this);
+	}
+
+	private void createProxyContainer() {
+		if (this.proxyContainer == null)
+			synchronized (this) {
+				if (this.proxyContainer == null)
+					this.proxyContainer = new HashMap<Integer, Object>();
+			}
 	}
 
 	public void setAttribute(String name, Object value) {
@@ -221,19 +235,276 @@ public class RegisterDescription {
 			checkPlugs(this.plugs);
 			PlugsFactory.getInstance().addRegisterHandlerQueue(this);
 		} catch (Exception e) {
-			if(PluginAppincationContext.isWebContext())
+			if (PluginAppincationContext.isWebContext())
 				throw new Exception("plugin " + file.getName() + " init failed", e);
 		}
 	}
 
+	public RegisterDescription(Config config) throws Exception {
+		try {
+			config.allowKeyNull(true);
+			this.config = config;
+			// 读取属性
+			String className = config.getString("class");
+			String ref = config.getString("ref");
+			if (className == null && ref == null)
+				throw new RuntimeException("could not fond class property and no reference any at \""
+						+ config.origin().url() + "\" at line : " + config.origin().lineNumber());
+			if (className != null) {
+				this.loader = new ClassLoader(className, false);
+				this.clzz = loader.getLoadedClass();
+				this.priority = config.getInt("priority", 0);
+				this.signlton = config.getBoolean("signlton", true);
+				this.attribute = config.getString("attribute", "*").split(",");
+				this.description = config.getString("description", "");
+
+				String model = config.getString("model", "DEFAULT");
+				this.proxyModel = ProxyModel.getProxyModel(model);
+				// 获取实现类
+				if (config.isConfigList("field")) {
+					List<? extends Config> fields = config.getConfigList("field");
+					for (Config field : fields)
+						this.configField(field);
+				} else {
+					Config field = config.getConfig("field");
+					if (field != null)
+						this.configField(field);
+				}
+				// 获取实现类所在的接口
+				String declareRegister = config.getString("service", "*");
+				this.plugs = getPlugs(clzz, declareRegister);
+				// if (this.plugs == null || this.plugs.length == 0)
+				// throw new Exception("register " + clzz.getName() + " not
+				// implements any interface");
+				checkPlugs(this.plugs);
+			}
+			PlugsFactory.getInstance().addRegisterHandlerQueue(this);
+		} catch (Exception e) {
+			if (PluginAppincationContext.isWebContext())
+				throw new Exception("plugin exception init at \"" + config.origin().url() + "\" at line "
+						+ config.origin().lineNumber(), e);
+		}
+	}
+
+	/**
+	 * 处理参数中Field字段
+	 * 
+	 * @param field
+	 */
+	private void configField(Config conf) {
+		ParamDesc paraDesc = this.getParameterDescription(conf);
+		if (paraDesc.getName() == null)
+			throw new RuntimeException("plugins property field name is null at \"" + conf.origin().url() + "\" at line "
+					+ conf.origin().lineNumber());
+		Field field = loader.getDeclaredField(paraDesc.getName());
+		if (field == null)
+			throw new RuntimeException("Field \"" + paraDesc.getName() + "\" is not exist at plug class "
+					+ clzz.getName() + " at \"" + conf.origin().url() + "\" at line " + conf.origin().lineNumber());
+		if (this.fieldParam == null)
+			this.fieldParam = new HashMap<Field, FieldDesc>();
+		this.fieldParam.put(field, new FieldDesc(paraDesc.getType(), paraDesc.getValue(), field));
+	}
+
+	private ParamDesc getParameterDescription(Config conf) {
+		conf.allowKeyNull(true);
+		String fieldName = null;
+		String value = null;
+		String type = null;
+		if (conf.hasPath("name")) {
+			fieldName = conf.getString("name");
+			type = conf.getString("type", "DEFAULT");
+			value = conf.getString("value");
+		} else {
+			Iterator<Entry<String, Config>> iterator = conf.configEntrySet().iterator();
+			while (iterator.hasNext()) {
+				Entry<String, Config> entry = iterator.next();
+				fieldName = entry.getKey();
+				Config config = entry.getValue();
+				config.allowKeyNull(true);
+				Iterator<Entry<String, Object>> objectIterator = config.simpleObjectEntrySet().iterator();
+				while (objectIterator.hasNext()) {
+					Entry<String, Object> object = objectIterator.next();
+					type = object.getKey();
+					value = (String) object.getValue();
+					continue;
+				}
+			}
+			Iterator<Entry<String, Object>> objectIterator = conf.simpleObjectEntrySet().iterator();
+			while (objectIterator.hasNext()) {
+				Entry<String, Object> object = objectIterator.next();
+				fieldName = object.getKey();
+				value = (String) object.getValue();
+				continue;
+			}
+		}
+		return new ParamDesc(type, value, fieldName);
+	}
+
 	public void initHandler() {
 		handlerMapping = new HashMap<Method, InvokeHandlerSet>();
-		for (Class<?> interfacer : plugs) {
-			this.initHandlerMapping(interfacer);
+		if (plugs != null)
+			for (Class<?> interfacer : plugs) {
+				this.initHandlerMapping(interfacer);
+			}
+		if (this.clzz != null) {
+			this.initHandlerMapping(this.clzz);
+			this.initConstructorHandlerMapping(this.clzz);
+			this.initFieldHandlerMapping();
 		}
-		this.initHandlerMapping(this.clzz);
-		this.initConstructorHandlerMapping(this.clzz);
-		this.initFieldHandlerMapping();
+		if (this.config != null) {
+			// 配置文件专用
+			String id = config.getString("id");
+			if (id != null) {
+				Object instance = null;
+				// Parmerter[] params ;
+				// ParamDesc param;
+				// //判断是否有参数
+				// if(config.hasPath("args")){
+				// //单个参数
+				// if(!config.isList("args")){
+				// if(config.getType("args") == ConfigValueType.OBJECT){
+				// param = new ParamDesc()
+				// }else{
+				// param = new ParamDesc(null,config.getString("args"), null);
+				// }
+				// }else{
+				//
+				// }
+				// System.out.println(config.isList("args"));
+				// String sParam = config.getString("args");
+				// if(sParam!=null){
+				// System.out.println(sParam);
+				// }else{
+				// }
+				// //获取参数描述
+				//
+				//// ParamDesc param =
+				// this.getParameterDescription(config.getConfig("args"));
+				// }
+				Object ref = null;
+				String refConf = config.getString("ref");
+				if (refConf != null) {
+					ref = PlugsFactory.getBean(refConf);
+					this.loader = new ClassLoader(ref.getClass(), false);
+					this.clzz = loader.getLoadedClass();
+					try {
+						RegisterDescription register = PlugsFactory.getBeanRegister(ref);
+						this.priority = config.getInt("priority", register.priority);
+						this.signlton = config.getBoolean("signlton", register.signlton);
+						String attr = config.getString("attribute");
+						if (attr == null)
+							this.attribute = register.attribute;
+						else
+							this.attribute = attr.split(",");
+						this.description = config.getString("description", register.description);
+						String model = config.getString("model");
+
+						this.proxyModel = ProxyModel.getProxyModel(model);
+						// 获取实现类
+						this.fieldParam = register.fieldParam;
+						// 获取实现类所在的接口
+						this.plugs = register.plugs;
+						this.fieldParam = register.fieldParam;
+					} catch (Throwable t) {
+						this.priority = config.getInt("priority", 0);
+						this.signlton = config.getBoolean("signlton", true);
+						this.attribute = config.getString("attribute", "*").split(",");
+						this.description = config.getString("description", "");
+
+						String model = config.getString("model", "DEFAULT");
+						this.proxyModel = ProxyModel.getProxyModel(model);
+						// 获取实现类
+						if (config.isConfigList("field")) {
+							List<? extends Config> fields = config.getConfigList("field");
+							for (Config field : fields)
+								this.configField(field);
+						} else {
+							Config field = config.getConfig("field");
+							if (field != null)
+								this.configField(field);
+						}
+						// 获取实现类所在的接口
+						String declareRegister = config.getString("service", "*");
+						this.plugs = getPlugs(clzz, declareRegister);
+					}
+					// if (this.plugs == null || this.plugs.length == 0)
+					// throw new Exception("register " + clzz.getName() + " not
+					// implements any interface");
+					this.initHandlerMapping(this.clzz);
+					this.initConstructorHandlerMapping(this.clzz);
+					this.initFieldHandlerMapping();
+					checkPlugs(this.plugs);
+				}
+				try {
+					instance = this.getNewBean();
+					PlugsFactory.addBeanRegister(instance, this);
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+				// if(this.plugs!=null){
+				// for (Class<?> cl : this.plugs) {
+				// PlugsHandler.newMapperProxy(cl, this, instance);
+				// }
+				// }
+				if (this.fieldParam != null) {
+					for (FieldDesc desc : this.fieldParam.values()) {
+						desc.getFieldHandler().preparedField(this, null, instance, desc, null);
+					}
+				}
+				if (this.config.hasPath("init")) {
+					try {
+						Method method;
+						if (this.config.isList("init")) {
+							List<String> methods = this.config.getStringList("init");
+							for (String methodStr : methods) {
+								method = ClassHelper.getClassHelper(clzz).getDeclaredMethod(methodStr);
+								if (method == null)
+									throw new RuntimeException("init invoke method \"" + methodStr
+											+ "\" could not be found at class" + clzz);
+								method.invoke(instance);
+							}
+						} else {
+							String methodStr = this.config.getString("init");
+							method = ClassHelper.getClassHelper(clzz).getDeclaredMethod(methodStr);
+							if (method == null)
+								throw new RuntimeException(
+										"init invoke method \"" + methodStr + "\" could not be found at class" + clzz);
+							method.invoke(instance);
+						}
+					} catch (Exception e) {
+						throw new RuntimeException(e);
+					}
+				}
+				BeanContext.getContext().addBean(id, instance);
+			}
+		}
+	}
+
+	private Object getNewBean() throws Exception {
+		String refConf = config.getString("ref");
+		if (refConf != null) {
+			Object ref = PlugsFactory.getBean(refConf);
+			if (config.hasPath("method")) {
+				String methodStr = config.getString("method");
+				Method method = ClassHelper.getClassHelper(clzz).getDeclaredMethod(methodStr);
+				if (method == null)
+					throw new RuntimeException("method \"" + methodStr + "\" is not exists");
+				return method.invoke(ref);
+			} else {
+				System.out.println(refConf);
+				return PlugsFactory.getBeanRegister(refConf).getNewBean();
+			}
+		} else {
+			if (config.hasPath("method")) {
+				String methodStr = config.getString("method");
+				Method method = ClassHelper.getClassHelper(clzz).getDeclaredMethod(methodStr);
+				if (method == null)
+					throw new RuntimeException("method \"" + methodStr + "\" is not exists");
+				return method.invoke(null);
+			} else {
+				return this.getRegisterNewInstance(null);
+			}
+		}
 	}
 
 	private void initFieldHandlerMapping() {
@@ -312,7 +583,7 @@ public class RegisterDescription {
 				}
 		}
 		if (handler != null) {
-			fieldDesc = new FieldDesc(null, null, field);
+			fieldDesc = new FieldDesc(field.getName(), null, field);
 			fieldDesc.setFieldHandler(handler);
 			fieldDesc.setAnnotation(annotation);
 		}
@@ -330,9 +601,9 @@ public class RegisterDescription {
 				InvokeHandlerSet ihs = null;
 				if (this.constructorMapping != null)
 					ihs = this.constructorMapping.get(construecotr);
-				InstanceHandler handler = null;
 				Map<Class<?>, Object> annos = null;
 				for (int i = 0; i < registerList.size(); i++) {
+					InstanceHandler handler = null;
 					RegisterDescription register = registerList.get(i);
 					Class<?> registerClass = register.getRegisterClass();
 					// 获取支持的注解
@@ -345,13 +616,13 @@ public class RegisterDescription {
 							for (Class<? extends Annotation> supportClzz : supportClass) {
 								// 对比注解
 								Annotation anno;
-								// 获取每个构造器的注解
+								// 从构造器获取注解
 								anno = construecotr.getAnnotation(supportClzz);
 								if (anno != null) {
 									annos = this.addHanslerAnnotation(annos, anno);
 									handler = register.getRegisterInstance(InstanceHandler.class);
-								} 
-								if(handler==null){
+								}
+								if (handler == null) {
 									Parameter[] parameters = construecotr.getParameters();
 									for (Parameter parameter : parameters) {
 										if ((anno = parameter.getAnnotation(supportClzz)) != null) {
@@ -360,7 +631,7 @@ public class RegisterDescription {
 										}
 									}
 								}
-								if(handler==null){
+								if (handler == null) {
 									anno = clzz.getAnnotation(supportClzz);
 									if (anno != null) {
 										annos = this.addHanslerAnnotation(annos, anno);
@@ -372,18 +643,18 @@ public class RegisterDescription {
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
-				}
-				if (handler != null) {
-					if (ihs == null) {
-						ihs = new InvokeHandlerSet(handler);
-						ihs.setAnnotations(annos);
-						if (constructorMapping == null)
-							constructorMapping = new HashMap<Constructor<?>, InvokeHandlerSet>();
-						constructorMapping.put(construecotr, ihs);
-					} else {
-						InvokeHandlerSet ihn = new InvokeHandlerSet(handler);
-						ihn.setAnnotations(annos);
-						ihs.getLast().addInvokeHandlerSet(ihn);
+					if (handler != null) {
+						if (ihs == null) {
+							ihs = new InvokeHandlerSet(handler);
+							ihs.setAnnotations(annos);
+							if (constructorMapping == null)
+								constructorMapping = new HashMap<Constructor<?>, InvokeHandlerSet>();
+							constructorMapping.put(construecotr, ihs);
+						} else {
+							InvokeHandlerSet ihn = new InvokeHandlerSet(handler);
+							ihn.setAnnotations(annos);
+							ihs.getLast().addInvokeHandlerSet(ihn);
+						}
 					}
 				}
 			}
@@ -617,13 +888,14 @@ public class RegisterDescription {
 		Constructor<?> constructor = this.getConstructor(args);
 		// 获取构造器拦截器
 		InvokeHandlerSet invokeHandlerSet = null;
+		InstanceHandler handler = null;
 		try {
 			if (constructor != null && this.constructorMapping != null) {
 				invokeHandlerSet = this.constructorMapping.get(constructor);
 				if (invokeHandlerSet != null) {
 					Iterator<InvokeHandlerSet> handlerIterator = invokeHandlerSet.iterator();
 					while (handlerIterator.hasNext()) {
-						InstanceHandler handler = (InstanceHandler) handlerIterator.next().getInvokeHandler();
+						handler = (InstanceHandler) handlerIterator.next().getInvokeHandler();
 						handler.before(this, plug, constructor, args);
 					}
 				}
@@ -672,19 +944,29 @@ public class RegisterDescription {
 			if (invokeHandlerSet != null) {
 				Iterator<InvokeHandlerSet> handlerIterator = invokeHandlerSet.iterator();
 				while (handlerIterator.hasNext()) {
-					InstanceHandler handler = (InstanceHandler) handlerIterator.next().getInvokeHandler();
+					handler = (InstanceHandler) handlerIterator.next().getInvokeHandler();
 					handler.after(this, plug, constructor, target, args);
 				}
 			}
 		} catch (Throwable t) {
+			PluginRuntimeException exception = new PluginRuntimeException(t);
 			if (invokeHandlerSet != null) {
-				Iterator<InvokeHandlerSet> handlerIterator = invokeHandlerSet.iterator();
-				while (handlerIterator.hasNext()) {
-					InstanceHandler handler = (InstanceHandler) handlerIterator.next().getInvokeHandler();
-					handler.exception(this, plug, constructor, proxy, t, args);
+				if (handler != null)
+					handler.exception(this, plug, constructor, proxy, exception, args);
+				if (!exception.isInterrupt()) {
+					Iterator<InvokeHandlerSet> handlerIterator = invokeHandlerSet.iterator();
+					InstanceHandler i;
+					while (handlerIterator.hasNext() && !exception.isInterrupt()) {
+						i = (InstanceHandler) handlerIterator.next().getInvokeHandler();
+						if (i == handler)
+							continue;
+						i.exception(this, plug, constructor, proxy, exception, args);
+					}
 				}
-			} else
-				t.printStackTrace();
+
+			}
+			if (!exception.isInterrupt())
+				throw exception;
 		}
 		return (T) proxy;
 	}
@@ -705,6 +987,7 @@ public class RegisterDescription {
 			proxy = this.getProxyInstance(plug, args);
 			if (proxy == null)
 				proxy = this.getRegisterNewInstance(plug, args);
+			this.createProxyContainer();
 			proxyContainer.put(hash(plug, args), proxy);
 		} else {
 			proxy = this.getRegisterNewInstance(plug, args);
@@ -715,10 +998,9 @@ public class RegisterDescription {
 	@SuppressWarnings("unchecked")
 	private <T> T getProxyInstance(Class<T> plug, Object... args) {
 		Object proxy = null;
-		if (this.proxyContainer != null) {
-			int hashKey = hash(plug, args);
-			proxy = this.proxyContainer.get(hashKey);
-		}
+		this.createProxyContainer();
+		int hashKey = hash(plug, args);
+		proxy = this.proxyContainer.get(hashKey);
 		return (T) proxy;
 	}
 
@@ -754,7 +1036,7 @@ public class RegisterDescription {
 	}
 
 	public static int hash(Class<?> clzz, Object... objects) {
-		return clzz.hashCode() + hash(objects);
+		return clzz == null ? 0 : clzz.hashCode() + hash(objects);
 	}
 
 	public static int hash(Object... objects) {
@@ -804,81 +1086,11 @@ public class RegisterDescription {
 		this.fieldParam = fieldParam;
 	}
 
-	public static class FieldDesc {
-		/**
-		 * Field的类型
-		 */
-		private String type;
-		/**
-		 * Field的值
-		 */
-		private String value;
-		/**
-		 * 字段
-		 */
-		private Field field;
-		/**
-		 * fieldHandler
-		 */
-		private FieldHandler fieldHandler;
-		/**
-		 * 扫描到的注解
-		 */
-		private Annotation annotation;
+	public Config getConfig() {
+		return config;
+	}
 
-		@SuppressWarnings("unchecked")
-		public <T> T getAnnotation() {
-			return (T) annotation;
-		}
-
-		public void setAnnotation(Annotation annotation) {
-			this.annotation = annotation;
-		}
-
-		public FieldDesc(String type, String value, Field field) {
-			super();
-			this.type = type;
-			this.value = value;
-			this.field = field;
-		}
-
-		public String getType() {
-			return type;
-		}
-
-		public void setType(String type) {
-			this.type = type;
-		}
-
-		public String getValue() {
-			return value;
-		}
-
-		public void setValue(String value) {
-			this.value = value;
-		}
-
-		public Field getField() {
-			return field;
-		}
-
-		public void setField(Field field) {
-			this.field = field;
-		}
-
-		public FieldHandler getFieldHandler() {
-			return fieldHandler;
-		}
-
-		public void setFieldHandler(FieldHandler fieldHandler) {
-			this.fieldHandler = fieldHandler;
-		}
-
-		@Override
-		public String toString() {
-			return "FieldDesc [type=" + type + ", value=" + value + ", field=" + field + ", fieldHandler="
-					+ fieldHandler + ", annotation=" + annotation + "]";
-		}
-
+	public void setConfig(Config config) {
+		this.config = config;
 	}
 }

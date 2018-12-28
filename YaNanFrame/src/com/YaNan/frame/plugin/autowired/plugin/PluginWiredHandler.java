@@ -5,9 +5,10 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Parameter;
 import java.util.List;
 
+import com.YaNan.frame.plugin.FieldDesc;
+import com.YaNan.frame.plugin.PluginRuntimeException;
 import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.plugin.RegisterDescription;
-import com.YaNan.frame.plugin.RegisterDescription.FieldDesc;
 import com.YaNan.frame.plugin.annotations.Register;
 import com.YaNan.frame.plugin.annotations.Service;
 import com.YaNan.frame.plugin.annotations.Support;
@@ -128,7 +129,7 @@ public class PluginWiredHandler implements InvokeHandler,FieldHandler,InstanceHa
 
 	@Override
 	public void exception(RegisterDescription registerDescription, Class<?> plug, Constructor<?> constructor,
-			Object proxyObject, Throwable throwable, Object... args) {
+			Object proxyObject, PluginRuntimeException throwable, Object... args) {
 		
 	}
 }

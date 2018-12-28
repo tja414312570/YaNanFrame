@@ -211,10 +211,11 @@ public class PlugsHandler implements InvocationHandler, PlugsListener, MethodInt
 	public Object intercept(Object object, Method method, Object[] parameters, MethodProxy methodProxy)
 			throws Throwable {
 		InvokeHandlerSet handler = null;
+		MethodHandler mh = null;
 		if (registerDescription != null && registerDescription.getHandlerMapping() != null) {
 			handler = registerDescription.getHandlerMapping().get(method);
 		}
-		MethodHandler mh = null;
+		try {
 		if (handler != null) {
 			mh = new MethodHandler(this, method, parameters);
 			Iterator<InvokeHandlerSet> iterator = handler.iterator();
@@ -227,7 +228,6 @@ public class PlugsHandler implements InvocationHandler, PlugsListener, MethodInt
 					return mh.getInterruptResult();
 			}
 		}
-		try {
 			Object result = methodProxy.invokeSuper(object, parameters);
 			if (handler != null) {
 				mh.setOriginResult(result);
@@ -243,7 +243,7 @@ public class PlugsHandler implements InvocationHandler, PlugsListener, MethodInt
 
 			}
 			return result;
-		}catch (Exception e) {
+		}catch (Throwable e) {
 			if (handler != null) {
 				Iterator<InvokeHandlerSet> iterator = handler.iterator();
 				InvokeHandlerSet hs;

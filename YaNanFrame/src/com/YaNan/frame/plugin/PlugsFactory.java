@@ -20,10 +20,15 @@ import com.YaNan.frame.path.PackageScanner.ClassInter;
 import com.YaNan.frame.path.Path.PathInter;
 import com.YaNan.frame.plugin.annotations.Register;
 import com.YaNan.frame.plugin.annotations.Service;
+import com.YaNan.frame.plugin.beans.BeanContext;
 import com.YaNan.frame.plugin.handler.InvokeHandler;
 import com.YaNan.frame.plugin.handler.PlugsHandler;
 import com.YaNan.frame.plugin.interfacer.PlugsListener;
 import com.YaNan.frame.reflect.cache.ClassInfoCache;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+
+
 import com.YaNan.frame.reflect.ClassLoader;
 
 /**
@@ -44,7 +49,18 @@ public class PlugsFactory {
 	// register >> registerInfo
 	private Map<Class<?>, RegisterDescription> RegisterContatiner = new HashMap<Class<?>, RegisterDescription>();
 	private volatile Vector<RegisterDescription> registerList = new Vector<RegisterDescription>();
-
+	private Map<Object,RegisterDescription> objectRegister = new HashMap<Object, RegisterDescription>();
+	private Map<String,RegisterDescription> objectIdRegister = new HashMap<String, RegisterDescription>();
+	static void addBeanRegister(Object object,RegisterDescription description){
+		instance.objectRegister.put(object, description);
+		instance.objectIdRegister.put(description.getConfig().getString("id"), description);
+	}
+	public static RegisterDescription getBeanRegister(Object object){
+		return instance.objectRegister.get(object);
+	}
+	public static RegisterDescription getBeanRegister(String beanId){
+		return instance.objectIdRegister.get(beanId);
+	}
 	public void addRegisterHandlerQueue(RegisterDescription registerDescription) {
 		synchronized (registerList) {
 			this.registerList.add(registerDescription);
@@ -111,7 +127,7 @@ public class PlugsFactory {
 			}
 		});
 		Path path = new Path(this.getClass().getClassLoader().getResource("").getPath().replace("%20", " "));
-		path.filter("**.plugs", "**.comps");
+		path.filter("**.plugs", "**.comps","**.conf");
 		path.scanner(new PathInter() {
 			@Override
 			public void find(File file) {
@@ -183,6 +199,16 @@ public class PlugsFactory {
 			if (type.equals(".comps")) {
 				RegisterDescription registerDescription = new RegisterDescription(file);
 				RegisterContatiner.put(registerDescription.getRegisterClass(), registerDescription);
+			}
+			if(type.equals(".conf")){
+				Config config = ConfigFactory.parseFile(file);
+				config.allowKeyNull(true);
+				List<? extends Config> list = config.getConfigList("plugins");
+				for(Config conf : list){
+					if(conf == null)continue;
+					RegisterDescription registerDescription = new RegisterDescription(conf);
+					RegisterContatiner.put(registerDescription.getRegisterClass(), registerDescription);
+				}
 			}
 		} catch (Exception e) {
 			throw new RuntimeException("failed to add plug at file " + file, e);
@@ -700,5 +726,12 @@ public class PlugsFactory {
 			throw new RuntimeException("failed to get instance's PlugsHandler", e);
 		}
 		return plugsHandler;
+	}
+	
+	public static <T> T getBean(String beanId) {
+		T t = BeanContext.getContext().getBean(beanId);
+		if(t==null)
+			throw new RuntimeException("colud not find bean id is \""+beanId+"\"");
+		return t;
 	}
 }
