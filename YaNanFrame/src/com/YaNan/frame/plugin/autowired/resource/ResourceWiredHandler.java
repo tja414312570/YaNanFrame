@@ -3,8 +3,8 @@ package com.YaNan.frame.plugin.autowired.resource;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 
+import com.YaNan.frame.plugin.FieldDesc;
 import com.YaNan.frame.plugin.RegisterDescription;
-import com.YaNan.frame.plugin.RegisterDescription.FieldDesc;
 import com.YaNan.frame.plugin.annotations.Register;
 import com.YaNan.frame.plugin.annotations.Support;
 import com.YaNan.frame.plugin.handler.FieldHandler;

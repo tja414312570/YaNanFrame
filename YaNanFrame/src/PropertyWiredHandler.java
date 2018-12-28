@@ -5,9 +5,10 @@ import java.lang.reflect.Parameter;
 
 import com.YaNan.frame.logging.DefaultLog;
 import com.YaNan.frame.logging.Log;
+import com.YaNan.frame.plugin.FieldDesc;
+import com.YaNan.frame.plugin.PluginRuntimeException;
 import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.plugin.RegisterDescription;
-import com.YaNan.frame.plugin.RegisterDescription.FieldDesc;
 import com.YaNan.frame.plugin.annotations.Register;
 import com.YaNan.frame.plugin.annotations.Support;
 import com.YaNan.frame.plugin.autowired.property.Property;
@@ -73,7 +74,6 @@ public class PropertyWiredHandler implements InvokeHandler, InstanceHandler, Fie
 	@Override
 	public void error(MethodHandler methodHandler, Throwable e) {
 	}
-
 	@Override
 	public void preparedField(RegisterDescription registerDescription, Object proxy, Object target, FieldDesc desc,
 			Object[] args) {
@@ -150,7 +150,7 @@ public class PropertyWiredHandler implements InvokeHandler, InstanceHandler, Fie
 
 	@Override
 	public void exception(RegisterDescription registerDescription, Class<?> plug, Constructor<?> constructor,
-			Object proxyObject, Throwable throwable, Object... args) {
+			Object proxyObject, PluginRuntimeException throwable, Object... args) {
 		// TODO Auto-generated method stub
 
 	}

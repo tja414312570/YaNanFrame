@@ -2,6 +2,7 @@ package com.YaNan.frame.plugin.handler;
 
 import java.lang.reflect.Constructor;
 
+import com.YaNan.frame.plugin.PluginRuntimeException;
 import com.YaNan.frame.plugin.RegisterDescription;
 
 public interface InstanceHandler {
@@ -28,6 +29,6 @@ public interface InstanceHandler {
 	 * @param t
 	 * @param args
 	 */
-	void exception(RegisterDescription registerDescription, Class<?> plug,Constructor<?> constructor, Object proxyObject, Throwable throwable, Object... args);
+	void exception(RegisterDescription registerDescription, Class<?> plug,Constructor<?> constructor, Object proxyObject, PluginRuntimeException throwable, Object... args);
 
 }
