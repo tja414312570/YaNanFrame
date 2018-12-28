@@ -11,6 +11,7 @@ import com.YaNan.frame.plugin.annotations.Register;
 @Register
 public class DefaultSqlSessionExecuter implements SqlSession{
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <T> T selectOne(String sqlId, T... parameters) {
 		SqlFragment frag = SqlFragmentManger.getSqlFragment(sqlId);
@@ -22,10 +23,11 @@ public class DefaultSqlSessionExecuter implements SqlSession{
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public <T> List<T> selectList(String sqlId, T... params) {
+	public <T> List<T> selectList(String sqlId, T... parameters) {
 		SqlFragment frag = SqlFragmentManger.getSqlFragment(sqlId);
-		PreparedSql pre = frag.getPreparedSql(params);
+		PreparedSql pre = frag.getPreparedSql(parameters);
 		try {
 			return pre.query();
 		} catch (SQLException e) {

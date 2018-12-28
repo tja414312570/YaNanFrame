@@ -275,7 +275,6 @@ class ConnectionPoolRefreshService implements Runnable{
 				sleepType = 0;
 				Thread.sleep(delay);
 			} catch (InterruptedException e) {
-				//e.printStackTrace();
 			}
 		}
 		connectionPoolRefreshThread=null;
