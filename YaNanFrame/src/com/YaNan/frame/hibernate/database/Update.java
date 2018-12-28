@@ -23,6 +23,7 @@ public class Update extends OperateImplement {
 	private Map<String, String> map = new HashMap<String, String>();
 	private List<String> condition = new ArrayList<String>();
 	private Map<String, Object> updateList = new LinkedHashMap<String, Object>();
+	//参数存储规则==>列==》参数
 	private final Log log = PlugsFactory.getPlugsInstance(Log.class, Query.class);
 
 	public Update(DBTab dataTables, Object object) {
@@ -48,7 +49,7 @@ public class Update extends OperateImplement {
 							if(!columnName.equals(this.dataTables.getSimpleName()))
 								continue;
 						}
-						this.updateList.put(columnName, "'"+value+"'");
+						this.updateList.put(columnName,value);
 					}
 				}
 			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException | SecurityException
@@ -89,7 +90,7 @@ public class Update extends OperateImplement {
 				Field field = this.getDbTab().getDataTablesClass().getDeclaredField(strField);
 				Object value = this.dataTables.getLoader().get(field);
 				if (value != null)
-					this.updateList.put(this.getDbTab().getDBColumn(field).getName(), "'"+value+"'");
+					this.updateList.put(this.getDbTab().getDBColumn(field).getName(),value);
 			}
 		} catch (Exception e) {
 			log.error(e);
@@ -112,7 +113,7 @@ public class Update extends OperateImplement {
 				Field field = this.getDbTab().getDataTablesClass().getDeclaredField(strField);
 				Object value = this.dataTables.getLoader().get(field);
 				if (value != null)
-					this.updateList.put(this.getDbTab().getDBColumn(field).getName(), "'"+value+"'");
+					this.updateList.put(this.getDbTab().getDBColumn(field).getName(),value);
 			}
 		} catch (Exception e) {
 			log.error(e);
@@ -133,7 +134,7 @@ public class Update extends OperateImplement {
 		while (iterator.hasNext()) {
 			String field = iterator.next();
 			String column = this.getDbTab().getDBColumn(field).getName();
-			this.updateList.put(column,"'"+ updateList.get(field)+"'");
+			this.updateList.put(column, updateList.get(field));
 			this.updateList = updateList;
 		}
 		return this;
@@ -149,7 +150,7 @@ public class Update extends OperateImplement {
 	 */
 	public Update setField(String field, Object value) throws NoSuchFieldException, SecurityException {
 		String column = this.getDbTab().getDBColumn(field).getName();
-		this.updateList.put(column, "'"+value+"'");
+		this.updateList.put(column,value);
 		return this;
 	}
 
@@ -160,7 +161,7 @@ public class Update extends OperateImplement {
 	 * @param value
 	 */
 	public Update setColumn(String field, Object value) {
-		this.updateList.put(field, "'"+value+"'");
+		this.updateList.put(field,value);
 		return this;
 	}
 
@@ -209,18 +210,21 @@ public class Update extends OperateImplement {
 	}
 
 	public String create() {
+		this.parameters.clear();
 		StringBuilder sb = new StringBuilder("UPDATE ").append(this.getDbTab().getName()).append(" SET ");
 		Iterator<String> iterator = this.updateList.keySet().iterator();
 		while (iterator.hasNext()) {
 			String column = iterator.next();
-			sb.append(column).append("=").append(updateList.get(column)).append(iterator.hasNext() ? "," : "");
+			sb.append(column).append(" = ?").append(iterator.hasNext() ? ',' : "");
+			this.parameters.add(updateList.get(column));
 		}
 		if (this.map.size() != 0) {
 			sb.append(" WHERE ");
 			Iterator<String> i = this.map.keySet().iterator();
 			while (i.hasNext()) {
 				String s = i.next();
-				sb.append(s).append("='").append(this.map.get(s)).append(i.hasNext() ? "' AND " : "'");
+				sb.append(s).append(" = ?").append(i.hasNext() ? " AND " : "");
+				this.parameters.add(this.map.get(s));
 			}
 		}
 		if (this.condition.size() != 0) {

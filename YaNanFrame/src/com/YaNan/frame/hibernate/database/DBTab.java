@@ -645,8 +645,33 @@ public class DBTab implements mySqlInterface {
 		int end = sql.indexOf(" ", 7);
 		String sub = sql.substring(start, end);
 		sql = sql.replaceFirst(sub, this.name);
-		QueryCache.getCache().cleanCache(this.getName());
-		return this.dataBase.executeUpdate(sql);
+		PreparedStatement ps  = null;
+		try {
+			ps= this.dataBase.execute(sql);
+			if (ps != null) {
+				Iterator<Object> iterator = update.getParameters().iterator();
+				int i = 0;
+				while (iterator.hasNext())
+					ps.setObject(++i, iterator.next());
+				ps.execute();
+				QueryCache.getCache().cleanCache(this.getName());// 清理查询缓存
+			}
+			return ps.executeUpdate();
+		} catch (SQLException | SecurityException e) {
+			log.error("error to execute sql:" + update.create());
+			log.error("parameter:" + update.getParameters());
+			log.error(e);
+		}finally {
+			if(ps!=null)
+				try {
+					ps.close();
+				} catch (SQLException e) {
+					log.error("error to close preparesStatement at sql:" + update.create());
+					log.error("parameter:" + update.getParameters());
+					log.error(e);
+				}
+		}
+		return 0;
 	}
 
 	public int update(Update update, Connection connection) throws SQLException {
