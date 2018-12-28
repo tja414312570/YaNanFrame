@@ -47,7 +47,8 @@ public class TokenManager{
 	 */
 	public void destory(){
 		tokenLifeTask.shutdown();
-		tokenDeamon.interrupt();
+		if(tokenDeamon.isAlive())
+			tokenDeamon.interrupt();
 	}
 	public static String getTokenMark() {
 		return TokenMark;

@@ -3,6 +3,11 @@ package com.YaNan.frame.servlets.session;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
+/**
+ * Token生命周期管理守护线程
+ * @author yanan
+ *
+ */
 class TokenLifeDeamon implements Runnable{
 	private volatile boolean available;
 	private int Intervals = 60*1000;
@@ -24,7 +29,6 @@ class TokenLifeDeamon implements Runnable{
 			try {
 				Thread.sleep(Intervals);
 			} catch (InterruptedException e) {
-				e.printStackTrace();
 			}
 		}
 	}

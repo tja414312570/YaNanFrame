@@ -123,6 +123,15 @@ public class Token {
 				token = getToken((String)requestContext.getAttribute(TokenManager.TokenMark));
 		return token;
 	}
+	public static Token getToken(){
+		Token token = TokenPool.getToken();
+			if(token==null)
+				token = Token.addToken(Token.newTokenId());
+		return token;
+	}
+	public static void delete(){
+		TokenPool.deleteToken();
+	}
 	public static Token getToken(String tokenId){
 		if(tokenId==null)return null;//如果tokenId为null 则返回null
 		Token token = TokenPool.getToken(tokenId);//从缓存中获取Token
