@@ -14,7 +14,7 @@ import com.YaNan.frame.reflect.ClassLoader;
 
 /**
  * 该类用于提供给DATab的query一个查询的SQL语句的生成方法 提过一个构造器，传入一个DBTab型的表对象，应为他需要使用DBTab context
- * 20181228 支持批量导入，自增键自动排除，删除、添加列等
+ * 20181228 支持批量导入，自增键自动排除，删除、添加列等，增加数据库批量插入功能。
  * 
  * @author yanan
  *
