@@ -37,6 +37,9 @@ public class Delete extends OperateImplement{
 		this.dbTab = new DBTab(object);
 		this.object = object;
 	}
+	public Delete(Class<?> tabClass) {
+		this.dbTab = new DBTab(tabClass);
+	}
 
 	public void setFields(List<String> key) {
 		this.key = key;
