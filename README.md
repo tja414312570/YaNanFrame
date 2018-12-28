@@ -12,6 +12,99 @@
     
 基于AOP的编程模式，自带mvc组件，持久层组件，基于AOP的设计模式，用接口规范您的代码，实现团队解耦。用JAVA Bean来做数据库对象，让您无需知道sql就可以实现数据库的CURD，支持子查询，联表查询。将项目的各种模块声明为Service，通过PluginFactory来管理Service的创建，装配，注入。
 
+更新日志：
+	20181218：1.修复Delete传入参数为Class的bug，2.支持无状态Token的获取，支持方法的权限认证（对象由Plugin代理）。3.支持hocon配置，用hocon配置代替prop文件作为配置，新增优化的Config库。实验性功能：支持方法参数加密，修改plugin的异常处理的bug，新增Bean的支持。
+	future:完善方法参数加密，完善bean支持。
+实例
+1、配置文件配置bean，框架调用
+配置文件：
+```
+plugins:[
+		{
+			class:com.YaNan.frame.hibernate.database.HibernateContextInit,##组件类
+			priority:0,##优先级
+			signlton:true,##是否启用单例模式
+			attribute:"RESTFUL_STYLE",
+			service:"javax.servlet.Servlet,*",
+			field:{location:{Resource:"classpath:hibernate.xml"}}
+		},{
+			id:testFacotory,
+			class:a.test.plugin.Factory,
+			method:newInstance,
+			init:init,
+			field:{location:{Resource:"classpath:hibernate.xml"}}
+		},{
+			id:testFacotory2,
+			ref:testFacotory,
+			field:{location:{Resource:"hibernate.xmls"}}
+		},{
+			id:testFacotory3,
+			ref:testFacotory,
+			method:newBean
+		}
+	]
+```
+代码
+```java
+public static void main(String[] args) {
+	PluginAppincationContext.setWebContext(true);
+	Factory factory = PlugsFactory.getBean("testFacotory");
+	System.out.println(factory);
+	factory.Out("hello");
+	Factory factory1 = PlugsFactory.getBean("testFacotory2");
+	System.out.println(factory1);
+	factory1.Out("hello2");
+	Factory factory2 = PlugsFactory.getBean("testFacotory3");
+	System.out.println(factory2);
+	factory2.Out("hello3");
+}
+```
+结果
+```
+初始化后调用方法
+testFacotory
+a.test.plugin.Factory@2133c8f8
+/Volumes/GENERAL/git/YaNanFrame/YaNanFrame/WebRoot/WEB-INF/classes/hibernate.xml   hello
+a.test.plugin.Factory@43a25848
+/Volumes/GENERAL/git/YaNanFrame/YaNanFrame/WebRoot/WEB-INF/classes/hibernate.xml   hello2
+a.test.plugin.Factory@3ac3fd8b
+/Volumes/GENERAL/git/YaNanFrame/YaNanFrame/WebRoot/WEB-INF/classes/hibernate.xml   hello3
+```
+2、方法调用权限认证与无状态Token
+java:
+```java
+public static void main(String[] args) {
+		Token token = Token.getToken();
+		token.addRole("root");
+		Crypt c = PlugsFactory.getPlugsInstance(Crypt.class);
+		c.out("输出权限有了");
+		
+	}
+	@Authentication(roles="root")
+	public static class Crypt{
+		@Authentication(roles="out")
+		public void out(String out){
+			System.out.println(out.toString());
+		}
+	}
+```
+结果:
+```
+初始化后调用方法
+testFacotory
+2018-12-28 11:15:19 Error: com.YaNan.frame.plugin.handler.PlugsHandler:
+java.lang.RuntimeException: No permission to invoke method:public void com.a.encrypt.testCrypt$Crypt.out(java.lang.String)
+	at com.YaNan.frame.servlets.session.plugin.TokenHandler.before(TokenHandler.java:63)
+	at com.YaNan.frame.plugin.handler.PlugsHandler.intercept(PlugsHandler.java:226)
+	at com.a.encrypt.testCrypt$Crypt$$EnhancerByCGLIB$$857033ca.out(<generated>)
+	at com.a.encrypt.testCrypt.main(testCrypt.java:14)
+Exception in thread "main" java.lang.RuntimeException: No permission to invoke method:public void com.a.encrypt.testCrypt$Crypt.out(java.lang.String)
+	at com.YaNan.frame.servlets.session.plugin.TokenHandler.before(TokenHandler.java:63)
+	at com.YaNan.frame.plugin.handler.PlugsHandler.intercept(PlugsHandler.java:226)
+	at com.a.encrypt.testCrypt$Crypt$$EnhancerByCGLIB$$857033ca.out(<generated>)
+	at com.a.encrypt.testCrypt.main(testCrypt.java:14)
+
+```
 项目结构：通用父级命名空间<br>
   1、hibernate：持久层，用于数据库的CRUD以及事物<br>
   2、logging:日志,框架的日志记录<br>
