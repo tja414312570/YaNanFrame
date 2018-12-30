@@ -8,9 +8,9 @@ import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 
 import javax.validation.Constraint;
 
@@ -48,7 +48,7 @@ public class PlugsFactory {
 	private Map<Class<?>, Plug> plugsList = new HashMap<Class<?>, Plug>();
 	// register >> registerInfo
 	private Map<Class<?>, RegisterDescription> RegisterContatiner = new HashMap<Class<?>, RegisterDescription>();
-	private volatile Vector<RegisterDescription> registerList = new Vector<RegisterDescription>();
+	private volatile List<RegisterDescription> registerList = new LinkedList<RegisterDescription>();
 	private Map<Object,RegisterDescription> objectRegister = new HashMap<Object, RegisterDescription>();
 	private Map<String,RegisterDescription> objectIdRegister = new HashMap<String, RegisterDescription>();
 	static void addBeanRegister(Object object,RegisterDescription description){

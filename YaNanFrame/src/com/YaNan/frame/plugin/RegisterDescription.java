@@ -184,7 +184,7 @@ public class RegisterDescription {
 		PlugsFactory.getInstance().addRegisterHandlerQueue(this);
 	}
 
-	public RegisterDescription(File file) throws Exception {
+	public RegisterDescription(File file){
 		try {
 			this.setFile(file);
 			String fileName = file.getName();
@@ -236,7 +236,9 @@ public class RegisterDescription {
 			PlugsFactory.getInstance().addRegisterHandlerQueue(this);
 		} catch (Exception e) {
 			if (PluginAppincationContext.isWebContext())
-				throw new Exception("plugin " + file.getName() + " init failed", e);
+				throw new RuntimeException("plugin " + file.getName() + " init failed", e);
+			else 
+				e.printStackTrace();
 		}
 	}
 
@@ -283,6 +285,8 @@ public class RegisterDescription {
 			if (PluginAppincationContext.isWebContext())
 				throw new Exception("plugin exception init at \"" + config.origin().url() + "\" at line "
 						+ config.origin().lineNumber(), e);
+			else 
+				e.printStackTrace();
 		}
 	}
 

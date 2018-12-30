@@ -20,7 +20,7 @@ import com.YaNan.frame.logging.Log;
 @WebListener
 public class PluginAppincationContext implements ServletContextListener {
 	private static boolean isWebContext;
-	private final Log log = PlugsFactory.getPlugsInstance(Log.class,PluginAppincationContext.class);
+	private Log log;
 	private ServletContextEvent servletContextEvent;
 	private List<ServletContextListener> contextListernerList;
 	private ServletContext servletContext;
@@ -30,6 +30,7 @@ public class PluginAppincationContext implements ServletContextListener {
 			for(ServletContextListener contenxtInitListener :contextListernerList){
 				contenxtInitListener.contextDestroyed(arg0);
 			}
+		if(log!=null)
 		log.debug("Plugin conetxt has destory at "+new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
 		System.gc();//通过gc清除无用的对象
 	}
@@ -37,6 +38,7 @@ public class PluginAppincationContext implements ServletContextListener {
 	@Override
 	public void contextInitialized(ServletContextEvent servletContextEvent) {
 		isWebContext = true;
+		log = PlugsFactory.getPlugsInstance(Log.class,PluginAppincationContext.class);
 		long t = System.currentTimeMillis();
 		this.servletContextEvent = servletContextEvent;
 		this.servletContext = servletContextEvent.getServletContext();
