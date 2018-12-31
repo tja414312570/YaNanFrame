@@ -115,6 +115,8 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 					// 判断返回结果是否为null,不为null则进行处理
 					// 判断是否有ResponseType等注解
 					List<Annotation> resultAnnotations = servletBean.getMethodAnnotation(ResponseType.class);
+					if (resultAnnotations == null || resultAnnotations.isEmpty()) 
+						resultAnnotations = servletBean.getClassAnnotation(ResponseType.class);
 					// 若果没有获得ResponseType的注解，则根据返回结果寻找response handler
 					if (resultAnnotations == null || resultAnnotations.isEmpty()) {
 						if (handlerResult == null) {

@@ -13,6 +13,7 @@ public class TokenEntity {
 	private String namespace;
 	private String roles;
 	private String chain;
+	private String[] chains;
 	private String CLASS;
 	//name result
 	private Map<String,Result> resultMap = new HashMap<String,Result>();
@@ -121,8 +122,13 @@ public class TokenEntity {
 		if(this.failed!=null&&this.failed.getValue()!=null&&url.contains(this.failed.getValue()))
 			return true;
 		if(this.chain!=null){
-			String[] strs = this.chain.split(",");
-			for(String str : strs){
+			if(this.chains==null){
+				this.chains = this.chain.split(",");
+				for(int i = 0 ;i<this.chains.length;i++){
+					this.chains[i] = this.chains[i].trim();
+				}
+			}
+			for(String str : this.chains){
 				if(!str.contains(".do")&&StringUtil.matchURI(url, str))
 						return true;
 			}

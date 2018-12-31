@@ -50,6 +50,10 @@ public class ServletBean {
 	 */
 	private Map<Class<Annotation>, List<Annotation>> methodAnnotation;
 	/**
+	 * 类的注解
+	 */
+	private Map<Class<Annotation>, List<Annotation>> classAnnotation;
+	/**
 	 * 接口返回类型
 	 */
 	private int type;
@@ -94,6 +98,14 @@ public class ServletBean {
 
 	public void setServletClass(Class<?> className) {
 		this.className = className;
+		List<MethodAnnotationType> phs = PlugsFactory.getPlugsInstanceList(MethodAnnotationType.class);
+		List<Class<Annotation>> annos = new ArrayList<Class<Annotation>>();
+		for (MethodAnnotationType responseType : phs) {
+			for (Class<Annotation> anno : responseType.getSupportAnnotationType())
+				annos.add(anno);
+		}
+		// 获取所有支持的组件的集合
+		this.methodAnnotation = PlugsFactory.getAnnotationGroup(className, annos);
 	}
 
 	public void setOutputStream(boolean output) {
@@ -298,7 +310,11 @@ public class ServletBean {
 			return null;
 		return this.methodAnnotation.get(annoType);
 	}
-
+	public List<Annotation> getClassAnnotation(Class<? extends Annotation> annoType) {
+		if (this.classAnnotation == null)
+			return null;
+		return this.classAnnotation.get(annoType);
+	}
 	public void setAttribute(String key, Object value) {
 		if (attributes == null)
 			synchronized (this) {

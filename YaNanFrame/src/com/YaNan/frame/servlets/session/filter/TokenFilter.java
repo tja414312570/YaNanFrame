@@ -42,7 +42,6 @@ public class TokenFilter extends HttpServlet implements Filter {
 	public void doFilter(ServletRequest request, ServletResponse response,
 			FilterChain chain) throws IOException, ServletException {
 		try {
-			response.setContentType("text/html;charset=UTF-8");
 			Token token = Token.getToken((HttpServletRequest) request);
 			if(token==null)
 				token = Token.addToken(((HttpServletRequest)request),(HttpServletResponse) response);
@@ -248,6 +247,7 @@ public class TokenFilter extends HttpServlet implements Filter {
 					return true;
 				}
 				if(command.equals("output")){
+					response.setContentType("text/html;charset=UTF-8");
 					response.getWriter().write(failed.getValue());
 					response.getWriter().flush();
 					return true;
@@ -262,6 +262,7 @@ public class TokenFilter extends HttpServlet implements Filter {
 					this.Redirect(result.getValue(), request, response);
 				}
 				if(result.getCommand().equals(Token_Command_Type.COMMAND_OUTPUT)){
+					response.setContentType("text/html;charset=UTF-8");
 					response.getWriter().write(result.getValue());
 					response.getWriter().flush();
 				}

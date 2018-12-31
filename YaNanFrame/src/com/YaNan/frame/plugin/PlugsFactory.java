@@ -681,6 +681,33 @@ public class PlugsFactory {
 		}
 		return annoGroup;
 	}
+	public static Map<Class<Annotation>, List<Annotation>> getAnnotationGroup(Class<?> clzz,
+			List<Class<Annotation>> annoTypes) {
+		if (clzz == null)
+			return null;
+		Annotation[] annotations = clzz.getAnnotations();
+		if (annotations.length == 0)
+			return null;
+		Map<Class<Annotation>, List<Annotation>> annoGroup = new HashMap<Class<Annotation>, List<Annotation>>();
+		if (annoTypes.size() == 0)// 没有指定注解参数时，返回空，因为没有意义
+			return null;
+		// 遍历所有注解，进行分组添加
+		for (Annotation annotation : annotations) {
+			for (Class<Annotation> annoType : annoTypes) {
+				Annotation annoMark = annotation.annotationType().getAnnotation(annoType);
+				if (annoMark != null) {
+					List<Annotation> list = annoGroup.get(annoType);
+					if (list == null) {
+						list = new ArrayList<Annotation>();
+						list.add(annotation);
+						annoGroup.put(annoType, list);
+					} else
+						list.add(annotation);
+				}
+			}
+		}
+		return annoGroup;
+	}
 
 	public static List<Annotation> getAnnotationGroup(Field field, Class<? extends Annotation> annotationType) {
 		if (field == null || annotationType == null)
@@ -704,6 +731,8 @@ public class PlugsFactory {
 			return PlugsFactory.getAnnotationGroup((Parameter) parameter, Constraint.class);
 		if (parameter.getClass().equals(Method.class))
 			return PlugsFactory.getAnnotationGroup((Method) parameter, Constraint.class);
+		if (parameter.getClass().equals(Class.class))
+			return PlugsFactory.getAnnotationGroup((Class<?>) parameter, Constraint.class);
 		return null;
 	}
 
