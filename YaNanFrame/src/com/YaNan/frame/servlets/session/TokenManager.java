@@ -39,7 +39,7 @@ public class TokenManager{
 	private TokenManager() {
 		tokenLifeTask = new TokenLifeDeamon();
 		tokenDeamon = new Thread(tokenLifeTask);
-		tokenDeamon.setPriority(1);
+		tokenDeamon.setDaemon(true);
 		tokenDeamon.start();
 	};
 	/**

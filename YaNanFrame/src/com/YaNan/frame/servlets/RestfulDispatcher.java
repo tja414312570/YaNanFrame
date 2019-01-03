@@ -44,6 +44,7 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 	private static final long serialVersionUID = 1L;
 	public static final String DEFAULT_METHOD_PARAM = "_method";
 	private static final String ActionStyle = "RESTFUL_STYLE";
+	private String contextType = "text/html;charset=utf-8";
 	// 日志类，用于输出日志
 	private final Log log = PlugsFactory.getPlugsInstance(Log.class, RestfulDispatcher.class);
 	protected boolean showServerInfo = true;
@@ -131,6 +132,7 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 							if (responseHandler != null) {
 								responseHandler.render(request, response, handlerResult, null, servletBean);
 							} else {
+								response.setContentType(contextType);
 								response.getWriter().write(handlerResult.toString());
 								response.getWriter().flush();
 								response.getWriter().close();

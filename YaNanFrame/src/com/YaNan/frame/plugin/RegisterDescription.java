@@ -125,7 +125,11 @@ public class RegisterDescription {
 	 * 域参数
 	 */
 	private Map<Field, FieldDesc> fieldParam;
-
+	/**
+	 * 初始化后执行的方法
+	 */
+	private String[] method;
+	private Method[] initMethod;
 	public ClassLoader getProxyClassLoader() {
 		return loader;
 	}
@@ -148,6 +152,14 @@ public class RegisterDescription {
 		this.attribute = register.attribute();
 		this.description = register.description();
 		this.proxyModel = register.model();
+		if(register.method().length>0){
+			this.method =register.method();
+			for(int i = 0;i<register.method().length;i++){
+				Method method = loader.getMethod(register.method()[i]);
+				if(method==null)
+					throw new PluginInitException("register class "+this.clzz.getName()+" could not found no parameter method \""+register.method()[i]+"\"");
+			}
+		}
 		checkPlugs(this.plugs);
 		PlugsFactory.getInstance().addRegisterHandlerQueue(this);
 	}
@@ -234,9 +246,9 @@ public class RegisterDescription {
 				throw new Exception("register " + clzz.getName() + " not implements any interface");
 			checkPlugs(this.plugs);
 			PlugsFactory.getInstance().addRegisterHandlerQueue(this);
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			if (PluginAppincationContext.isWebContext())
-				throw new RuntimeException("plugin " + file.getName() + " init failed", e);
+				throw new PluginInitException("plugin " + file.getName() + " init failed", e);
 			else 
 				e.printStackTrace();
 		}
@@ -252,6 +264,20 @@ public class RegisterDescription {
 			if (className == null && ref == null)
 				throw new RuntimeException("could not fond class property and no reference any at \""
 						+ config.origin().url() + "\" at line : " + config.origin().lineNumber());
+			if(config.hasPath("init")){
+				if (this.config.isList("init")) {
+					List<String> methods = this.config.getStringList("init");
+					this.method = new String[methods.size()];
+					for (int i = 0;i<methods.size();i++) {
+						this.method[i]  = methods.get(i);
+					}
+				} else {
+					this.method = new String[1];
+					this.method[0] = config.getString("init");
+				}
+			}
+			
+			
 			if (className != null) {
 				this.loader = new ClassLoader(className, false);
 				this.clzz = loader.getLoadedClass();
@@ -283,7 +309,7 @@ public class RegisterDescription {
 			PlugsFactory.getInstance().addRegisterHandlerQueue(this);
 		} catch (Exception e) {
 			if (PluginAppincationContext.isWebContext())
-				throw new Exception("plugin exception init at \"" + config.origin().url() + "\" at line "
+				throw new PluginInitException("plugin exception init at \"" + config.origin().url() + "\" at line "
 						+ config.origin().lineNumber(), e);
 			else 
 				e.printStackTrace();
@@ -457,26 +483,9 @@ public class RegisterDescription {
 				}
 				if (this.config.hasPath("init")) {
 					try {
-						Method method;
-						if (this.config.isList("init")) {
-							List<String> methods = this.config.getStringList("init");
-							for (String methodStr : methods) {
-								method = ClassHelper.getClassHelper(clzz).getDeclaredMethod(methodStr);
-								if (method == null)
-									throw new RuntimeException("init invoke method \"" + methodStr
-											+ "\" could not be found at class" + clzz);
-								method.invoke(instance);
-							}
-						} else {
-							String methodStr = this.config.getString("init");
-							method = ClassHelper.getClassHelper(clzz).getDeclaredMethod(methodStr);
-							if (method == null)
-								throw new RuntimeException(
-										"init invoke method \"" + methodStr + "\" could not be found at class" + clzz);
-							method.invoke(instance);
-						}
-					} catch (Exception e) {
-						throw new RuntimeException(e);
+						this.initProxyMethod(instance);
+					} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+						throw new PluginInitException("failed to invoke register init method", e);
 					}
 				}
 				BeanContext.getContext().addBean(id, instance);
@@ -952,8 +961,9 @@ public class RegisterDescription {
 					handler.after(this, plug, constructor, target, args);
 				}
 			}
+			this.initProxyMethod(proxy);
 		} catch (Throwable t) {
-			PluginRuntimeException exception = new PluginRuntimeException(t);
+			PluginRuntimeException exception =t.getClass().equals(PluginRuntimeException.class)?(PluginRuntimeException) t:new PluginRuntimeException(t);
 			if (invokeHandlerSet != null) {
 				if (handler != null)
 					handler.exception(this, plug, constructor, proxy, exception, args);
@@ -972,7 +982,38 @@ public class RegisterDescription {
 			if (!exception.isInterrupt())
 				throw exception;
 		}
+	
 		return (T) proxy;
+	}
+	/**
+	 * 代理实例化后调用方法
+	 * @param proxy
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 * @throws InvocationTargetException
+	 */
+	private void initProxyMethod(Object proxy) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		
+		if(this.initMethod!=null){
+			for(Method method : this.initMethod){
+				method.setAccessible(true);
+				method.invoke(proxy);
+				method.setAccessible(false);
+			}
+		}else if(this.method!=null){
+			ClassHelper helper = ClassHelper.getClassHelper(proxy.getClass());
+			this.initMethod = new Method[this.method.length];
+			for(int i = 0;i<this.method.length;i++){
+				Method method = helper.getMethod(this.method[i]);
+				if(method==null){
+					this.initMethod = null;
+					throw new PluginRuntimeException("could not found proxy init method \""+this.method[i]
+							+"\" at register class "+this.clzz.getName()+",mabye the service class not the method and the proxy model is jdk.");
+				}
+				this.initMethod[i] = method;
+			}
+			this.initProxyMethod(proxy);
+		}
 	}
 
 	/**

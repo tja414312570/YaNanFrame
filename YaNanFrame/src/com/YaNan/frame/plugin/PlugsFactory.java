@@ -209,6 +209,10 @@ public class PlugsFactory {
 					RegisterDescription registerDescription = new RegisterDescription(conf);
 					RegisterContatiner.put(registerDescription.getRegisterClass(), registerDescription);
 				}
+				Config conf = config.getConfig("conf");
+				if(conf!=null)
+					ConfigContext.addConf(conf);
+				
 			}
 		} catch (Exception e) {
 			throw new RuntimeException("failed to add plug at file " + file, e);
@@ -232,8 +236,8 @@ public class PlugsFactory {
 			try {
 				RegisterDescription registerDescription = new RegisterDescription(register, cls);
 				RegisterContatiner.put(cls, registerDescription);
-			} catch (Exception e) {
-				e.printStackTrace();
+			} catch (Throwable e) {
+				throw e;
 			}
 		}
 	}
@@ -296,7 +300,12 @@ public class PlugsFactory {
 	public static boolean checkAvaliableNE() {
 		return instance != null && instance.isAvailable();
 	}
-
+	public static List<RegisterDescription> getRegisterList(Class<?> plugsClass) {
+		Plug plug = instance.plugsList.get(plugsClass);
+		if(plug==null)
+			throw new PluginRuntimeException("could found plug for "+plugsClass.getName());
+		return plug.getRegisterDescriptionList();
+	}
 	/**
 	 * 获取注册描述器
 	 * 
@@ -760,7 +769,7 @@ public class PlugsFactory {
 	public static <T> T getBean(String beanId) {
 		T t = BeanContext.getContext().getBean(beanId);
 		if(t==null)
-			throw new RuntimeException("colud not find bean id is \""+beanId+"\"");
+			throw new RuntimeException("colud not find bean defined id is \""+beanId+"\"");
 		return t;
 	}
 }

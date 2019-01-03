@@ -19,7 +19,7 @@ public class JsonResponseHandler implements ResponseHandler{
 	@Override
 	public void render(HttpServletRequest request, HttpServletResponse response, Object handlerResult,Annotation annotation,
 			ServletBean servletBean) throws ServletException, IOException {
-		response.setContentType("application/json");
+		response.setContentType("application/json;charset=utf-8");
 		if(!response.isCommitted())
 			if(handlerResult!=null){
 				ResponseJson anno = (ResponseJson) annotation;

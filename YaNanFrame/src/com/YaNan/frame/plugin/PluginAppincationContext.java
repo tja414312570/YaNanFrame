@@ -38,21 +38,21 @@ public class PluginAppincationContext implements ServletContextListener {
 	@Override
 	public void contextInitialized(ServletContextEvent servletContextEvent) {
 		isWebContext = true;
-		log = PlugsFactory.getPlugsInstance(Log.class,PluginAppincationContext.class);
-		long t = System.currentTimeMillis();
-		this.servletContextEvent = servletContextEvent;
-		this.servletContext = servletContextEvent.getServletContext();
-		log.debug("");
-		log.debug("       PLUGINPLUGID     PLUE         PLUA       PLUR      PLUGINPLUGIY    PLUGINPLUGIN   PLUG         PLUG");
-		log.debug("      PLUG      PLUW   PLUA         PLUN       PLUG    PLUG                  PLUG       PLUGPLUG     PLUG");
-		log.debug("     PLUG      PLUH   PLUO         PLUN       PLUG   PLUG                   PLUG       PLUG PLUG    PLUG");
-		log.debug("    PLUG      PLUY   PLUA         PLUN       PLUG   PLUG                   PLUG       PLUG  PLUG   PLUG");
-		log.debug("   PLUGPLUGPLUGI    PLUG         PLUG       PLUG   PLUG      PLUGINP      PLUG       PLUG   PLUG  PLUG");
-		log.debug("  PLUN             PLUE         PLUV       PLUE   PLUR         PLUG      PLUG       PLUG    PLUG PLUG");
-		log.debug(" PLUG             PLUI         PLUV       PLUE     PLUU       PLUP      PLUG       PLUG     PLUGINPL");
-		log.debug("PLUY             PLUGINPLUGO   PLUGINPLUGINU        PLUGINPLUGIG    PLUGINPLUGIE  PLUG         PLUG");
-		log.debug("");
 		try{
+			log = PlugsFactory.getPlugsInstance(Log.class,PluginAppincationContext.class);
+			long t = System.currentTimeMillis();
+			this.servletContextEvent = servletContextEvent;
+			this.servletContext = servletContextEvent.getServletContext();
+			log.debug("");
+			log.debug("       PLUGINPLUGID     PLUE         PLUA       PLUR      PLUGINPLUGIY    PLUGINPLUGIN   PLUG         PLUG");
+			log.debug("      PLUG      PLUW   PLUA         PLUN       PLUG    PLUG                  PLUG       PLUGPLUG     PLUG");
+			log.debug("     PLUG      PLUH   PLUO         PLUN       PLUG   PLUG                   PLUG       PLUG PLUG    PLUG");
+			log.debug("    PLUG      PLUY   PLUA         PLUN       PLUG   PLUG                   PLUG       PLUG  PLUG   PLUG");
+			log.debug("   PLUGPLUGPLUGI    PLUG         PLUG       PLUG   PLUG      PLUGINP      PLUG       PLUG   PLUG  PLUG");
+			log.debug("  PLUN             PLUE         PLUV       PLUE   PLUR         PLUG      PLUG       PLUG    PLUG PLUG");
+			log.debug(" PLUG             PLUI         PLUV       PLUE     PLUU       PLUP      PLUG       PLUG     PLUGINPL");
+			log.debug("PLUY             PLUGINPLUGO   PLUGINPLUGINU        PLUGINPLUGIG    PLUGINPLUGIE  PLUG         PLUG");
+			log.debug("");
 			contextListernerList = PlugsFactory.getPlugsInstanceList(ServletContextListener.class);
 			log.debug("Context Init Plug number:"+contextListernerList.size());
 			for(ServletContextListener contenxtInitListener :contextListernerList){
@@ -62,7 +62,10 @@ public class PluginAppincationContext implements ServletContextListener {
 			log.debug("Plugin conetxt init has completed in "+(System.currentTimeMillis()-t)+"ms");
 			System.gc();//通过gc清除启动时创建的对象
 		}catch (Throwable e){
-			log.error(e);
+			if(log!=null)
+				log.error(e);
+			else 
+				e.printStackTrace();
 			System.exit(1);
 		}
 		

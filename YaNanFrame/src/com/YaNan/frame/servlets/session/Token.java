@@ -182,6 +182,8 @@ public class Token {
 		Cookie cookie = new Cookie(TokenManager.TokenMark,tokenId);
 		cookie.setPath("/");
 		cookie.setMaxAge(token.getTimeOut());
+		cookie.setHttpOnly(true);
+//		cookie.setSecure(true); 非 https 不能获取到ID
 		response.addCookie(cookie);
 		request.setAttribute(TokenManager.TokenMark, tokenId);
 		if(TokenManager.getHibernateInterface()!=null){

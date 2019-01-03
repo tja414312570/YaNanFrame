@@ -33,11 +33,6 @@ import com.YaNan.frame.util.StringUtil;
  */
 @WebFilter(filterName = "tokenFilter", urlPatterns = "/*")
 public class TokenFilter extends HttpServlet implements Filter {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-	
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response,
 			FilterChain chain) throws IOException, ServletException {
@@ -91,6 +86,11 @@ public class TokenFilter extends HttpServlet implements Filter {
 			e.printStackTrace();
 		}
 	}
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	private void forward(TokenFilterInterface ti, String url, ServletRequest request, ServletResponse response){
 		this.forward(getURL(null,url, ti), request, response);

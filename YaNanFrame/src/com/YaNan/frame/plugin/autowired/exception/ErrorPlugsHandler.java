@@ -53,7 +53,6 @@ public class ErrorPlugsHandler implements InvokeHandler,InstanceHandler{
 	public void before(RegisterDescription registerDescription, Class<?> plugClass, Constructor<?> constructor,
 			Object... args) {
 		// TODO Auto-generated method stub
-		System.out.println("构造器");
 		
 	}
 

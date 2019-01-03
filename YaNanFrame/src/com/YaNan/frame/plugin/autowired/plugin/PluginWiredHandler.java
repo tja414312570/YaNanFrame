@@ -77,7 +77,7 @@ public class PluginWiredHandler implements InvokeHandler,FieldHandler,InstanceHa
 				}else{
 					Object obj =  PlugsFactory.getPlugsInstanceByAttributeStrict(type,service.attribute());
 					PlugsHandler handler = PlugsFactory.getPlugsHandler(obj);
-					PlugsHandler invokeHandler = PlugsFactory.getPlugsHandler(target);
+					PlugsHandler invokeHandler = PlugsFactory.getPlugsHandler(proxy);
 					handler.setAttribute("INVOKER_INSTANCE", invokeHandler.getProxyObject());
 					handler.setAttribute("INVOKER_FIELD",field);
 					field.set(target, obj);

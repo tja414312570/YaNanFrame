@@ -105,7 +105,7 @@ public class ServletBean {
 				annos.add(anno);
 		}
 		// 获取所有支持的组件的集合
-		this.methodAnnotation = PlugsFactory.getAnnotationGroup(className, annos);
+		this.classAnnotation = PlugsFactory.getAnnotationGroup(className, annos);
 	}
 
 	public void setOutputStream(boolean output) {

@@ -20,6 +20,7 @@ import com.mysql.jdbc.Connection;
  * 从连接释放中独立出来，提高数据吞吐能力，同时该服务会自动启动和销毁。</br>
  * 2018-6-18 ~ 2018-6-20 优化连接池刷新、释放、获取、添加逻辑，降低各种锁的粒度，提高运行速度，降低运行内存，</br>
  * 2016-?-？~ 2018-6-17 添加数据库连接池用于管理所有DataBase中的数据连接</br>
+ * 20190103 修改连接池管理进程为守护线程
  * 
  * @author yanan
  *
@@ -212,7 +213,7 @@ class ConnectionPoolRefreshService implements Runnable{
 				if(connectionPoolRefreshThread==null){
 					keepAlive=true;
 					connectionPoolRefreshThread = new Thread(this);
-					connectionPoolRefreshThread.setPriority(1);
+					connectionPoolRefreshThread.setDaemon(true);;
 					connectionPoolRefreshThread.start();
 				}
 			}

@@ -1,16 +1,19 @@
 package com.YaNan.frame.plugin;
 
-public class PluginRuntimeException extends RuntimeException{
+public class PluginInitException extends RuntimeException{
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -8769553319796579864L;
 	private boolean interrupt;
-	public PluginRuntimeException(Throwable t) {
+	public PluginInitException(Throwable t) {
 		super(t);
 	}
-	public PluginRuntimeException(String string) {
+	public PluginInitException(String string) {
 		super(string);
+	}
+	public PluginInitException(String string, Throwable e) {
+		super(string,e);
 	}
 	public boolean isInterrupt() {
 		return interrupt;

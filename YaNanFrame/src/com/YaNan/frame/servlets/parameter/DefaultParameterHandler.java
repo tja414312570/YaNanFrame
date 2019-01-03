@@ -480,6 +480,8 @@ public class DefaultParameterHandler implements ParameterHandler {
 	 */
 	protected Object pojoParameterBind(Class<?> pojoClass, String path, HttpServletRequest request,
 			HttpServletResponse response, ServletBean servletBean, Map<String, String> pathParameter) throws Exception {
+		if(pojoClass.isInterface())
+			return null;
 		// 对pojo类进行ClassLoader的包装，ClassLoader会在内部产生一个pojo类的实例
 		ClassLoader loader = new ClassLoader(pojoClass);
 		// 获取所有的field

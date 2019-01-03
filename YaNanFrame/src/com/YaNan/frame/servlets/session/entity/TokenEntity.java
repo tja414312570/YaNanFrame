@@ -117,9 +117,9 @@ public class TokenEntity {
 		return false;
 	}
 	public boolean chainURL(String url,Token token){
-		if(this.value!=null&&url.contains(this.value))
+		if(this.value!=null&&StringUtil.matchURI(url, this.value))
 			return true;
-		if(this.failed!=null&&this.failed.getValue()!=null&&url.contains(this.failed.getValue()))
+		if(this.failed!=null&&this.failed.getValue()!=null&&StringUtil.matchURI(url, this.failed.getValue()))
 			return true;
 		if(this.chain!=null){
 			if(this.chains==null){

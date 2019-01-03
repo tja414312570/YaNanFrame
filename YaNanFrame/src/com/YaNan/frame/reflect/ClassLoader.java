@@ -802,7 +802,7 @@ public class ClassLoader {
 	 * @throws NoSuchMethodException
 	 * @throws SecurityException
 	 */
-	public Method getMethod(String method, Class<?>... parameterType) throws NoSuchMethodException, SecurityException {
+	public Method getMethod(String method, Class<?>... parameterType){
 		return this.infoCache.getMethod(method, parameterType);
 	}
 
