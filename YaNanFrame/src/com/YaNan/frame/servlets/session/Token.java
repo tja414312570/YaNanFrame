@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 
@@ -79,6 +80,9 @@ public class Token {
 	}
 	public Object get(Class<?> cls) {
 		return this.arguments.get(cls.getName());
+	}
+	public Set<Entry<String, Object>> attributeEntry() {
+		return this.arguments.entrySet();
 	}
 	public void remove(Class<?> cls) {
 		this.arguments.remove(cls.getName());
@@ -180,7 +184,7 @@ public class Token {
 		String tokenId=newTokenId();
 		Token token = addToken(tokenId);
 		Cookie cookie = new Cookie(TokenManager.TokenMark,tokenId);
-		cookie.setPath("/");
+		cookie.setPath(request.getContextPath());
 		cookie.setMaxAge(token.getTimeOut());
 		cookie.setHttpOnly(true);
 //		cookie.setSecure(true); 非 https 不能获取到ID

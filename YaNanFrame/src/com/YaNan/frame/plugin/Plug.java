@@ -29,7 +29,7 @@ public class Plug {
 		//设置默认注册组件
 		if(this.defaultRegisterDescription==null)
 			this.defaultRegisterDescription = registerDescription;
-		else if(this.defaultRegisterDescription.getPriority()<registerDescription.getPriority())
+		else if(this.defaultRegisterDescription.getPriority()>registerDescription.getPriority())
 			this.setDefaultRegisterDescription(registerDescription);
 		//为了保持与默认注册组件有相同的优先级，采用倒叙对比法进行优先级运算 比如 原始数据 0  0  2  3 现在需要插入 1  则插入后应该为 0 0 1 2 3
 		if(this.registerList.size()==0){

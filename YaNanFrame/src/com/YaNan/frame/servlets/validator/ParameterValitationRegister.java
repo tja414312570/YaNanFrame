@@ -1,5 +1,6 @@
 package com.YaNan.frame.servlets.validator;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Parameter;
@@ -51,18 +52,18 @@ public class ParameterValitationRegister implements InvokeHandler{
 			ParameterValidator parameterValidator = PlugsFactory.getPlugsInstanceByAttributeStrict(ParameterValidator.class, anno.annotationType().getName());
 			ConstraintViolation<?> valitation = parameterValidator.validate(params[0],anno,methodHandler.getOriginResult(),groups);
 			if(valitation!=null){
-//				try {
+				try {
 					//如果出现错误   则直接返回错误信息
 					if(!parameterHandler.getServletResponse().isCommitted()){
-						throw new ServletRuntimeException(400,valitation.getMessage());
-//						parameterHandler.getServletResponse().setContentType("text/html;charset=UTF-8");
-////						parameterHandler.getServletResponse().setStatus(400);
-//						parameterHandler.getServletResponse().getWriter().write(valitation.getMessage());
-//						parameterHandler.getServletResponse().getWriter().close();
+//						throw new ServletRuntimeException(400,valitation.getMessage());
+						parameterHandler.getServletResponse().setContentType("text/html;charset=UTF-8");
+//						parameterHandler.getServletResponse().setStatus(400);
+						parameterHandler.getServletResponse().getWriter().write(valitation.getMessage());
+						parameterHandler.getServletResponse().getWriter().close();
 					}
-//				} catch (IOException e) {
-//					e.printStackTrace();
-//				}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 				methodHandler.interrupt(methodHandler.getOriginResult());
 			}
 		}

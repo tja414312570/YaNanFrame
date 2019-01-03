@@ -772,4 +772,28 @@ public class PlugsFactory {
 			throw new RuntimeException("colud not find bean defined id is \""+beanId+"\"");
 		return t;
 	}
+	public static <T> T getPlugsInstanceNewByParamType(Class<T> impl, Class<?>[] parameterType,
+			Object... arguments) {
+		try {
+			// 获取一个注册描述
+			RegisterDescription registerDescription = getRegisterDescrption(impl);
+			if (registerDescription == null)
+				throw new Exception("service interface " + impl.getName() + " could not found any registrar");
+			return registerDescription.getRegisterNewInstanceByParamType(impl,parameterType, arguments);
+		} catch (Exception e) {
+			throw new RuntimeException("failed to get plugin instance at plugin class " + impl, e);
+		}
+	}
+	public static <T> T getPlugsInstanceByParamType(Class<T> impl, Class<?>[] parameterType,
+			Object... arguments) {
+		try {
+			// 获取一个注册描述
+			RegisterDescription registerDescription = getRegisterDescrption(impl);
+			if (registerDescription == null)
+				throw new Exception("service interface " + impl.getName() + " could not found any registrar");
+			return registerDescription.getRegisterInstanceByParamType(impl,parameterType, arguments);
+		} catch (Exception e) {
+			throw new RuntimeException("failed to get plugin instance at plugin class " + impl, e);
+		}
+	}
 }

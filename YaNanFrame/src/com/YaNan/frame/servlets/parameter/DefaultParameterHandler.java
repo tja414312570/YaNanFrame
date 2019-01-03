@@ -18,7 +18,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -65,6 +64,8 @@ public class DefaultParameterHandler implements ParameterHandler {
 	private Iterator<String> pathIterator;
 	// 请求参数集合的枚举
 	private Iterator<Entry<String, String[]>> entrySetiterator;
+	//内置模型model
+	private Model model;
 	// 获取session attribute 名称迭代器
 	private static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	private HttpServletRequest servletRequest;
@@ -147,31 +148,7 @@ public class DefaultParameterHandler implements ParameterHandler {
 			} else {
 				// 处理特殊参数 如 pojo session cookie model request response write
 				// header
-				if (paras.getType().equals(HttpServletRequest.class))// request
-					return this.servletRequest;
-				else if (paras.getType().equals(HttpServletResponse.class))// response
-					return this.servletResponse;
-				else if (paras.getType().equals(PrintWriter.class) || paras.getType().equals(Writer.class))// writer
-					return this.servletResponse.getWriter();
-				else if (paras.getType().equals(InputStream.class))// inputStream
-					return this.servletRequest.getInputStream();
-				else if (paras.getType().equals(OutputStream.class))// OutputStream
-					return this.servletResponse.getOutputStream();
-				else if (paras.getType().equals(HttpSession.class))// session
-					return this.servletRequest.getSession();
-				else if (paras.getType().equals(Cookie[].class))// cookies
-					return this.servletRequest.getCookies();
-				else if (paras.getType().equals(Locale.class))// Locale
-					return this.servletRequest.getLocale();
-				else {
-					// pojo 类型 异常部分可能需要处理
-					/**
-					 * 第二个参数需要处理
-					 */
-					return this.pojoParameterBind(paras.getType(), null, servletRequest, servletResponse, servletBean,
-							pathParameter);
-					// ;
-				}
+				return this.specialParams(paras.getType());
 			}
 		} catch (Throwable e) {
 			log.error("An error occurred while processing the parameters !\r\nat class : "+servletBean.getServletClass().getName()
@@ -180,6 +157,37 @@ public class DefaultParameterHandler implements ParameterHandler {
 			throw new ServletRuntimeException(HttpServletResponse.SC_BAD_REQUEST,"An error occurred while processing the parameters !\r\nat class : "+servletBean.getServletClass().getName()
 					+",\r\nat method : "+servletBean.getMethod().getName()
 					+",\r\nat parameter : "+paras.getName(),e);
+		}
+	}
+
+	private Object specialParams(Class<?> type) throws Exception {
+		if (type.equals(HttpServletRequest.class))// request
+			return this.servletRequest;
+		else if (type.equals(HttpServletResponse.class))// response
+			return this.servletResponse;
+		else if (type.equals(Model.class)){// model
+			return this.getModel();
+		}
+		else if (type.equals(PrintWriter.class) || type.equals(Writer.class))// writer
+			return this.servletResponse.getWriter();
+		else if (type.equals(InputStream.class))// inputStream
+			return this.servletRequest.getInputStream();
+		else if (type.equals(OutputStream.class))// OutputStream
+			return this.servletResponse.getOutputStream();
+		else if (type.equals(HttpSession.class))// session
+			return this.servletRequest.getSession();
+		else if (type.equals(Cookie[].class))// cookies
+			return this.servletRequest.getCookies();
+		else if (type.equals(Locale.class))// Locale
+			return this.servletRequest.getLocale();
+		else {
+			// pojo 类型 异常部分可能需要处理
+			/**
+			 * 第二个参数需要处理
+			 */
+			return this.pojoParameterBind(type, null, servletRequest, servletResponse, servletBean,
+					pathParameter);
+			// ;
 		}
 	}
 
@@ -201,6 +209,8 @@ public class DefaultParameterHandler implements ParameterHandler {
 		int endIndex = parameterAnnotation.endIndex();
 		if (parameterAnnotation.value() == -1)
 			endIndex = parameterAnnotation.value();
+		if((endIndex<0))
+			endIndex = uuid.length();
 		return parseBaseType(paras.getType(), uuid.substring(parameterAnnotation.beginIndex(), endIndex), null);
 	}
 
@@ -429,41 +439,26 @@ public class DefaultParameterHandler implements ParameterHandler {
 						+",\r\nat parameter : "+paras.getName(),e);
 			}
 		} else {
-			// 处理特殊参数 如 pojo session cookie model request response write header
-			if (paras.getType().equals(HttpServletRequest.class))// request
-				return this.servletRequest;
-			else if (paras.getType().equals(HttpServletResponse.class))// response
-				return this.servletResponse;
-			else if (paras.getType().equals(PrintWriter.class) || paras.getType().equals(Writer.class))// writer
-				return this.servletResponse.getWriter();
-			else if (paras.getType().equals(InputStream.class))// inputStream
-				return this.servletRequest.getInputStream();
-			else if (paras.getType().equals(OutputStream.class))// OutputStream
-				return this.servletResponse.getOutputStream();
-			else if (paras.getType().equals(HttpSession.class))// session
-				return this.servletRequest.getSession();
-			else if (paras.getType().equals(Cookie[].class))// cookies
-				return this.servletRequest.getCookies();
-			else if (paras.getType().equals(Locale.class))// Locale
-				return this.servletRequest.getLocale();
-			else if (paras.getType().equals(ServletContext.class))// ServletContext
-				return this.servletRequest.getServletContext();
-			else {
-				// pojo 类型 异常部分可能需要处理
-				try {
-					return this.pojoParameterBind(paras.getType(), null, servletRequest, servletResponse, servletBean,
-							pathParameter);
-				} catch (Exception e) {
-					log.error("An error occurred while processing the parameters !\r\nat class : "+servletBean.getServletClass().getName()
-							+",\r\nat method : "+servletBean.getMethod().getName()
-							+",\r\nat parameter : "+paras.getName(),e);
-				}
-				// return
-				// this.pojoParameterBind(paras.getType(),paramEntry.getValue().getName(),
-				// request, response, servletBean, pathParameter);
+			try {
+				return this.specialParams(paras.getType());
+			} catch (Exception e) {
+				log.error("An error occurred while processing the parameters !\r\nat class : "+servletBean.getServletClass().getName()
+						+",\r\nat method : "+servletBean.getMethod().getName()
+						+",\r\nat parameter : "+paras.getName(),e);
 			}
 		}
 		return null;
+	}
+
+	private Object getModel() {
+		if(this.model==null)
+			synchronized (this) {
+				if(this.model==null){
+					Class<?>[] parameterType = {HttpServletRequest.class};
+					this.model = PlugsFactory.getPlugsInstanceNewByParamType(Model.class,parameterType, this.servletRequest);
+				}
+			}
+		return this.model;
 	}
 
 	/**
@@ -737,33 +732,7 @@ public class DefaultParameterHandler implements ParameterHandler {
 				else
 					return null;// 不支持的的类型
 			} else {
-				// 处理特殊参数 如 pojo session cookie model request response write
-				// header
-				if (field.getType().equals(HttpServletRequest.class))// request
-					return this.servletRequest;
-				else if (field.getType().equals(HttpServletResponse.class))// response
-					return this.servletResponse;
-				else if (field.getType().equals(PrintWriter.class) || field.getType().equals(Writer.class))// writer
-					return this.servletResponse.getWriter();
-				else if (field.getType().equals(InputStream.class))// inputStream
-					return this.servletRequest.getInputStream();
-				else if (field.getType().equals(OutputStream.class))// OutputStream
-					return this.servletResponse.getOutputStream();
-				else if (field.getType().equals(HttpSession.class))// session
-					return this.servletRequest.getSession();
-				else if (field.getType().equals(Cookie[].class))// cookies
-					return this.servletRequest.getCookies();
-				else if (field.getType().equals(Locale.class))// Locale
-					return this.servletRequest.getLocale();
-				else {
-					// pojo 类型 异常部分可能需要处理
-					/**
-					 * 第二个参数需要处理
-					 */
-					return this.pojoParameterBind(field.getType(), null, servletRequest, servletResponse, servletBean,
-							pathParameter);
-					// ;
-				}
+				return this.specialParams(field.getType());
 			}
 		} catch (Exception e) {
 			log.error("An error occurred while processing the parameters !\r\nat class : "+servletBean.getServletClass().getName()
@@ -807,38 +776,12 @@ public class DefaultParameterHandler implements ParameterHandler {
 						+",\r\nat field : "+field.getName(),e);
 			}
 		} else {
-			// 处理特殊参数 如 pojo session cookie model request response write header
-			if (field.getType().equals(HttpServletRequest.class))// request
-				return this.servletRequest;
-			else if (field.getType().equals(HttpServletResponse.class))// response
-				return this.servletResponse;
-			else if (field.getType().equals(PrintWriter.class) || field.getType().equals(Writer.class))// writer
-				return this.servletResponse.getWriter();
-			else if (field.getType().equals(InputStream.class))// inputStream
-				return this.servletRequest.getInputStream();
-			else if (field.getType().equals(OutputStream.class))// OutputStream
-				return this.servletResponse.getOutputStream();
-			else if (field.getType().equals(HttpSession.class))// session
-				return this.servletRequest.getSession();
-			else if (field.getType().equals(Cookie[].class))// cookies
-				return this.servletRequest.getCookies();
-			else if (field.getType().equals(Locale.class))// Locale
-				return this.servletRequest.getLocale();
-			else if (field.getType().equals(ServletContext.class))// ServletContext
-				return this.servletRequest.getServletContext();
-			else {
-				// pojo 类型 异常部分可能需要处理
-				try {
-					return this.pojoParameterBind(field.getType(), null, servletRequest, servletResponse, servletBean,
-							pathParameter);
-				} catch (Exception e) {
-					log.error("An error occurred while processing the parameters !\r\nat class : "+servletBean.getServletClass().getName()
-							+",\r\nat method : "+servletBean.getMethod().getName()
-							+",\r\nat field : "+field.getName(),e);
-				}
-				// return
-				// this.pojoParameterBind(paras.getType(),paramEntry.getValue().getName(),
-				// request, response, servletBean, pathParameter);
+			try {
+				return this.specialParams(field.getType());
+			} catch (Exception e) {
+				log.error("An error occurred while processing the parameters !\r\nat class : "+servletBean.getServletClass().getName()
+						+",\r\nat method : "+servletBean.getMethod().getName()
+						+",\r\nat field : "+field.getName(),e);
 			}
 		}
 		return null;

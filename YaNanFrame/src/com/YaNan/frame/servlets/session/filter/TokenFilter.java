@@ -3,6 +3,7 @@ package com.YaNan.frame.servlets.session.filter;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 import javax.servlet.Filter;
@@ -40,6 +41,7 @@ public class TokenFilter extends HttpServlet implements Filter {
 			Token token = Token.getToken((HttpServletRequest) request);
 			if(token==null)
 				token = Token.addToken(((HttpServletRequest)request),(HttpServletResponse) response);
+			this.jstlSupport((HttpServletRequest)request,token);
 			String url =URLSupport.getRelativePath((HttpServletRequest) request);//URLSupport
 			String queryParam = ((HttpServletRequest) request).getQueryString();
 			if(queryParam!=null)
@@ -61,6 +63,14 @@ public class TokenFilter extends HttpServlet implements Filter {
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+	}
+
+	private void jstlSupport(HttpServletRequest request, Token token) {
+		Iterator<Entry<String, Object>> iterator = token.attributeEntry().iterator();
+		while(iterator.hasNext()){
+			Entry<String, Object> entry = iterator.next();
+			request.setAttribute(entry.getKey(), entry.getValue());
 		}
 	}
 

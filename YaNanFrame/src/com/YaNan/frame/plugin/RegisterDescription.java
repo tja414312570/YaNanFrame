@@ -893,13 +893,22 @@ public class RegisterDescription {
 	 * @return
 	 * @throws Exception
 	 */
-	@SuppressWarnings("unchecked")
 	public <T> T getRegisterNewInstance(Class<T> plug, Object... args) throws Exception {
-		Object proxy = null;
-		Object target = null;
 		// 获取构造器
 		Constructor<?> constructor = this.getConstructor(args);
+		return this.getNewInstance(plug, constructor, args);
+	}
+	public <T> T getRegisterNewInstanceByParamType(Class<T> plug,Class<?>[] paramTypes, Object... args) throws Exception {
+		// 获取构造器
+		Constructor<?> constructor = this.getConstructor(paramTypes);
 		// 获取构造器拦截器
+		return this.getNewInstance(plug, constructor, args);
+	}
+	@SuppressWarnings("unchecked")
+	private <T> T getNewInstance(Class<T> plug, Constructor<?> constructor,  Object... args) {
+		
+		Object proxy = null;
+		Object target = null;
 		InvokeHandlerSet invokeHandlerSet = null;
 		InstanceHandler handler = null;
 		try {
@@ -985,6 +994,7 @@ public class RegisterDescription {
 	
 		return (T) proxy;
 	}
+
 	/**
 	 * 代理实例化后调用方法
 	 * @param proxy
@@ -1029,7 +1039,8 @@ public class RegisterDescription {
 		Object proxy = null;
 		// 判断是否单例
 		if (this.signlton) {
-			proxy = this.getProxyInstance(plug, args);
+			int hashKey = hash(plug, args);
+			proxy = this.getProxyInstance(plug,hashKey, args);
 			if (proxy == null)
 				proxy = this.getRegisterNewInstance(plug, args);
 			this.createProxyContainer();
@@ -1039,12 +1050,27 @@ public class RegisterDescription {
 		}
 		return (T) proxy;
 	}
-
 	@SuppressWarnings("unchecked")
-	private <T> T getProxyInstance(Class<T> plug, Object... args) {
+	public <T> T getRegisterInstanceByParamType(Class<T> plug,Class<?>[] paramType, Object... args) throws Exception {
+		Object proxy = null;
+		// 判断是否单例
+		if (this.signlton) {
+			int hashKey = hash(plug, args);
+			proxy = this.getProxyInstance(plug,hashKey, args);
+			if (proxy == null)
+				proxy = this.getRegisterNewInstanceByParamType(plug, paramType,args);
+			this.createProxyContainer();
+			proxyContainer.put(hash(plug, args), proxy);
+		} else {
+			proxy = this.getRegisterNewInstanceByParamType(plug, paramType,args);
+		}
+		return (T) proxy;
+	}
+	
+	@SuppressWarnings("unchecked")
+	private <T> T getProxyInstance(Class<T> plug,int hashKey, Object... args) {
 		Object proxy = null;
 		this.createProxyContainer();
-		int hashKey = hash(plug, args);
 		proxy = this.proxyContainer.get(hashKey);
 		return (T) proxy;
 	}
@@ -1068,13 +1094,16 @@ public class RegisterDescription {
 
 	public Constructor<?> getConstructor(Object... args) throws Exception {
 		Class<?>[] parameterTypes = com.YaNan.frame.reflect.ClassLoader.getParameterTypes(args);
-		Constructor<?> constructor = ClassInfoCache.getClassHelper(this.clzz).getConstructor(parameterTypes);// this.cl.getConstructor(parameterTypes);
+		return this.getConstructor(parameterTypes);
+	}
+	public Constructor<?> getConstructor(Class<?>[] paramTypes) throws Exception {
+		Constructor<?> constructor = ClassInfoCache.getClassHelper(this.clzz).getConstructor(paramTypes);// this.cl.getConstructor(parameterTypes);
 		if (constructor == null) {
 			StringBuilder sb = new StringBuilder();
-			for (int i = 0; i < parameterTypes.length; i++) {
-				sb.append(parameterTypes[i].getName()).append(i < parameterTypes.length - 1 ? "," : "");
+			for (int i = 0; i < paramTypes.length; i++) {
+				sb.append(paramTypes[i].getName()).append(i < paramTypes.length - 1 ? "," : "");
 			}
-			throw new Exception("constructor " + this.clzz.getSimpleName() + "(" + sb.toString() + ") is not exist at "
+			throw new PluginRuntimeException("constructor " + this.clzz.getSimpleName() + "(" + sb.toString() + ") is not exist at "
 					+ this.clzz.getName());
 		}
 		return constructor;
