@@ -123,7 +123,7 @@ public class ClassLoader {
 	public static Class<?>[] getParameterTypes(Object... args) {
 		Class<?>[] parmType = new Class[args.length];
 		for (int i = 0; i < args.length; i++)
-			parmType[i] = args[i].getClass();
+			parmType[i] = args[i]==null?null:args[i].getClass();
 		return parmType;
 	}
 
@@ -1198,6 +1198,41 @@ public class ClassLoader {
 		Object result = field.get(proxyInstance);
 		field.setAccessible(false);
 		return (T) result;
+	}
+	/**
+	 * 传入参数类型和目标参数类型匹配
+	 * @param matchType
+	 * @param parameterTypes
+	 * @return
+	 */
+	public static  boolean matchType(Class<?>[] matchType, Class<?>[] parameterTypes) {
+		if(parameterTypes.length!=matchType.length)
+			return false;
+		for(int i = 0;i<parameterTypes.length;i++){
+			if(parameterTypes[i]==null&&!isNotNullType(matchType[i]))
+				continue;
+			if(parameterTypes[i].equals(matchType[i]))
+				continue;
+			if(ClassLoader.extendsOf(parameterTypes[i], matchType[i]))
+				continue;
+			if(ClassLoader.implementsOf(parameterTypes[i], matchType[i]))
+				continue;
+			return false;
+		}
+		return true;
+	}
+	/**
+	 * 类型是否非空类型
+	 * @param type
+	 * @return
+	 */
+	public static boolean isNotNullType(Class<?> type) {
+		return type.equals(int.class)||
+			   type.equals(long.class)||
+			   type.equals(float.class)||
+			   type.equals(double.class)||
+			   type.equals(short.class)||
+			   type.equals(boolean.class)?true:false;
 	}
 
 }

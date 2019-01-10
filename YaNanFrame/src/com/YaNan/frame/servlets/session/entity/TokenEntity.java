@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.YaNan.frame.servlets.session.Token;
-import com.YaNan.frame.util.StringUtil;
+import com.YaNan.frame.util.PathMatcher;
 
 public class TokenEntity {
 	private String namespace;
@@ -111,15 +111,15 @@ public class TokenEntity {
 		Iterator<String> iterator = this.urlMap.keySet().iterator();
 		while(iterator.hasNext()){
 			String url = iterator.next();
-			if(!url.equals("")&&StringUtil.matchURI(requestURL,url))
+			if(!url.equals("")&&PathMatcher.match(url, requestURL).isMatch())
 				return true;
 		}
 		return false;
 	}
 	public boolean chainURL(String url,Token token){
-		if(this.value!=null&&StringUtil.matchURI(url, this.value))
+		if(this.value!=null&&PathMatcher.match(this.value, url).isMatch())
 			return true;
-		if(this.failed!=null&&this.failed.getValue()!=null&&StringUtil.matchURI(url, this.failed.getValue()))
+		if(this.failed!=null&&this.failed.getValue()!=null&&PathMatcher.match(this.failed.getValue(), url).isMatch())
 			return true;
 		if(this.chain!=null){
 			if(this.chains==null){
@@ -129,14 +129,14 @@ public class TokenEntity {
 				}
 			}
 			for(String str : this.chains){
-				if(!str.contains(".do")&&StringUtil.matchURI(url, str))
+				if(!str.contains(".do")&&PathMatcher.match(str, url).isMatch())
 						return true;
 			}
 		}
 		Iterator<String> iterator = this.urlMap.keySet().iterator();
 		while(iterator.hasNext()){
 			String u = iterator.next();
-			if(!u.equals("")&&StringUtil.matchURI(url,u)){
+			if(!u.equals("")&&PathMatcher.match(u, url).isMatch()){
 				if(this.urlMap.get(u)==null||this.urlMap.get(u).equals(""))
 					return true;
 				String role = this.urlMap.get(u);

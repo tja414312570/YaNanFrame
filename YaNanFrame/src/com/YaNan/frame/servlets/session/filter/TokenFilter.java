@@ -1,14 +1,18 @@
 package com.YaNan.frame.servlets.session.filter;
 
 import java.io.IOException;
+import java.io.Writer;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -17,10 +21,17 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.reflect.ClassLoader;
+import com.YaNan.frame.servlets.ServletBean;
+import com.YaNan.frame.servlets.ServletDispatcher;
+import com.YaNan.frame.servlets.ServletMapping;
 import com.YaNan.frame.servlets.URLSupport;
 import com.YaNan.frame.servlets.session.Token;
 import com.YaNan.frame.servlets.session.TokenManager;
+import com.YaNan.frame.servlets.session.annotation.Authentication;
+import com.YaNan.frame.servlets.session.annotation.AuthenticationGroups;
+import com.YaNan.frame.servlets.session.annotation.Chain;
 import com.YaNan.frame.servlets.session.entity.Failed;
 import com.YaNan.frame.servlets.session.entity.Result;
 import com.YaNan.frame.servlets.session.entity.TokenEntity;
@@ -34,6 +45,7 @@ import com.YaNan.frame.util.StringUtil;
  */
 @WebFilter(filterName = "tokenFilter", urlPatterns = "/*")
 public class TokenFilter extends HttpServlet implements Filter {
+	Map<ServletBean, Authentication[]> authPools;
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response,
 			FilterChain chain) throws IOException, ServletException {
@@ -41,8 +53,23 @@ public class TokenFilter extends HttpServlet implements Filter {
 			Token token = Token.getToken((HttpServletRequest) request);
 			if(token==null)
 				token = Token.addToken(((HttpServletRequest)request),(HttpServletResponse) response);
+			token.set(HttpServletRequest.class, request);
+			token.set(HttpServletResponse.class,response);
+			
 			this.jstlSupport((HttpServletRequest)request,token);
+			
+			//如果为servlet 访问其属性
 			String url =URLSupport.getRelativePath((HttpServletRequest) request);//URLSupport
+			ServletBean servletBean = ServletMapping.getInstance().getAsServlet(url);
+			if (servletBean != null) {
+				String resourceType = servletBean.getStyle();
+				ServletDispatcher servletDispatcher = PlugsFactory.getPlugsInstanceByAttribute(ServletDispatcher.class,
+						resourceType);
+				servletBean = servletDispatcher.getServletBean((HttpServletRequest) request);
+				if (servletBean != null)
+					if(!dispatcherServlet(request, response, chain, servletBean, token))
+						return;
+			}
 			String queryParam = ((HttpServletRequest) request).getQueryString();
 			if(queryParam!=null)
 				url = new StringBuilder(url).append("?").append(queryParam).toString();
@@ -300,5 +327,120 @@ public class TokenFilter extends HttpServlet implements Filter {
 		return contextUrl
 				+ oUrl;
 	}
+	
+	/**
+	 * 如果有注解。则返回true，否则返回false；
+	 * @param request
+	 * @param response
+	 * @param chain
+	 * @param servletBean
+	 * @param token
+	 * @return
+	 */
+	private boolean dispatcherServlet(ServletRequest request, ServletResponse response, FilterChain chain,
+			ServletBean servletBean, Token token) {
+		if (servletBean != null) {
+			try {
+				Class<?> cls = servletBean.getServletClass();
+				Authentication[] authGroups = getAuthGroups(servletBean);
+				if(authGroups.length==0) 
+					return true;
+				//遍历每个认证注解
+				for (Authentication auth : authGroups) {
+					// 要求token验证
+					if (auth != null) {
+						// 0获取Token注解中的chain
+						if (auth.chain().length != 0) {
+							for (String action : auth.chain()) {
+								if (servletBean.getMethod().getName().equals(action)) {// 如果找到，就直接放行
+									chain.doFilter(request, response);
+								}
+							}
+						}
+						// 1获取类中的chain注解
+						Chain c = cls.getAnnotation(Chain.class);
+						if (c != null) {
+							for (String action : auth.chain()) {
+								if (servletBean.getMethod().getName().equals(action)) {// 如果找到，就直接放行
+									chain.doFilter(request, response);
+								}
+							}
+						}
+						// 2获取token注解中的roles
+						if (auth.roles().length != 0) {
+							if (token.containerRole(auth.roles())) {
+								chain.doFilter(request, response);
+							} else {
+								this.onFailed(request, response, auth);
+							}
+						}
+						// 3 获取Token注解中的exroles
+						if (auth.exroles().length != 0) {
+							if (token.containerRole(auth.exroles())) {
+								this.onFailed(request, response, auth);
+							} else {
+								chain.doFilter(request, response);
+							}
+						}
+						chain.doFilter(request, response);
+					}
+				}
+				chain.doFilter(request, response);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return false;
+	}
+
+	private void onFailed(ServletRequest request, ServletResponse response, Authentication auth)
+			throws IOException, ServletException {
+		int status = auth.status() == -1 ? HttpServletResponse.SC_UNAUTHORIZED : auth.status();
+		if (auth.message().length() != 0) {
+			((HttpServletResponse) response).setStatus(status);
+			response.setContentType(auth.contextType());
+			Writer writer = response.getWriter();
+			writer.write(auth.message());
+			writer.flush();
+			writer.close();
+		} else if (auth.forward().length() != 0) {
+			RequestDispatcher dispatcher = request.getRequestDispatcher(auth.forward());
+			dispatcher.forward(request, response);
+		} else if (auth.redirect().length() != 0) {
+			((HttpServletResponse) response).setStatus(status);
+			((HttpServletResponse) response).sendRedirect(auth.redirect());
+		} else {
+			((HttpServletResponse) response).sendError(status, "You do not have permission to access this content");
+		}
+
+	}
+
+	private Authentication[] getAuthGroups(ServletBean servletBean) {
+		Authentication[] authGroups;
+		if (authPools == null)
+			synchronized (this) {
+				if (authPools == null)
+					authPools = new HashMap<ServletBean, Authentication[]>();
+			}
+		authGroups = authPools.get(servletBean);
+		if (authGroups == null) {
+			authGroups = servletBean.getMethod().getAnnotationsByType(Authentication.class);
+			if (authGroups.length == 0) {
+				AuthenticationGroups authGroup = servletBean.getMethod().getAnnotation(AuthenticationGroups.class);
+				if (authGroup != null)
+					authGroups = authGroup.value();
+				else {
+					authGroups = servletBean.getServletClass().getAnnotationsByType(Authentication.class);
+					if (authGroups.length == 0)
+						authGroup = servletBean.getServletClass().getAnnotation(AuthenticationGroups.class);
+					if (authGroup != null)
+						authGroups = authGroup.value();
+				}
+			}
+			authPools.put(servletBean, authGroups);
+		}
+		return authGroups;
+	}
+
 
 }

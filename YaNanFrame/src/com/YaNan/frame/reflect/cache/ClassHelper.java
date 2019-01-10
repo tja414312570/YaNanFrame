@@ -209,7 +209,7 @@ public class ClassHelper {
 	public static int hash(Class<?>...clzz){
 		int hash = 0;
 		for(Class<?> clz:clzz)
-			hash+=clz.getName().hashCode();
+			hash+=clz==null?1:clz.getName().hashCode();
 		return hash;
 	}
 	public static int hash(Parameter parameter,Annotation annotation){

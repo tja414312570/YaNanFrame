@@ -45,6 +45,10 @@ public class MethodHandler {
 		this.methodProxy = methodProxy;
 		this.parameters = args;
 	}
+	/**
+	 * 获取方法的组件处理器
+	 * @return
+	 */
 	public PlugsHandler getPlugsProxy() {
 		return plugsProxy;
 	}
@@ -52,7 +56,10 @@ public class MethodHandler {
 	public void setPlugsProxy(PlugsHandler plugsProxy) {
 		this.plugsProxy = plugsProxy;
 	}
-
+	/**
+	 * 获取拦截的方法
+	 * @return
+	 */
 	public Method getMethod() {
 		return method;
 	}
@@ -60,7 +67,10 @@ public class MethodHandler {
 	public void setMethod(Method method) {
 		this.method = method;
 	}
-
+	/**
+	 * 获取拦截的方法的参数
+	 * @return
+	 */
 	public Object[] getParameters() {
 		return parameters;
 	}
@@ -72,19 +82,33 @@ public class MethodHandler {
 	public Object getResult() {
 		return null;
 	}
-
+	/**
+	 * 中断返回数据，中断之后代理的方法和之后的拦截器都不再工作
+	 * @param result 作为原方法的返回结果
+	 */
 	public void interrupt(Object result){
 		this.chain = false;
 		this.setInterruptResult(result) ;
 	}
+	/**
+	 * 将结果代替原来的结果，不中断执行
+	 * @param result
+	 */
 	public void setOriginResult(Object result) {
 		this.originResult = result;
 		
 	}
+	/**
+	 * 获取原始方法返回的结果，执行之后有效
+	 * @return
+	 */
 	public Object getOriginResult() {
 		return this.originResult;
 	}
-
+	/**
+	 * 获取拦截器设置的返回结果
+	 * @return
+	 */
 	public Object getHeaderResult() {
 		return headerResult;
 	}
@@ -116,16 +140,28 @@ public class MethodHandler {
 	public <T> T getAttribute(String key) {
 		return (T) attribute.get(key);
 	}
-
+	/**
+	 * 设置此次方法执行的属性，之后的相关拦截器都能获取到此方法此次执行的该参数
+	 * @param key
+	 * @param value
+	 */
 	public void addAttribute(String key,Object value) {
 		this.attribute.put(key, value);
 	}
+	/**
+	 * 获取方法的拦截链
+	 * @return
+	 */
 	public InvokeHandlerSet getInvokeHandlerSet() {
 		return invokeHandlerSet;
 	}
 	public void setInvokeHandlerSet(InvokeHandlerSet invokeHandlerSet) {
 		this.invokeHandlerSet = invokeHandlerSet;
 	}
+	/**
+	 * 获取中断结果
+	 * @return
+	 */
 	public Object getInterruptResult() {
 		return interruptResult;
 	}

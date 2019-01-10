@@ -1,4 +1,4 @@
-package com.YaNan.frame.servlet.restful;
+package com.YaNan.frame.servlets.restful;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;

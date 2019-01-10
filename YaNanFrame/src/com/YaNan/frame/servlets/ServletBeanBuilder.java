@@ -11,6 +11,7 @@ import com.YaNan.frame.servlets.annotations.Action;
 import com.YaNan.frame.servlets.annotations.ActionResults;
 import com.YaNan.frame.servlets.annotations.RequestMapping;
 import com.YaNan.frame.servlets.annotations.ActionResults.Result;
+import com.YaNan.frame.servlets.parameter.DefaultParameterHandler;
 import com.YaNan.frame.servlets.annotations.DeleteMapping;
 import com.YaNan.frame.servlets.annotations.GetMapping;
 import com.YaNan.frame.servlets.annotations.PostMapping;
@@ -100,16 +101,7 @@ public class ServletBeanBuilder implements ServletMappingBuilder{
 		}else{
 			urlPath = requestMapping.trim().equals("")?"/"+method.getName():requestMapping.trim();
 		}
-		String urlMapping =urlPath+"@"+type;
-		int varIndex = urlMapping.indexOf("{");
-		while(varIndex>=0){
-			int varEndex = urlMapping.indexOf("}");
-			if(varEndex<0)
-				throw new Exception("url mapping "+ urlPath
-				+ " error,the Variable descriptors are not equal,please check :["+method+" or use @Action parse to action style]");
-			urlMapping =urlMapping .substring(0,varIndex)+"*"+urlMapping .substring(varEndex+1);
-			varIndex = urlMapping.indexOf("{");
-		}
+		String urlMapping = urlPath+"@"+type;
 		bean.setUrlmapping(urlMapping);
 		bean.setPathRegex(urlPath);
 		bean.setMethod(method);
@@ -122,26 +114,7 @@ public class ServletBeanBuilder implements ServletMappingBuilder{
 			for(int i = 0;i<paras.length;i++)
 				bean.addParameter(paras[i]);
 		}
-		/**
-		 * 添加PathVariable的描述
-		 */
-		int Index = urlPath.indexOf("/");
-		int count = 0;
-		while(Index>=0){
-			count ++;
-			int Endex = urlPath.indexOf("/",Index+1);
-			if(Endex<0){
-				String regTmp = urlPath.substring(Index+1);
-				if(regTmp.indexOf("{")>=0&&regTmp.indexOf("}")>=0)
-					bean.addPathVariable(count, regTmp.substring(1,regTmp.length()-1));
-				break;
-			}
-			String regTmp = urlPath.substring(Index+1,Endex);
-			if(regTmp.indexOf("{")>=0&&regTmp.indexOf("}")>=0)
-				bean.addPathVariable(count, regTmp.substring(1,regTmp.length()-1));
-			Index =Endex;
-		}
-		return bean;
+			return bean;
 	}
 	@Override
 	public boolean builder(Class<? extends Annotation> annotationClass,Annotation annotation, Class<?> beanClass,Method beanMethod,

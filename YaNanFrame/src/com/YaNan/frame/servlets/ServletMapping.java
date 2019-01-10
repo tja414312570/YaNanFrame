@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import com.YaNan.frame.util.StringUtil;
+import com.YaNan.frame.util.PathMatcher;
 
 public class ServletMapping {
 	/**
@@ -59,7 +59,7 @@ public class ServletMapping {
 		Iterator<Entry<String, ServletBean>> iterator = this.servletMapping.entrySet().iterator();
 		while (iterator.hasNext()) {
 			Entry<String, ServletBean> entry = iterator.next();
-			if(StringUtil.matchURI(url, entry.getKey()))
+			if(PathMatcher.match(entry.getKey(), url).isMatch())
 				return entry.getValue();
 		}
 		return null;
@@ -76,7 +76,7 @@ public class ServletMapping {
 			String urlMapping = entry.getKey();
 			if(urlMapping.indexOf("@")>=0)
 				urlMapping=urlMapping.substring(0, urlMapping.length()-2);
-			if(StringUtil.matchURI(url, urlMapping))
+			if(PathMatcher.match(urlMapping, url).isMatch())
 				return entry.getValue();
 		}
 		return null;
@@ -107,7 +107,7 @@ public class ServletMapping {
 		Iterator<Entry<String, ServletBean>> iterator = map.entrySet().iterator();
 		while (iterator.hasNext()) {
 			Entry<String, ServletBean> entry = iterator.next();
-			if(StringUtil.matchURI(url,entry.getKey()))
+			if(PathMatcher.match(entry.getKey(), url).isMatch())
 				return entry.getValue();
 		}
 		return null;

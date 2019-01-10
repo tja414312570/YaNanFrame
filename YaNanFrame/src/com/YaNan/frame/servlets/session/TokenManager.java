@@ -12,7 +12,7 @@ import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.servlets.session.entity.Result;
 import com.YaNan.frame.servlets.session.entity.TokenEntity;
 import com.YaNan.frame.servlets.session.interfaceSupport.TokenHibernateInterface;
-import com.YaNan.frame.util.StringUtil;
+import com.YaNan.frame.util.PathMatcher;
 import com.YaNan.frame.util.beans.BeanFactory;
 import com.YaNan.frame.util.beans.XMLBean;
 
@@ -204,7 +204,7 @@ public class TokenManager{
 		if(manager!=null){
 			Iterator<String> iterator = manager.tokenMap.keySet().iterator();
 			while(iterator.hasNext()){
-				if(StringUtil.matchURI(namespace, iterator.next()))
+				if(PathMatcher.match(iterator.next(), namespace).isMatch())
 					return true;
 			}
 		}
@@ -216,7 +216,7 @@ public class TokenManager{
 		Iterator<String> iterator = manager.tokenMap.keySet().iterator();
 		while(iterator.hasNext()){
 			String nameReg =  iterator.next();
-			if(StringUtil.matchURI(url,nameReg))
+			if(PathMatcher.match(nameReg, url).isMatch())
 				tl.add(manager.tokenMap.get(nameReg));
 		}
 		return tl;

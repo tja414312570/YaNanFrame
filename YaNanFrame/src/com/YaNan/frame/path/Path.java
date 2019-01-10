@@ -8,9 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-import com.YaNan.frame.util.StringUtil;
+import com.YaNan.frame.util.PathMatcher;
 
-/*
+/**
  * encoding = "utf-8"
  * 用于路径的批量操作，目前只用于 删除，复制，移动
  */

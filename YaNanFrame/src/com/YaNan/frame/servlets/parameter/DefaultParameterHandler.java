@@ -40,6 +40,7 @@ import com.YaNan.frame.servlets.parameter.annotations.RequestHeader;
 import com.YaNan.frame.servlets.parameter.annotations.RequestParam;
 import com.YaNan.frame.servlets.parameter.annotations.SessionAttributes;
 import com.YaNan.frame.servlets.parameter.annotations.UUID;
+import com.YaNan.frame.util.PathMatcher;
 
 /**
  * 2018-7-15 重新修改parseBaseType代码，将包装类型和原始类型分开
@@ -77,7 +78,7 @@ public class DefaultParameterHandler implements ParameterHandler {
 	@Override
 	public void initHandler(HttpServletRequest request, HttpServletResponse response, ServletBean servletBean,
 			ParameterHandlerCache parameterHandlerCache) {
-		this.pathParameter = this.getPathValues(servletBean.getPathVariable(), URLSupport.getRelativePath(request));
+		this.pathParameter = PathMatcher.match(servletBean.getPathRegex(), URLSupport.getRelativePath(request)).variableMap();
 		if(pathParameter!=null)
 			pathIterator = pathParameter.values().iterator();
 		this.servletBean = servletBean;

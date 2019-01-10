@@ -18,16 +18,14 @@ public class CodeGeneral {
 
 	public static void main(String[] args) {
 		try {
-			Path path = new Path("/Volumes/GENERAL/Web Projects/WX");/// Users/yanan/Workspaces/MyEclipse
+			Path path = new Path("/Volumes/GENERAL/svnworkspace/EM");/// Users/yanan/Workspaces/MyEclipse
 																			/// 2017
 																			/// CI/springFramework
-			path.filter("**.java");
+			path.filter("**frame**.java");
 			path.scanner(new PathInter() {
 				@Override
 				public void find(File file) {
 					try {
-						if(file.getAbsolutePath().indexOf("frame")==-1)
-							return;
 						int lineCount = 0;
 						BufferedReader br = new BufferedReader(
 								new InputStreamReader(new FileInputStream(file), "utf-8"));// 以utf-8

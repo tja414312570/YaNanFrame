@@ -184,7 +184,7 @@ public class Token {
 		String tokenId=newTokenId();
 		Token token = addToken(tokenId);
 		Cookie cookie = new Cookie(TokenManager.TokenMark,tokenId);
-		cookie.setPath(request.getContextPath());
+		cookie.setPath(request.getContextPath().length()==0?"/":request.getContextPath());
 		cookie.setMaxAge(token.getTimeOut());
 		cookie.setHttpOnly(true);
 //		cookie.setSecure(true); 非 https 不能获取到ID

@@ -1,7 +1,7 @@
 package com.a.encrypt;
 
+import com.YaNan.frame.plugin.FieldDesc;
 import com.YaNan.frame.plugin.RegisterDescription;
-import com.YaNan.frame.plugin.RegisterDescription.FieldDesc;
 import com.YaNan.frame.plugin.annotations.Register;
 import com.YaNan.frame.plugin.handler.FieldHandler;
 

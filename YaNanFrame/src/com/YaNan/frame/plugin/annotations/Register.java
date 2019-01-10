@@ -50,7 +50,7 @@ public @interface Register {
 	 */
 	ProxyModel model() default ProxyModel.DEFAULT;
 	/**
-	 * 组件实例化并在Field复制完成后之后执行的方法
+	 * 组件实例化并在Field赋值完成后之后执行的方法
 	 * @return
 	 */
 	String[] method() default {};

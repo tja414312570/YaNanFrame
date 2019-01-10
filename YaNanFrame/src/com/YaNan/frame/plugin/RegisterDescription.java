@@ -1092,16 +1092,34 @@ public class RegisterDescription {
 		return target;
 	}
 
-	public Constructor<?> getConstructor(Object... args) throws Exception {
-		Class<?>[] parameterTypes = com.YaNan.frame.reflect.ClassLoader.getParameterTypes(args);
-		return this.getConstructor(parameterTypes);
+	public Constructor<?> getConstructor(Object... args){
+		Class<?>[] parameterTypes = ClassLoader.getParameterTypes(args);
+		Constructor<?> constructor = null;
+		try{
+			constructor = this.getConstructor(parameterTypes);
+		}catch(Throwable t){
+			Iterator<Constructor<?>> iterator = ClassInfoCache.getClassHelper(this.clzz).getConstructorHelperMap().keySet().iterator();
+			while(iterator.hasNext()){
+				Constructor<?> con = iterator.next();
+				Class<?>[] matchType = con.getParameterTypes();
+				if(matchType.length!=args.length)
+					continue;
+				if(ClassLoader.matchType(matchType,parameterTypes)){
+					constructor = con;
+					break;
+				}
+			}
+			if(constructor==null)
+				throw t;
+		}
+		return constructor;
 	}
-	public Constructor<?> getConstructor(Class<?>[] paramTypes) throws Exception {
+	public Constructor<?> getConstructor(Class<?>[] paramTypes){
 		Constructor<?> constructor = ClassInfoCache.getClassHelper(this.clzz).getConstructor(paramTypes);// this.cl.getConstructor(parameterTypes);
 		if (constructor == null) {
 			StringBuilder sb = new StringBuilder();
 			for (int i = 0; i < paramTypes.length; i++) {
-				sb.append(paramTypes[i].getName()).append(i < paramTypes.length - 1 ? "," : "");
+				sb.append(paramTypes[i]==null?null:paramTypes[i].getName()).append(i < paramTypes.length - 1 ? "," : "");
 			}
 			throw new PluginRuntimeException("constructor " + this.clzz.getSimpleName() + "(" + sb.toString() + ") is not exist at "
 					+ this.clzz.getName());
