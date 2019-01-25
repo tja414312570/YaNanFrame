@@ -4,14 +4,12 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 
-import com.YaNan.frame.logging.DefaultLog;
 import com.YaNan.frame.logging.Log;
 import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.servlets.annotations.Action;
 import com.YaNan.frame.servlets.annotations.ActionResults;
 import com.YaNan.frame.servlets.annotations.RequestMapping;
 import com.YaNan.frame.servlets.annotations.ActionResults.Result;
-import com.YaNan.frame.servlets.parameter.DefaultParameterHandler;
 import com.YaNan.frame.servlets.annotations.DeleteMapping;
 import com.YaNan.frame.servlets.annotations.GetMapping;
 import com.YaNan.frame.servlets.annotations.PostMapping;
@@ -20,10 +18,10 @@ import com.YaNan.frame.servlets.annotations.PutMapping;
 public class ServletBeanBuilder implements ServletMappingBuilder{
 	public static final String ACTION_STYLE="ACTION_STYLE";
 	public static final String RESTFUL_STYLE="RESTFUL_STYLE";
-	static Log log = PlugsFactory.getPlugsInstanceWithDefault(Log.class,DefaultLog.class,ServletBeanBuilder.class);
 
 	public static boolean builderAction(Action action, Method method, RequestMapping parentRequestMaping, ServletMapping servletMannager){
 		ServletBean bean = new ServletBean();
+		Log log = PlugsFactory.getPlugsInstance(Log.class,ServletBeanBuilder.class);
 		if (method.getParameterCount()!=0) 
 			log.error("the Parameters at action method ["
 					+ method
@@ -73,6 +71,7 @@ public class ServletBeanBuilder implements ServletMappingBuilder{
 				ServletBean bean = builder(requestMapping.value(),method,parentRequestMaping==null?null:parentRequestMaping.value(),type);
 				servletMannager.add(bean);
 			} catch (Exception e) {
+				Log log = PlugsFactory.getPlugsInstance(Log.class,ServletBeanBuilder.class);
 				log.error(e);
 				continue;
 			}

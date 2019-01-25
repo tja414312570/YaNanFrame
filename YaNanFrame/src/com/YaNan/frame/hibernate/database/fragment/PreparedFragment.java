@@ -6,6 +6,14 @@ import java.util.List;
 public class PreparedFragment {
 	private String sql = "";
 	private List<String> arguments = new ArrayList<String>();
+	private List<Object> variable = new ArrayList<Object>();
+	public List<Object> getVariable() {
+		return variable;
+	}
+	
+	public void setVariable(List<Object> variable) {
+		this.variable = variable;
+	}
 	public String getSql() {
 		return sql;
 	}
@@ -27,5 +35,9 @@ public class PreparedFragment {
 	@Override
 	public String toString() {
 		return "PreparedFragment [sql=" + sql + ", arguments=" + arguments + "]";
+	}
+
+	public void addAllVariable(List<Object> param) {
+		this.variable.addAll(param);
 	}
 }

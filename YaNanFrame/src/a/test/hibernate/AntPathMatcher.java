@@ -694,18 +694,8 @@ public class AntPathMatcher implements PathMatcher {
 					for (int i = 1; i <= matcher.groupCount(); i++) {
 						String name = this.variableNames.get(i - 1);
 						String value = matcher.group(i);
-						System.out.println(name+":"+value);
 						uriTemplateVariables.put(name, value);
 					}
-				}
-				
-				System.out.println("========");
-				System.out.println(str);
-				System.out.println(matcher.group());
-				System.out.println("get："+matcher.group());
-				for (int i = 1; i <= matcher.groupCount(); i++) {
-					String value = matcher.group(i);
-					System.out.println("get:"+value);
 				}
 				return true;
 			}

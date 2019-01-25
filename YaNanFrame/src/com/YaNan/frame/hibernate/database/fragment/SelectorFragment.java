@@ -9,7 +9,6 @@ import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.plugin.ProxyModel;
 import com.YaNan.frame.plugin.annotations.Register;
 import com.YaNan.frame.plugin.handler.PlugsHandler;
-import com.YaNan.frame.util.StringUtil;
 
 /**
  * 
@@ -38,7 +37,7 @@ public class SelectorFragment extends SqlFragment implements FragmentBuilder {
 		int index = sql.indexOf(SPLITPREFIX);
 		int endex = sql.lastIndexOf(SUFFIX);
 		sql = sql.substring(index + 1, endex);
-		// 简历一个临时的FragmentSet
+		// 建立一个临时的FragmentSet
 		FragmentSet currentFragmentSet;
 		FragmentSet preFragmentSet = null;
 		// 分隔片段
@@ -109,30 +108,7 @@ public class SelectorFragment extends SqlFragment implements FragmentBuilder {
 
 	public PreparedSql getPreparedSql(Object... parameter) {
 		PreparedFragment preparedFragment = this.prepared(parameter);
-		preparedFragment.setSql(this.preparedParameterSql(preparedFragment.getSql(), parameter));
-		List<Object> arguments = this.preparedParameter(preparedFragment.getArguments(), parameter);
-		PreparedSql preparedSql = new PreparedSql(preparedFragment.getSql(), arguments, this);
+		PreparedSql preparedSql = new PreparedSql(preparedFragment.getSql(), preparedFragment.getVariable(), this);
 		return preparedSql;
-	}
-
-	private String preparedParameterSql(String sql, Object... parameter) {
-		List<String> variable = StringUtil.find(sql, "${", "}");
-		if (variable != null && variable.size() > 0) {
-			StringBuffer sb = new StringBuffer(sql);
-			List<Object> arguments = this.preparedParameter(variable, parameter);
-			for (int i = 0; i < variable.size(); i++) {
-				String rep = "${" + variable.get(i) + "}";
-				int index = sb.indexOf(rep);
-				Object arg = arguments.get(i);
-				while (index > -1) {
-					sb = new StringBuffer(sb.substring(0, index)).append(arg)
-							.append(sb.substring(index + rep.length()));
-					index = sb.indexOf(rep);
-				}
-			}
-			sql = sb.toString();
-		}
-		sql = sql.replaceAll("\n\t\t", " ").replaceAll("\t\t", " ").replaceAll("\t", " ").replaceAll("\n", " ").trim();
-		return sql;
 	}
 }

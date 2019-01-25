@@ -59,10 +59,13 @@ public class TrimFragment extends FragmentSet implements FragmentBuilder {
 			PreparedFragment next = this.nextSet.prepared(objects);
 			preparedFragment.setSql(this.preparedSql(child.getSql()) + next.getSql());
 			preparedFragment.addParameter(child.getArguments(), next.getArguments());
+			preparedFragment.addAllVariable(child.getVariable());
+			preparedFragment.addAllVariable(next.getVariable());
 		} else if (this.childSet != null) {
 			PreparedFragment child = this.childSet.prepared(objects);
 			preparedFragment.setSql(this.preparedSql(child.getSql()));
 			preparedFragment.addParameter(child.getArguments());
+			preparedFragment.addAllVariable(child.getVariable());
 		} else {
 			preparedFragment = super.prepared(objects);
 		}

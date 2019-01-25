@@ -13,6 +13,8 @@ public class TagSupport{
 	protected String value;
 	@Mapping(node = "trim", target = Trim.class)
 	@Mapping(node = "if", target = IF.class)
+	@Mapping(node = "foreach", target = ForEach.class)
+	@Mapping(node = "include", target = Include.class)
 	protected List<TagSupport> tags;
 	public String getValue() {
 		return value;

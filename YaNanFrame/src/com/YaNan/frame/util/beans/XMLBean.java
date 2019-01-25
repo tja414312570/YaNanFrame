@@ -97,6 +97,7 @@ public class XMLBean {
 		this.elementPath.add(elementPath);
 	}
 
+	@SuppressWarnings("unchecked")
 	public <T> List<T> execute() {
 		// if XML fileList list is zero,throw exception and stop process
 		if (this.fileList.size() == 0) {

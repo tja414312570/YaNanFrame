@@ -10,7 +10,7 @@ import java.util.Scanner;
 
 import com.YaNan.frame.util.PathMatcher;
 
-/**
+/*
  * encoding = "utf-8"
  * 用于路径的批量操作，目前只用于 删除，复制，移动
  */
@@ -122,7 +122,7 @@ public class Path {
 		if(filter.isEmpty())
 			p.find(file);
 		else for(String word : filter)
-			if(StringUtil.matchURI(file.getAbsolutePath(), word))
+			if(PathMatcher.match(word, file.getAbsolutePath()).isMatch())
 				p.find(file);
 	}
 

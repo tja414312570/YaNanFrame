@@ -23,7 +23,7 @@ public class SqlFragmentManger {
 		String namespace = id.substring(0,symIndex);
 		WrapMapping wrapperMapping = wrapMapping.get(namespace);
 		if(wrapperMapping==null)
-			throw new RuntimeException("could not found wrapper at namespace \"" +namespace+"\"!");
+			throw new RuntimeException("could not found wrapper \""+id+"\" at namespace \"" +namespace+"\"!");
 		String idl = id.substring(symIndex+1);
 		SqlFragment sqlFragment = wrapperMapping.getSqlFragment(idl);
 		if(sqlFragment==null)

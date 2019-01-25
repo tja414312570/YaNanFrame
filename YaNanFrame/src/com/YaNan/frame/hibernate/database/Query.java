@@ -17,6 +17,7 @@ import com.YaNan.frame.util.StringUtil;
 /**
  * 该类用于提供给DATab的query一个查询的SQL语句的生成方法 提过一个构造器，传入一个DBTab型的表对象，应为他需要使用DBTab context
  * 
+ * 20190121 将参数处理，防止sql注入
  * @author Administrator
  *
  */
@@ -469,8 +470,12 @@ public class Query extends OperateImplement {
 			while (s.hasNext())
 				sb.append(s.next()).append(s.hasNext() ? "," : "");
 		}
-		sb.append(" FROM ").append(this.subQuery == null ? dataTables.getName()
-				: "(" + this.subQuery.create() + ") AS T" + ((int) Math.random() * 100));
+		if(this.subQuery!=null){
+			sb.append(" FROM ").append("(" + this.subQuery.create() + ") AS T" + ((int) Math.random() * 100));
+			this.parameters.addAll(this.subQuery.getParameters());
+		}else{
+			sb.append(" FROM ").append(dataTables.getName());
+		}
 		if (this.joinObject != null) {
 			sb.append(this.joinObject.isInnerJoin() ? " INNER OUTER "
 					: " LEFT " + "JOIN " + this.joinObject.getRight() + " ON ");
@@ -483,7 +488,8 @@ public class Query extends OperateImplement {
 			Iterator<String> i = map.keySet().iterator();
 			while (i.hasNext()) {
 				String s = i.next();
-				sb.append(s).append("='").append(map.get(s)).append("'").append(i.hasNext() ? " AND " : "");
+				sb.append(s).append("= ?").append(i.hasNext() ? " AND " : "");
+				this.parameters.add(map.get(s));
 			}
 		}
 		if (this.condition.size() != 0) {

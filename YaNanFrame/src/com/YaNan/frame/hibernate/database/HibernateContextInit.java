@@ -19,7 +19,6 @@ public class HibernateContextInit implements ServletContextListener {
 	@Override
 	public void contextDestroyed(ServletContextEvent arg0) {
 		log.debug("Destory the hibernate services");
-		//关闭数据驱动连接线程
 		 Enumeration<Driver> drivers = DriverManager.getDrivers();
 	        Driver d = null;
 	        while (drivers.hasMoreElements()) {

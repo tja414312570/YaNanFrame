@@ -19,7 +19,10 @@ public class WrapperMapping{
 	@Attribute
 	private String database;
 	@Mapping(node = "select", target = SelectorMapping.class)
-	@Mapping(node = "update", target = BaseMapping.class)
+	@Mapping(node = "insert", target = SelectorMapping.class)
+	@Mapping(node = "update", target = SelectorMapping.class)
+	@Mapping(node = "delete", target = SelectorMapping.class)
+	@Mapping(node = "sql", target = SelectorMapping.class)
 	private List<BaseMapping> baseMappings;
 	public String getNamespace() {
 		return namespace;

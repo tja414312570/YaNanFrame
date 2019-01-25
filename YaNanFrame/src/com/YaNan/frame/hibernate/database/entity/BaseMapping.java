@@ -5,12 +5,15 @@ import java.util.List;
 import com.YaNan.frame.util.beans.xml.AsXml;
 import com.YaNan.frame.util.beans.xml.Attribute;
 import com.YaNan.frame.util.beans.xml.Mapping;
+import com.YaNan.frame.util.beans.xml.NodeName;
 import com.YaNan.frame.util.beans.xml.Value;
 import com.YaNan.frame.util.beans.xml.XmlFile;
 
 public abstract class BaseMapping {
 	@XmlFile
 	protected String xmlFile;
+	@NodeName
+	protected String node;
 	@Attribute
 	protected String id;
 	@Attribute
@@ -24,6 +27,8 @@ public abstract class BaseMapping {
 	protected String xml;
 	@Mapping(node = "trim", target = Trim.class)
 	@Mapping(node = "if", target = IF.class)
+	@Mapping(node = "foreach", target = ForEach.class)
+	@Mapping(node = "include", target = Include.class)
 	protected List<TagSupport> tags;
 	public List<TagSupport> getTags() {
 		return tags;
@@ -42,6 +47,12 @@ public abstract class BaseMapping {
 	}
 	public void setId(String id) {
 		this.id = id;
+	}
+	public String getNode() {
+		return node;
+	}
+	public void setNode(String node) {
+		this.node = node;
 	}
 	public String getResultType() {
 		return resultType;

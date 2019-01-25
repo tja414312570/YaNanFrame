@@ -723,7 +723,7 @@ public class StringUtil {
 			this.type = type;
 		}
 	}
-
+	
 	public static boolean isNotEmpty(String name) {
 		if(name==null)
 			return false;

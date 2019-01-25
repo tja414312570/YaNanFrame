@@ -3,9 +3,9 @@ package com.YaNan.frame.plugin.autowired.exception;
 
 import java.lang.reflect.Constructor;
 
-import com.YaNan.frame.logging.DefaultLog;
 import com.YaNan.frame.logging.Log;
 import com.YaNan.frame.plugin.PluginRuntimeException;
+import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.plugin.RegisterDescription;
 import com.YaNan.frame.plugin.annotations.Register;
 import com.YaNan.frame.plugin.annotations.Support;
@@ -18,7 +18,7 @@ import com.YaNan.frame.reflect.cache.ClassHelper;
 @Support(Error.class)
 @Register(attribute="*",priority=Integer.MAX_VALUE)
 public class ErrorPlugsHandler implements InvokeHandler,InstanceHandler{
-	private static Log log = new DefaultLog(ErrorPlugsHandler.class);
+	private Log log = PlugsFactory.getPlugsInstance(Log.class,ErrorPlugsHandler.class);
 	@Override
 	public void before(MethodHandler methodHandler) {
 	}

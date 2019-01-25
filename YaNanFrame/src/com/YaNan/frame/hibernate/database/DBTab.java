@@ -543,6 +543,7 @@ public class DBTab implements mySqlInterface {
 		dataTablesObjects = new ArrayList<T>();
 		try {
 			PreparedStatement ps = this.dataBase.executeQuery(sql);
+			preparedParameter(ps, query.getParameters());
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
 				loader = new ClassLoader(this.dataTablesClass);
@@ -623,7 +624,10 @@ public class DBTab implements mySqlInterface {
 		if (this.dataBase == null)
 			throw new RuntimeException("DataTable mapping class " + this.dataTablesClass.getName()
 					+ " datatable is null,please try to configure the @Tab attribute DB to declare database ");
-		ResultSet rs = this.dataBase.executeQuery(query.create(), connection);
+		PreparedStatement ps = (PreparedStatement) connection
+				.prepareStatement(query.create());
+		preparedParameter(ps, query.getParameters());
+		ResultSet rs = ps.executeQuery();
 		List<Object> dataTablesObjects = new ArrayList<Object>();
 		while (rs.next()) {
 			loader = new ClassLoader(dataTablesClass, true);

@@ -36,8 +36,10 @@ public class IFFragment extends FragmentSet implements FragmentBuilder {
 		String[] strs = condition.split(" ");
 		for(String str  : strs){
 			if(str.matches("[a-zA-Z_$][a-zA-Z0-9_$]*") && !str.trim().equals("null")){
-				if(!testArgument.contains(str))
-					testArgument.add(str);
+				if(!testArgument.contains(str)){
+					int i =  str.indexOf(".");
+					testArgument.add(i != -1?str.substring(0,i):str);
+				}
 				this.sqlFragment.addParameter(str);
 			}
 		}

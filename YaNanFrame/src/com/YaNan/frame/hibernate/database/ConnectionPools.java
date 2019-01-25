@@ -30,10 +30,7 @@ public class ConnectionPools{
 	 private Vector<Connection> all = null; // 存放连接池中数据库连接的向量 , 初始时为 null 
      private Vector<Connection> free = null; //空闲的连接
      private Log log = PlugsFactory.getPlugsInstance(Log.class,ConnectionPools.class);
-     private final static ConnectionPoolRefreshService connectionPoolRefreshService = new ConnectionPoolRefreshService();
-     public static ConnectionPoolRefreshService getConnectionpoolRefreshService() {
-		return connectionPoolRefreshService;
-	}
+     private final ConnectionPoolRefreshService connectionPoolRefreshService = new ConnectionPoolRefreshService();
 	private ConnectionPools(DataBase db) {
     	 this.dataBase = db;
     	 this.all = new Vector<Connection>();
@@ -62,8 +59,8 @@ public class ConnectionPools{
 	 * 从DataBase中创建一个Connection并保存在all与free中
 	 */
 	private synchronized void initial(){
-		log.debug("****初始化数据库连接池["+this.dataBase.getName()+"]****");
-		log.debug("连接池配置:"+this.dataBase.getDataBaseConfigure().toString());
+		log.debug("****init database["+this.dataBase.getName()+"]****");
+		log.debug("database configure:"+this.dataBase.getDataBaseConfigure().toString());
 		this.create(this.dataBase.getDataBaseConfigure().getMinNum());
 	}
 	private synchronized void create(int num){
@@ -213,7 +210,8 @@ class ConnectionPoolRefreshService implements Runnable{
 				if(connectionPoolRefreshThread==null){
 					keepAlive=true;
 					connectionPoolRefreshThread = new Thread(this);
-					connectionPoolRefreshThread.setDaemon(true);;
+					connectionPoolRefreshThread.setName("ConnectionPoolRefreshService-"+connectionPool.getDataBase().getName());
+					connectionPoolRefreshThread.setDaemon(true);
 					connectionPoolRefreshThread.start();
 				}
 			}
@@ -272,9 +270,10 @@ class ConnectionPoolRefreshService implements Runnable{
 					sleepType = 1;
 					Thread.sleep(timeout);
 					break;
+				}else{
+					sleepType = 0;
+					Thread.sleep(delay);
 				}
-				sleepType = 0;
-				Thread.sleep(delay);
 			} catch (InterruptedException e) {
 			}
 		}

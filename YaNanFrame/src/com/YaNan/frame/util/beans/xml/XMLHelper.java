@@ -22,7 +22,6 @@ import org.dom4j.Element;
 import org.dom4j.Node;
 import org.dom4j.io.SAXReader;
 
-import com.YaNan.frame.logging.DefaultLog;
 import com.YaNan.frame.logging.Log;
 import com.YaNan.frame.path.ResourceManager;
 import com.YaNan.frame.plugin.PlugsFactory;
@@ -56,7 +55,7 @@ public class XMLHelper {
 	// 命名映射
 	private Map<String, String> nameMapping = new HashMap<String, String>();
 	// 日志
-	Log log = PlugsFactory.getPlugsInstanceWithDefault(Log.class, DefaultLog.class, XMLHelper.class);
+	Log log = PlugsFactory.getPlugsInstance(Log.class,XMLHelper.class);
 	// 用于存储结果集
 	private List<Object> beanObjectList = new ArrayList<Object>();
 	// remove mapping
@@ -276,6 +275,12 @@ public class XMLHelper {
 			return null;
 		if (helper.getAnnotation(XmlFile.class) != null)
 			return fieldType.equals(String.class) ? this.xmlFile.getAbsolutePath() : this.xmlFile;
+		if (helper.getAnnotation(NodeName.class) != null)
+			return node.getName();
+		if (helper.getAnnotation(NodePath.class) != null)
+			return node.getPath();
+		if (helper.getAnnotation(NodeUniquePath.class) != null)
+			return node.getUniquePath();
 		// get the node info from Element annotation
 		com.YaNan.frame.util.beans.xml.Element element = helper
 				.getAnnotation(com.YaNan.frame.util.beans.xml.Element.class);

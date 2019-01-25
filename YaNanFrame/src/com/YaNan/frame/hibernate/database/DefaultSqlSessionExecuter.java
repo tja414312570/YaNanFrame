@@ -43,5 +43,40 @@ public class DefaultSqlSessionExecuter implements SqlSession{
 			throw new RuntimeException("faild to execute query \""+sqlId+"\"",e);
 		}
 	}
+	@Override
+	public <T> T insert(String sqlId, Object... parameters) {
+		SqlFragment frag = SqlFragmentManger.getSqlFragment(sqlId);
+		PreparedSql pre = frag.getPreparedSql(parameters);
+		try {
+			return pre.insert();
+		} catch (SQLException e) {
+			throw new RuntimeException("faild to execute query \""+sqlId+"\"",e);
+		}
+	}
+	@Override
+	public <T> List<T> insertBatch(String sqlId, Object... parameters) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public <T> T update(String sqlId, Object... parameters) {
+		SqlFragment frag = SqlFragmentManger.getSqlFragment(sqlId);
+		PreparedSql pre = frag.getPreparedSql(parameters);
+		try {
+			return pre.update();
+		} catch (SQLException e) {
+			throw new RuntimeException("faild to execute query \""+sqlId+"\"",e);
+		}
+	}
+	@Override
+	public int delete(String sqlId, Object... parameters) {
+		SqlFragment frag = SqlFragmentManger.getSqlFragment(sqlId);
+		PreparedSql pre = frag.getPreparedSql(parameters);
+		try {
+			return pre.update();
+		} catch (SQLException e) {
+			throw new RuntimeException("faild to execute query \""+sqlId+"\"",e);
+		}
+	}
 
 }

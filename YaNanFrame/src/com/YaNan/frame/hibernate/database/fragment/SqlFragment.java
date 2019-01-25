@@ -1,6 +1,7 @@
 package com.YaNan.frame.hibernate.database.fragment;
 
 import java.lang.reflect.InvocationTargetException;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -122,7 +123,11 @@ public abstract class SqlFragment implements FragmentBuilder {
 					typeClass = Map.class;
 				} else if (typeString.equals("list")) {
 					typeClass = List.class;
-				} else {
+				} else if (typeString.equals("boolean")) {
+					typeClass = boolean.class;
+				} else if (typeString.equals("ResultSet")) {
+					typeClass = ResultSet.class;
+				}   else {
 					throw new RuntimeException(
 							"Unsupport " + (isParmeter ? "parameterType" : "resultType") + " type '" + typeString
 									+ "' at mapping file '" + baseMapping.getXmlFile() + "' at id '" + this.id + "'");

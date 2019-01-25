@@ -163,7 +163,6 @@ public class DBManager {
 		return dbFactory.dbMap.containsKey(dbName);
 	}
 	public void destory() {
-		ConnectionPools.getConnectionpoolRefreshService().destory();
 		Iterator<DataBase> iterator = this.dbMap.values().iterator();
 		while(iterator.hasNext()){
 			iterator.next().destory();
