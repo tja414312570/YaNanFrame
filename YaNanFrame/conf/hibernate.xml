@@ -16,13 +16,13 @@
 		<host>localhost</host>
 		<port>3306</port>
 		<username>root</username>
-		<password>tja950233140710W</password>
+		<password></password>
 	</dataBase>
 	<dataBase name="YaNan_Demo">
 		<driver>com.mysql.jdbc.Driver</driver>
 		<host>localhost</host>
 		<port>3306</port>
 		<username>root</username>
-		<password>tja950233140710W</password>
+		<password></password>
 	</dataBase>
 </Hibernate>
