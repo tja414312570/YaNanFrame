@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wrapper namespace="com.YaNan.debug.test" database="YaNan_Account">
+	<select id="test" resultType="map">
+		SELECT * FROM test
+		<trim prefix = "where" prefixoverride="and or" suffix="" suffixoverride="and or">
+			<if test="id != null and id > 0">id = #{id}</if>
+			and
+			<if test = 'name!=null'>name like '%'||#{name}||'%'</if>
+		</trim>
+	</select>
+	<insert id="insert" resultType="int">
+		insert into test ( id , name ) values 
+		<foreach collection="list" index="index" item = "item" open="" separator="," close="">
+			<if test = "item.id != null">
+				( #{item.id} , #{item.name} )
+			</if>
+		</foreach>
+	</insert>
+</wrapper>
