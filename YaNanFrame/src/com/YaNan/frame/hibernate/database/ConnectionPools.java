@@ -173,6 +173,7 @@ public class ConnectionPools{
 			this.all.clear();
 			this.all = null;
 			connectionPoolRefreshService.removeConnectionPool(this);
+			connectionPoolRefreshService.destory();
 		}
 		if(this.dataBase!=null)
 			this.dataBase = null;
@@ -191,7 +192,7 @@ public class ConnectionPools{
  */
 class ConnectionPoolRefreshService implements Runnable{
 	 private Thread connectionPoolRefreshThread;//用于提供服务的线程
-	 transient boolean keepAlive = false;
+	 volatile transient boolean keepAlive = false;
 	 private int delay = 1000;//每次数据连接池刷新时间  
 	 private int timeout = 1000*60;//当所有连接为空时刷新服务等待时间 默认1 min  //用于提高效率，降低新建对象的性能开销
 	 private int sleepType = 0;//睡眠类型   0 ==> 间隔睡眠   1 ==> 守护睡眠
@@ -274,7 +275,7 @@ class ConnectionPoolRefreshService implements Runnable{
 					sleepType = 0;
 					Thread.sleep(delay);
 				}
-			} catch (InterruptedException e) {
+			} catch (Throwable e) {
 			}
 		}
 		connectionPoolRefreshThread=null;

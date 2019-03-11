@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.YaNan.frame.logging.Log;
+import com.YaNan.frame.plugin.ConfigContext;
 import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.servlets.session.entity.Result;
 import com.YaNan.frame.servlets.session.entity.TokenEntity;
@@ -15,6 +16,7 @@ import com.YaNan.frame.servlets.session.interfaceSupport.TokenHibernateInterface
 import com.YaNan.frame.util.PathMatcher;
 import com.YaNan.frame.util.beans.BeanFactory;
 import com.YaNan.frame.util.beans.XMLBean;
+import com.typesafe.config.Config;
 
 public class TokenManager{
 	/**
@@ -22,7 +24,10 @@ public class TokenManager{
 	 */
 	public static String TokenMark = "TUID"; 
 	public static String RoleMark = "ROLES";
-	public static int Timeout=3000;
+	public static int Timeout=3000;//默认超时
+	public static String path;//cookie有效域
+	public static boolean secure = false;//启用secure
+	public static boolean HttpOnly = true;//启用HttpOnly
 	private final Log log = PlugsFactory.getPlugsInstance(Log.class, TokenManager.class);
 	/**
 	 * token 数据持久层接口
@@ -113,6 +118,14 @@ public class TokenManager{
 		while (i.hasNext()) {
 			TokenEntity tokenBean = (TokenEntity) i.next();
 			manager.addToken(tokenBean.getNamespace(), tokenBean);
+		}
+		Config conf = ConfigContext.getConfig("Token");
+		if(conf!=null){
+			conf.allowKeyNull();
+			Timeout = conf.getInt("Timeout",3000);
+			path = conf.getString("Path",null);
+			secure = conf.getBoolean("Secure",false);
+			HttpOnly =  conf.getBoolean("HttpOnly",true);
 		}
 	}
 

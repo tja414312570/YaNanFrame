@@ -8,6 +8,12 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.YaNan.frame.plugin.annotations.Register;
 
+/**
+ * 默认实现的Model
+ * {@link Model}
+ * @author yanan
+ *
+ */
 @Register(priority=Integer.MAX_VALUE,signlTon=false)
 public class DefaultModel implements Model{
 	private HttpServletRequest request;

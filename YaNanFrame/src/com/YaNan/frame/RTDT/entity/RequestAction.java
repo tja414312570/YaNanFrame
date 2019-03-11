@@ -9,9 +9,8 @@ import com.YaNan.frame.servlets.session.Token;
 public class RequestAction {
 	private String action;
 	private int type;
-	private String data;
 	private String AUID;
-	private Map<String, String> parameterMap = new HashMap<String, String>();
+	private Map<String, String> data = new HashMap<String, String>();
 	private Token token;
 	private ActionEntity actionEntity;
 	private Notification notification;
@@ -34,23 +33,23 @@ public class RequestAction {
 	}
 
 	public Map<String, String> getParameterMap() {
-		return this.parameterMap;
+		return data;
 	}
 
 	public void setParameterMap(Map<String, String> parameterMap) {
-		this.parameterMap = parameterMap;
+		data = parameterMap;
 	}
 
 	public Iterator<String> getParametersKeyIterator() {
-		return this.parameterMap.keySet().iterator();
+		return data.keySet().iterator();
 	}
 
 	public Iterator<String> getParametersValueIterator() {
-		return this.parameterMap.values().iterator();
+		return data.values().iterator();
 	}
 
 	public String getParameter(String parameterName) {
-		return (String) this.parameterMap.get(parameterName);
+		return (String) data.get(parameterName);
 	}
 
 	public Token getToken() {
@@ -85,13 +84,6 @@ public class RequestAction {
 		this.type = type;
 	}
 
-	public String getData() {
-		return data;
-	}
-
-	public void setData(String data) {
-		this.data = data;
-	}
 
 	public ActionEntity getActionEntity() {
 		return actionEntity;

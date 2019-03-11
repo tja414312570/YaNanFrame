@@ -14,7 +14,11 @@ import javax.servlet.http.HttpServletResponse;
 import com.YaNan.frame.plugin.PlugsFactory;
 
 /**
- * 	CoreDispatcher 核心调配器
+ * 	CoreDispatcher 核心调配器 当请求进入服务器之后<p>
+ * 走完所有的过滤器，将进入此调配器。让后通过此调配器<p>
+ * 通过配置以及请求特点分配具体的调配器
+ * {@link RestfulDispatcher}
+ * {@link Default}
  * @version 2.0.0
  * @since jdk1.7
  * @enCoding UTF-8

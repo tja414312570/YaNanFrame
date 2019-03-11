@@ -22,24 +22,29 @@ import org.quartz.impl.StdSchedulerFactory;
 
 import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.plugin.RegisterDescription;
-import com.YaNan.frame.plugin.annotations.Register;
 import com.YaNan.frame.reflect.cache.ClassHelper;
 import com.YaNan.frame.reflect.cache.MethodHelper;
 import com.YaNan.frame.reflect.ClassLoader;
 
-@Register
 public class QuartzManager implements ServletContextListener {
 	private volatile static Scheduler scheduler ;
+	private volatile static StdSchedulerFactory stdSchedulerFactory;
 	public static Scheduler getScheduler() {
 		return scheduler;
 	}
 	@Override
 	public void contextDestroyed(ServletContextEvent arg0) {
-
+		try {
+			if(scheduler!=null){
+				scheduler.shutdown(true);
+			}
+		} catch (SchedulerException e) {
+			throw new RuntimeException("failed to stop quarzt scheduler", e);
+		}
 	}
 	private void initScheduler(){
 		try {
-			StdSchedulerFactory stdSchedulerFactory = new StdSchedulerFactory();
+			stdSchedulerFactory = new StdSchedulerFactory();
 			scheduler = stdSchedulerFactory.getScheduler();
 			scheduler.start();
 		} catch (SchedulerException e) {
@@ -63,7 +68,6 @@ public class QuartzManager implements ServletContextListener {
 						jobMethod(helper.getCacheClass(), methodHelper.getMethod(), cron);
 				}
 			}
-		
 		}
 	}
 

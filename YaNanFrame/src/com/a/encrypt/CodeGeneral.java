@@ -15,6 +15,7 @@ public class CodeGeneral {
 	public static int allLine = 0;// 总行数
 	public static int sumUnit = 0;// 总字数
 	public static int maxLine = 0;//最大行数
+	public static long size;
 
 	public static void main(String[] args) {
 		try {
@@ -26,6 +27,7 @@ public class CodeGeneral {
 				@Override
 				public void find(File file) {
 					try {
+						size+=file.length();
 						int lineCount = 0;
 						BufferedReader br = new BufferedReader(
 								new InputStreamReader(new FileInputStream(file), "utf-8"));// 以utf-8
@@ -41,6 +43,8 @@ public class CodeGeneral {
 								lineCount++;
 								sumUnit += line.length();
 							}
+							if(line.indexOf("@Register")>-1)
+								System.out.println(file.getAbsolutePath()+"  "+line);
 							allLine++;
 						}
 						System.out.println(file.getAbsolutePath().replace("/Volumes/GENERAL/git/Frame/YaNanFrame", "")
@@ -56,7 +60,7 @@ public class CodeGeneral {
 			});
 			System.out.println("一共：" + sumFile + " 个文件\t\t" + allLine + " 行代码！");
 			System.out.println( sumLine + " 行有效代码\t\t" + sumUnit + " 个有效字符");
-			System.out.println( "其中最多行数: "+maxLine);
+			System.out.println( "其中最多行数: "+maxLine+"  "+size);
 
 		} catch (Exception e) {
 			e.printStackTrace();

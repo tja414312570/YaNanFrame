@@ -39,8 +39,8 @@ public class PluginAppincationContext implements ServletContextListener {
 	public void contextInitialized(ServletContextEvent servletContextEvent) {
 		isWebContext = true;
 		try{
-			log = PlugsFactory.getPlugsInstance(Log.class,PluginAppincationContext.class);
 			long t = System.currentTimeMillis();
+			log = PlugsFactory.getPlugsInstance(Log.class,PluginAppincationContext.class);
 			this.servletContextEvent = servletContextEvent;
 			this.servletContext = servletContextEvent.getServletContext();
 			log.debug("");
@@ -54,7 +54,7 @@ public class PluginAppincationContext implements ServletContextListener {
 			log.debug("PLUY             PLUGINPLUGO   PLUGINPLUGINU        PLUGINPLUGIG    PLUGINPLUGIE  PLUG         PLUG");
 			log.debug("");
 			contextListernerList = PlugsFactory.getPlugsInstanceList(ServletContextListener.class);
-			log.debug("Context Init Plug number:"+contextListernerList.size());
+			log.debug("Context Init Plug size:"+contextListernerList.size());
 			for(ServletContextListener contenxtInitListener :contextListernerList){
 				log.debug("Plug Instance:"+contenxtInitListener);
 				contenxtInitListener.contextInitialized(servletContextEvent);

@@ -9,8 +9,11 @@ public class PluginRuntimeException extends RuntimeException{
 	public PluginRuntimeException(Throwable t) {
 		super(t);
 	}
-	public PluginRuntimeException(String string) {
-		super(string);
+	public PluginRuntimeException(String msg) {
+		super(msg);
+	}
+	public PluginRuntimeException(String msg, Throwable t) {
+		super(msg,t);
 	}
 	public boolean isInterrupt() {
 		return interrupt;

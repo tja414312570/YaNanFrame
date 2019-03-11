@@ -49,7 +49,7 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 	private final Log log = PlugsFactory.getPlugsInstance(Log.class, RestfulDispatcher.class);
 	protected boolean showServerInfo = true;
 	protected Servlet servlet;
-	// 注解类型
+	// 支持的注解类型
 	private static final Class<?>[] annotations = { com.YaNan.frame.servlets.annotations.RequestMapping.class,
 			com.YaNan.frame.servlets.annotations.GetMapping.class,
 			com.YaNan.frame.servlets.annotations.PutMapping.class,
@@ -83,14 +83,13 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 			return;
 		}
 		try {
-			Map<String, ?> model = null;// 此变量目前不适用
 			// 获取Servlet类代理对象的实例
 			Object proxyObject = PlugsFactory.getPlugsInstanceNew(servletBean.getServletClass());
 			// 获取参数,参数验证通过拦截里面的方法完成
 			List<Object> parameters = null;
 			if (servletBean.getParameters() != null)
 				try {
-					parameters = this.urlencodedParameterBind(request, response, servletBean, model);
+					parameters = this.urlencodedParameterBind(request, response, servletBean);
 				} catch ( ServletRuntimeException servletRuntimeException){
 					throw servletRuntimeException;
 				}catch (Throwable e) {
@@ -130,6 +129,7 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 									ResponseHandler.class, handlerResultType.getName());
 							// 如果handler不为空，则调用handler，否则直接输出
 							if (responseHandler != null) {
+								//通过responseHandler对结果进行渲染并输出
 								responseHandler.render(request, response, handlerResult, null, servletBean);
 							} else {
 								response.setContentType(contextType);
@@ -219,12 +219,11 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 	 * @param response
 	 * @param servletBean
 	 * @param pathParameter
-	 * @param model
 	 * @return
 	 * @throws Exception
 	 */
 	protected List<Object> urlencodedParameterBind(HttpServletRequest request, HttpServletResponse response,
-			ServletBean servletBean, Map<String, ?> model) throws Throwable {
+			ServletBean servletBean) throws Throwable {
 		// 创建一个ParameterHandler的集合
 		ParameterHandlerCache parameterHandlerCache = new ParameterHandlerCache(request, response, servletBean);
 		// 获得servletBean中的参数 该集合类型为 参数 ==》注解类型 ==》注解
@@ -244,6 +243,7 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 				List<Annotation> annos = paramEntry.getValue().get(ParameterType.class);
 				if (annos != null && annos.size() != 0) {
 					Annotation parameterAnnotation = annos.get(0);
+					//通过参数注解获取对应的参数处理器
 					ParameterHandler parameterHandler = parameterHandlerCache.getParameterHandler(parameterAnnotation);
 					parameters.add(parameterHandler == null ? null
 							: parameterHandler.getParameter(paramEntry.getKey(), parameterAnnotation));
@@ -258,7 +258,7 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 	}
 
 	/**
-	 * 支持注解 PathVariable RequestParam赋值
+	 * invoke proxy object servlet method
 	 * 
 	 * @param model
 	 * @return
@@ -304,7 +304,9 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 	public void contextDestroyed(ServletContextEvent arg0) {
 
 	}
-
+	/**
+	 * 用于当服务器启动时初始化容器、数据解析等
+	 */
 	@Override
 	public void contextInitialized(ServletContextEvent arg0) {
 		ServletBuilder.getInstance();
@@ -349,36 +351,40 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 		String urlMapping = URLSupport.getRelativePath(request);
 		String method = request.getMethod();
 		if (method.equals("GET")) {
-			urlMapping = new StringBuilder(urlMapping).append("@").append(REQUEST_METHOD.GET).toString();
+			urlMapping = this.buildUrl(urlMapping,REQUEST_METHOD.GET);
 		} else if (method.equals("POST")) {
 			method = request.getParameter(DEFAULT_METHOD_PARAM);
 			if (method == null) {
-				urlMapping = new StringBuilder(urlMapping).append("@").append(REQUEST_METHOD.POST).toString();
+				urlMapping = this.buildUrl(urlMapping,REQUEST_METHOD.POST);
 			} else if (method.toUpperCase().equals("DELETE")) {
-				urlMapping = new StringBuilder(urlMapping).append("@").append(REQUEST_METHOD.DELETE).toString();
+				urlMapping = this.buildUrl(urlMapping,REQUEST_METHOD.DELETE);
 			} else if (method.toUpperCase().equals("PUT")) {
-				urlMapping = new StringBuilder(urlMapping).append("@").append(REQUEST_METHOD.PUT).toString();
+				urlMapping = this.buildUrl(urlMapping,REQUEST_METHOD.PUT);
 			} else if (method.toUpperCase().equals("POST")) {
-				urlMapping = new StringBuilder(urlMapping).append("@").append(REQUEST_METHOD.POST).toString();
+				urlMapping = this.buildUrl(urlMapping,REQUEST_METHOD.POST);
 			} else {
 				throw new ServletException("servlet handle not process this request method ! request url :" + urlMapping
 						+ ",method:" + method);
 			}
 			// 组装post delete put 请求
 		} else if (method.equals("DELETE")) {
-			urlMapping = new StringBuilder(urlMapping).append("@").append(REQUEST_METHOD.DELETE).toString();
+			urlMapping = this.buildUrl(urlMapping,REQUEST_METHOD.DELETE);
 		} else if (method.equals("PUT")) {
-			urlMapping = new StringBuilder(urlMapping).append("@").append(REQUEST_METHOD.PUT).toString();
+			urlMapping = this.buildUrl(urlMapping,REQUEST_METHOD.PUT);
 		} else if (method.equals("HEAD")) {
-			urlMapping = new StringBuilder(urlMapping).append("@").append(REQUEST_METHOD.HEAD).toString();
+			urlMapping = this.buildUrl(urlMapping,REQUEST_METHOD.HEAD);
 		} else if (method.equals("OPTIONS")) {
-			urlMapping = new StringBuilder(urlMapping).append("@").append(REQUEST_METHOD.OPTIONS).toString();
+			urlMapping = this.buildUrl(urlMapping,REQUEST_METHOD.OPTIONS);
 		} else if (method.equals("TRACE")) {
-			urlMapping = new StringBuilder(urlMapping).append("@").append(REQUEST_METHOD.TRACE).toString();
+			urlMapping = this.buildUrl(urlMapping,REQUEST_METHOD.TRACE);
 		} else {
 			throw new ServletException("servlet handle not process this request method ! request url :" + urlMapping
 					+ ",method:" + method);
 		}
 		return urlMapping;
+	}
+
+	private String buildUrl(String urlMapping, int type) {
+		return new StringBuilder(urlMapping).append("@").append(type).toString();
 	}
 }

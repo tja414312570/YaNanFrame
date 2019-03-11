@@ -12,6 +12,11 @@ import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 
+/**
+ * 此过滤器用于封装Restful接口请求
+ * @author yanan
+ *
+ */
 @WebFilter(filterName = "restful_request_filter", urlPatterns = "/*")
 public class RestfulRequestFilter  extends HttpServlet implements Filter {
 	/**

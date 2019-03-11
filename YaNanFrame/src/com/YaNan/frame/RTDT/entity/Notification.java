@@ -15,6 +15,7 @@ public class Notification {
 	private RTDTNotification notifyImpl;
 	private Token token;
 	private RequestAction requestAction;
+	private boolean isNotify;
 
 	public Notification(WebSocketListener client, NotifyEntity action) {
 		this.client = client;
@@ -38,14 +39,18 @@ public class Notification {
 	}
 
 	public void Notify(String message) {
-		this.client.write(buildResponse(message));
+		if(!this.isNotify)
+			this.bindNotify();
+		if (this.bind) {
+			this.client.write(buildResponse(message));
+		}
 	}
 
 	public ResponseAction buildResponse(String message) {
 		ResponseAction response = new ResponseAction();
+		response.setType(4281);
 		response.setAUID(this.requestAction.getAUID());
 		response.setStatus(4280);
-		response.setType(4281);
 		response.setData(message);
 		return response;
 	}
@@ -53,9 +58,27 @@ public class Notification {
 	public boolean isBind() {
 		return this.bind;
 	}
-
-	public void setBind(boolean bind) {
-		this.bind = bind;
+	private void bindNotify(){
+		if(!isNotify){
+			isNotify=true;
+			ResponseAction response = new ResponseAction();
+			response.setType(4281);
+			response.setAUID(this.requestAction.getAUID());
+			if (this.bind) {
+				response.setStatus(4270);
+				response.setData("Notify bind success!");
+			} else {
+				response.setStatus(4271);
+				response.setData(this.reason);
+			}
+			this.client.write(response);
+		}
+		
+	}
+	public void reject(String reason) {
+		this.bind = false;
+		this.reason = reason;
+		this.bindNotify();
 	}
 
 	public void setReason(String reason) {

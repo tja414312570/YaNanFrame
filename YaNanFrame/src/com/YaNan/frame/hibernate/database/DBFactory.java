@@ -1,6 +1,7 @@
 package com.YaNan.frame.hibernate.database;
 
 import java.io.File;
+import java.lang.reflect.Method;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Enumeration;
@@ -23,6 +24,7 @@ import com.YaNan.frame.hibernate.database.entity.WrapperConfgureMapping;
 import com.YaNan.frame.hibernate.database.entity.WrapperMapping;
 import com.YaNan.frame.hibernate.database.exception.DATABASES_EXCEPTION;
 import com.YaNan.frame.hibernate.database.exception.DataBaseException;
+import com.YaNan.frame.hibernate.database.exception.HibernateInitException;
 import com.YaNan.frame.hibernate.database.fragment.FragmentBuilder;
 import com.YaNan.frame.hibernate.database.fragment.SqlFragment;
 import com.YaNan.frame.logging.Log;
@@ -35,6 +37,7 @@ import com.YaNan.frame.util.beans.BeanFactory;
 import com.YaNan.frame.util.beans.XMLBean;
 import com.YaNan.frame.util.beans.xml.XMLHelper;
 import com.mysql.jdbc.Driver;
+import com.YaNan.frame.reflect.cache.ClassHelper;
 
 /**
  * v2.0 增加连接池对连接进行管理，重构DBTab和DataBase功能 修复连接慢，内存泄漏问题
@@ -75,7 +78,7 @@ public class DBFactory {
 	 * 
 	 * @throws Exception
 	 */
-	public void init() {
+	public void init(){
 		log.debug("init hibernate configure!");
 		if (xmlFile == null)
 			xmlFile = new File(this.getClass().getClassLoader().getResource("").getPath().replace("%20", " "),
@@ -107,18 +110,38 @@ public class DBFactory {
 		Iterator<File> fileIterator = files.iterator();
 		while (fileIterator.hasNext()) {
 			File file = fileIterator.next();
-			log.debug("scan wrap file : " + file.getName());
+			log.debug("scan wrap file : " + file.getAbsolutePath());
 			XMLHelper helper = new XMLHelper(file, WrapperMapping.class);
 			List<WrapperMapping> wrapps = helper.read();
 			if (wrapps != null && wrapps.size() != 0) {
 				List<BaseMapping> baseMapping = wrapps.get(0).getBaseMappings();
 				Iterator<BaseMapping> mappingIterator = baseMapping.iterator();
+				String namespace = wrapps.get(0).getNamespace();
+				ClassHelper classHelper = null;
+				try {
+					Class<?> clzz = Class.forName(namespace);
+					classHelper = ClassHelper.getClassHelper(clzz);
+				} catch (ClassNotFoundException e) {
+//						throw new HibernateInitException("wrapper interface class \""+namespace+"\" is not exists ! at file \""+file.getAbsolutePath()+"\"");
+				}
 				while (mappingIterator.hasNext()) {
 					BaseMapping mapping = mappingIterator.next();
 					mapping.setWrapperMapping(wrapps.get(0));
-					String sqlId = wrapps.get(0).getNamespace() + "." + mapping.getId();
+					if(classHelper!=null){
+						Method[] methods = classHelper.getDeclaredMethods();
+						boolean find = false;
+						for(Method method : methods){
+							if(method.getName().equals(mapping.getId())){
+								find = true;
+								continue;
+							}
+						}
+						if(!find)
+							throw new HibernateInitException("wrapper method \""+mapping.getId()+"\" at interface class \""+namespace+"\" is not exists ! at file \""+file.getAbsolutePath()+"\"");
+					}
+					String sqlId = namespace + "." + mapping.getId();
 					wrapMap.put(sqlId, mapping);
-					log.debug("find wrap id " +sqlId);
+					log.debug("found wrap id " +sqlId+" ; content : "+mapping.getContent().trim());
 				}
 			}
 		}
@@ -151,7 +174,7 @@ public class DBFactory {
 			FragmentBuilder fragmentBuilder = PlugsFactory.getPlugsInstanceByAttributeStrict(FragmentBuilder.class,
 					handler.getProxyClass().getName() + ".root");
 			log.debug("build " + mapping.getNode().toUpperCase() + " wrapper fragment , wrapper id : \""
-					+ mapping.getWrapperMapping().getNamespace() + "." + mapping.getId() + "\"");
+					+ mapping.getWrapperMapping().getNamespace() + "." + mapping.getId() + "\" ;");
 			fragmentBuilder.build(mapping);
 			sqlFragment = (SqlFragment) fragmentBuilder;
 			SqlFragmentManger.addWarp(sqlFragment);

@@ -130,6 +130,7 @@ public class RegisterDescription {
 	 */
 	private String[] method;
 	private Method[] initMethod;
+
 	public ClassLoader getProxyClassLoader() {
 		return loader;
 	}
@@ -152,19 +153,20 @@ public class RegisterDescription {
 		this.attribute = register.attribute();
 		this.description = register.description();
 		this.proxyModel = register.model();
-		if(register.method().length>0){
-			this.method =register.method();
-			for(int i = 0;i<register.method().length;i++){
+		if (register.method().length > 0) {
+			this.method = register.method();
+			for (int i = 0; i < register.method().length; i++) {
 				Method method = loader.getMethod(register.method()[i]);
-				if(method==null)
-					throw new PluginInitException("register class "+this.clzz.getName()+" could not found no parameter method \""+register.method()[i]+"\"");
+				if (method == null)
+					throw new PluginInitException("register class " + this.clzz.getName()
+							+ " could not found no parameter method \"" + register.method()[i] + "\"");
 			}
 		}
 		checkPlugs(this.plugs);
 		PlugsFactory.getInstance().addRegisterHandlerQueue(this);
 	}
 
-	private void createProxyContainer() {
+	public void createProxyContainer() {
 		if (this.proxyContainer == null)
 			synchronized (this) {
 				if (this.proxyContainer == null)
@@ -196,7 +198,7 @@ public class RegisterDescription {
 		PlugsFactory.getInstance().addRegisterHandlerQueue(this);
 	}
 
-	public RegisterDescription(File file){
+	public RegisterDescription(File file) {
 		try {
 			this.setFile(file);
 			String fileName = file.getName();
@@ -249,7 +251,7 @@ public class RegisterDescription {
 		} catch (Throwable e) {
 			if (PluginAppincationContext.isWebContext())
 				throw new PluginInitException("plugin " + file.getName() + " init failed", e);
-			else 
+			else
 				e.printStackTrace();
 		}
 	}
@@ -264,20 +266,19 @@ public class RegisterDescription {
 			if (className == null && ref == null)
 				throw new RuntimeException("could not fond class property and no reference any at \""
 						+ config.origin().url() + "\" at line : " + config.origin().lineNumber());
-			if(config.hasPath("init")){
+			if (config.hasPath("init")) {
 				if (this.config.isList("init")) {
 					List<String> methods = this.config.getStringList("init");
 					this.method = new String[methods.size()];
-					for (int i = 0;i<methods.size();i++) {
-						this.method[i]  = methods.get(i);
+					for (int i = 0; i < methods.size(); i++) {
+						this.method[i] = methods.get(i);
 					}
 				} else {
 					this.method = new String[1];
 					this.method[0] = config.getString("init");
 				}
 			}
-			
-			
+
 			if (className != null) {
 				this.loader = new ClassLoader(className, false);
 				this.clzz = loader.getLoadedClass();
@@ -311,7 +312,7 @@ public class RegisterDescription {
 			if (PluginAppincationContext.isWebContext())
 				throw new PluginInitException("plugin exception init at \"" + config.origin().url() + "\" at line "
 						+ config.origin().lineNumber(), e);
-			else 
+			else
 				e.printStackTrace();
 		}
 	}
@@ -368,6 +369,29 @@ public class RegisterDescription {
 			}
 		}
 		return new ParamDesc(type, value, fieldName);
+	}
+
+	/**
+	 * 给方法添加Handler
+	 * 
+	 * @param method
+	 * @param handler
+	 */
+	public synchronized void addMethodHandler(Method method, InvokeHandler handler) {
+		if (handlerMapping == null) {
+			handlerMapping = new HashMap<Method, InvokeHandlerSet>();
+		}
+		InvokeHandlerSet ihs = handlerMapping.get(method);
+		if (handler != null) {
+			if (ihs == null) {
+				ihs = new InvokeHandlerSet(handler);
+				handlerMapping.put(method, ihs);
+			} else {
+				InvokeHandlerSet ihn = new InvokeHandlerSet(handler);
+				ihs.getLast().addInvokeHandlerSet(ihn);
+			}
+		}
+
 	}
 
 	public void initHandler() {
@@ -504,7 +528,6 @@ public class RegisterDescription {
 					throw new RuntimeException("method \"" + methodStr + "\" is not exists");
 				return method.invoke(ref);
 			} else {
-				System.out.println(refConf);
 				return PlugsFactory.getBeanRegister(refConf).getNewBean();
 			}
 		} else {
@@ -549,6 +572,8 @@ public class RegisterDescription {
 	private FieldDesc getSupportField(FieldDesc desc) throws Exception {
 		if (desc != null) {
 			Plug cplug = PlugsFactory.getPlug(FieldHandler.class);
+			if (cplug == null)
+				return null;
 			FieldHandler handler = null;
 			List<RegisterDescription> registerList = cplug
 					.getRegisterDescriptionListByAttribute(clzz.getName() + "." + desc.getField().getName());
@@ -565,6 +590,8 @@ public class RegisterDescription {
 					}
 			}
 			if (handler != null) {
+				if (handler.getClass().equals(this.getRegisterClass()))
+					return null;
 				desc.setFieldHandler(handler);
 				return desc;
 			}
@@ -574,6 +601,8 @@ public class RegisterDescription {
 
 	private FieldDesc getSupportField(Field field) throws Exception {
 		Plug cplug = PlugsFactory.getPlug(FieldHandler.class);
+		if (cplug == null)
+			return null;
 		List<RegisterDescription> registerList = cplug
 				.getRegisterDescriptionListByAttribute(clzz.getName() + "." + field.getName());
 		Annotation[] annos = field.getAnnotations();
@@ -596,6 +625,8 @@ public class RegisterDescription {
 				}
 		}
 		if (handler != null) {
+			if (handler.getClass().equals(this.getRegisterClass()))
+				return null;
 			fieldDesc = new FieldDesc(field.getName(), null, field);
 			fieldDesc.setFieldHandler(handler);
 			fieldDesc.setAnnotation(annotation);
@@ -657,6 +688,8 @@ public class RegisterDescription {
 						e.printStackTrace();
 					}
 					if (handler != null) {
+						if (handler.getClass().equals(this.getRegisterClass()))
+							continue;
 						if (ihs == null) {
 							ihs = new InvokeHandlerSet(handler);
 							ihs.setAnnotations(annos);
@@ -738,10 +771,13 @@ public class RegisterDescription {
 									if (handler == null && (anno = clzz.getAnnotation(supportClzz)) != null) {
 										annos = this.addHanslerAnnotation(annos, anno);
 										handler = register.getRegisterInstance(InvokeHandler.class);
+
 									}
 								}
 							}
 							if (handler != null) {
+								if (handler.getClass().equals(this.getRegisterClass()))
+									continue;
 								if (ihs == null) {
 									ihs = new InvokeHandlerSet(handler);
 									ihs.setAnnotations(annos);
@@ -898,15 +934,17 @@ public class RegisterDescription {
 		Constructor<?> constructor = this.getConstructor(args);
 		return this.getNewInstance(plug, constructor, args);
 	}
-	public <T> T getRegisterNewInstanceByParamType(Class<T> plug,Class<?>[] paramTypes, Object... args) throws Exception {
+
+	public <T> T getRegisterNewInstanceByParamType(Class<T> plug, Class<?>[] paramTypes, Object... args)
+			throws Exception {
 		// 获取构造器
 		Constructor<?> constructor = this.getConstructor(paramTypes);
 		// 获取构造器拦截器
 		return this.getNewInstance(plug, constructor, args);
 	}
+
 	@SuppressWarnings("unchecked")
-	private <T> T getNewInstance(Class<T> plug, Constructor<?> constructor,  Object... args) {
-		
+	private <T> T getNewInstance(Class<T> plug, Constructor<?> constructor, Object... args) {
 		Object proxy = null;
 		Object target = null;
 		InvokeHandlerSet invokeHandlerSet = null;
@@ -927,17 +965,11 @@ public class RegisterDescription {
 				switch (this.proxyModel) {
 				case DEFAULT:
 					target = constructor.newInstance(args);
-					if (plug.equals(InvokeHandler.class) || plug.equals(InstanceHandler.class))
-						proxy = target;
-					else
-						proxy = PlugsHandler.newMapperProxy(plug, this, target);
+					proxy = PlugsHandler.newMapperProxy(plug, this, target);
 					break;
 				case JDK:
 					target = constructor.newInstance(args);
-					if (plug.equals(InvokeHandler.class) || plug.equals(InstanceHandler.class))
-						proxy = target;
-					else
-						proxy = PlugsHandler.newMapperProxy(plug, this, target);
+					proxy = PlugsHandler.newMapperProxy(plug, this, target);
 					break;
 				case CGLIB:
 					target = proxy = PlugsHandler.newCglibProxy(this.getRegisterClass(), this, args);
@@ -972,7 +1004,8 @@ public class RegisterDescription {
 			}
 			this.initProxyMethod(proxy);
 		} catch (Throwable t) {
-			PluginRuntimeException exception =t.getClass().equals(PluginRuntimeException.class)?(PluginRuntimeException) t:new PluginRuntimeException(t);
+			PluginRuntimeException exception = t.getClass().equals(PluginRuntimeException.class)
+					? (PluginRuntimeException) t : new PluginRuntimeException(t);
 			if (invokeHandlerSet != null) {
 				if (handler != null)
 					handler.exception(this, plug, constructor, proxy, exception, args);
@@ -991,34 +1024,37 @@ public class RegisterDescription {
 			if (!exception.isInterrupt())
 				throw exception;
 		}
-	
+
 		return (T) proxy;
 	}
 
 	/**
 	 * 代理实例化后调用方法
+	 * 
 	 * @param proxy
 	 * @throws IllegalAccessException
 	 * @throws IllegalArgumentException
 	 * @throws InvocationTargetException
 	 */
-	private void initProxyMethod(Object proxy) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		
-		if(this.initMethod!=null){
-			for(Method method : this.initMethod){
+	private void initProxyMethod(Object proxy)
+			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+
+		if (this.initMethod != null) {
+			for (Method method : this.initMethod) {
 				method.setAccessible(true);
 				method.invoke(proxy);
 				method.setAccessible(false);
 			}
-		}else if(this.method!=null){
+		} else if (this.method != null) {
 			ClassHelper helper = ClassHelper.getClassHelper(proxy.getClass());
 			this.initMethod = new Method[this.method.length];
-			for(int i = 0;i<this.method.length;i++){
+			for (int i = 0; i < this.method.length; i++) {
 				Method method = helper.getMethod(this.method[i]);
-				if(method==null){
+				if (method == null) {
 					this.initMethod = null;
-					throw new PluginRuntimeException("could not found proxy init method \""+this.method[i]
-							+"\" at register class "+this.clzz.getName()+",mabye the service class not the method and the proxy model is jdk.");
+					throw new PluginRuntimeException("could not found proxy init method \"" + this.method[i]
+							+ "\" at register class " + this.clzz.getName()
+							+ ",mabye the service class not the method and the proxy model is jdk.");
 				}
 				this.initMethod[i] = method;
 			}
@@ -1040,7 +1076,7 @@ public class RegisterDescription {
 		// 判断是否单例
 		if (this.signlton) {
 			int hashKey = hash(plug, args);
-			proxy = this.getProxyInstance(plug,hashKey, args);
+			proxy = this.getProxyInstance(plug, hashKey, args);
 			if (proxy == null)
 				proxy = this.getRegisterNewInstance(plug, args);
 			this.createProxyContainer();
@@ -1050,25 +1086,26 @@ public class RegisterDescription {
 		}
 		return (T) proxy;
 	}
+
 	@SuppressWarnings("unchecked")
-	public <T> T getRegisterInstanceByParamType(Class<T> plug,Class<?>[] paramType, Object... args) throws Exception {
+	public <T> T getRegisterInstanceByParamType(Class<T> plug, Class<?>[] paramType, Object... args) throws Exception {
 		Object proxy = null;
 		// 判断是否单例
 		if (this.signlton) {
 			int hashKey = hash(plug, args);
-			proxy = this.getProxyInstance(plug,hashKey, args);
+			proxy = this.getProxyInstance(plug, hashKey, args);
 			if (proxy == null)
-				proxy = this.getRegisterNewInstanceByParamType(plug, paramType,args);
+				proxy = this.getRegisterNewInstanceByParamType(plug, paramType, args);
 			this.createProxyContainer();
 			proxyContainer.put(hash(plug, args), proxy);
 		} else {
-			proxy = this.getRegisterNewInstanceByParamType(plug, paramType,args);
+			proxy = this.getRegisterNewInstanceByParamType(plug, paramType, args);
 		}
 		return (T) proxy;
 	}
-	
+
 	@SuppressWarnings("unchecked")
-	private <T> T getProxyInstance(Class<T> plug,int hashKey, Object... args) {
+	private <T> T getProxyInstance(Class<T> plug, int hashKey, Object... args) {
 		Object proxy = null;
 		this.createProxyContainer();
 		proxy = this.proxyContainer.get(hashKey);
@@ -1092,37 +1129,40 @@ public class RegisterDescription {
 		return target;
 	}
 
-	public Constructor<?> getConstructor(Object... args){
+	public Constructor<?> getConstructor(Object... args) {
 		Class<?>[] parameterTypes = ClassLoader.getParameterTypes(args);
 		Constructor<?> constructor = null;
-		try{
+		try {
 			constructor = this.getConstructor(parameterTypes);
-		}catch(Throwable t){
-			Iterator<Constructor<?>> iterator = ClassInfoCache.getClassHelper(this.clzz).getConstructorHelperMap().keySet().iterator();
-			while(iterator.hasNext()){
+		} catch (Throwable t) {
+			Iterator<Constructor<?>> iterator = ClassInfoCache.getClassHelper(this.clzz).getConstructorHelperMap()
+					.keySet().iterator();
+			while (iterator.hasNext()) {
 				Constructor<?> con = iterator.next();
 				Class<?>[] matchType = con.getParameterTypes();
-				if(matchType.length!=args.length)
+				if (matchType.length != args.length)
 					continue;
-				if(ClassLoader.matchType(matchType,parameterTypes)){
+				if (ClassLoader.matchType(matchType, parameterTypes)) {
 					constructor = con;
 					break;
 				}
 			}
-			if(constructor==null)
+			if (constructor == null)
 				throw t;
 		}
 		return constructor;
 	}
-	public Constructor<?> getConstructor(Class<?>[] paramTypes){
+
+	public Constructor<?> getConstructor(Class<?>[] paramTypes) {
 		Constructor<?> constructor = ClassInfoCache.getClassHelper(this.clzz).getConstructor(paramTypes);// this.cl.getConstructor(parameterTypes);
 		if (constructor == null) {
 			StringBuilder sb = new StringBuilder();
 			for (int i = 0; i < paramTypes.length; i++) {
-				sb.append(paramTypes[i]==null?null:paramTypes[i].getName()).append(i < paramTypes.length - 1 ? "," : "");
+				sb.append(paramTypes[i] == null ? null : paramTypes[i].getName())
+						.append(i < paramTypes.length - 1 ? "," : "");
 			}
-			throw new PluginRuntimeException("constructor " + this.clzz.getSimpleName() + "(" + sb.toString() + ") is not exist at "
-					+ this.clzz.getName());
+			throw new PluginRuntimeException("constructor " + this.clzz.getSimpleName() + "(" + sb.toString()
+					+ ") is not exist at " + this.clzz.getName());
 		}
 		return constructor;
 	}

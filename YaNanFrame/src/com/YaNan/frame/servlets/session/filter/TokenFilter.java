@@ -55,7 +55,7 @@ public class TokenFilter extends HttpServlet implements Filter {
 				token = Token.addToken(((HttpServletRequest)request),(HttpServletResponse) response);
 			token.set(HttpServletRequest.class, request);
 			token.set(HttpServletResponse.class,response);
-			
+			((HttpServletRequest)request).getSession().setAttribute(TokenManager.getTokenMark(), token.getTokenId());
 			this.jstlSupport((HttpServletRequest)request,token);
 			
 			//如果为servlet 访问其属性

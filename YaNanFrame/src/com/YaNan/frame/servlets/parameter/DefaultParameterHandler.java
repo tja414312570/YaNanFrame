@@ -53,6 +53,7 @@ import com.YaNan.frame.util.PathMatcher;
  * 支持UUID Date标签
  * 支持普通pojo
  * 不支持文件上传，二进制数据
+ * 新增Model类型的参数
  * 
  * @author yanan
  *

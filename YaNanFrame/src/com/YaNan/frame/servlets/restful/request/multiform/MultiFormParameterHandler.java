@@ -27,13 +27,20 @@ import com.YaNan.frame.servlets.ParameterHandlerCache;
 import com.YaNan.frame.servlets.ServletBean;
 import com.YaNan.frame.servlets.parameter.ParameterHandler;
 
-@Register(attribute={"java.io.File","org.apache.commons.fileupload.FileItem"},signlTon = false)
-public class MultiFormParameterHandler  implements ParameterHandler{
+/**
+ * 多媒体表单参数处理器
+ * 
+ * @author yanan
+ *
+ */
+@Register(attribute = { "java.io.File", "org.apache.commons.fileupload.FileItem" }, signlTon = false)
+public class MultiFormParameterHandler implements ParameterHandler {
 	private HttpServletRequest servletRequest;
 	private HttpServletResponse servletResponse;
 	private ServletBean servletBean;
-	private Log log = PlugsFactory.getPlugsInstance(Log.class,this.getClass());
+	private Log log = PlugsFactory.getPlugsInstance(Log.class, this.getClass());
 	private List<FileItem> fileItemList;
+
 	@Override
 	public void initHandler(HttpServletRequest request, HttpServletResponse response, ServletBean servletBean,
 			ParameterHandlerCache parameterHandlerCache) {
@@ -42,126 +49,134 @@ public class MultiFormParameterHandler  implements ParameterHandler{
 		this.servletResponse = response;
 		this.MultiFormSupport(request);
 	}
+
 	/**
-	 *	read parameter
+	 * read parameter
 	 * 
 	 * @param bytes
 	 * @param start
 	 * @param len
 	 * @param charset
-	 * @throws FileUploadException 
+	 * @throws FileUploadException
 	 * @throws UnsupportedEncodingException
 	 */
 	@SuppressWarnings("unchecked")
 	public void MultiFormSupport(HttpServletRequest servletRequest) {
-			if (ServletFileUpload.isMultipartContent(servletRequest)) {
-				DiskFileItemFactory factory = new DiskFileItemFactory();
-					//设置内存中缓存文件大小
-					factory.setSizeThreshold(4096);
-					File uploadPath = new File(System.getProperty("java.io.tmpdir")+File.separator);
-					if(!uploadPath.exists())uploadPath.mkdirs();
-					//设置缓存文件位置
-					factory.setRepository(uploadPath);
-					ServletFileUpload sfUpload = new ServletFileUpload(factory);
-					List<FileItem> lists;
-					try {
-						lists = sfUpload.parseRequest(servletRequest);
-						Iterator<FileItem> iterator = lists.iterator();
-						while(iterator.hasNext()){
-							FileItem fileItem =iterator.next();
-							if (!fileItem.isFormField()) {
-								if(fileItemList==null)
-									fileItemList = new ArrayList<FileItem>(4);
-								fileItemList.add(fileItem);
-						     //文件域处理
-						    }
-						}
-					} catch (FileUploadException e) {
-						log.error(e);
+		if (ServletFileUpload.isMultipartContent(servletRequest)) {
+			DiskFileItemFactory factory = new DiskFileItemFactory();
+			// 设置内存中缓存文件大小
+			factory.setSizeThreshold(4096);
+			File uploadPath = new File(System.getProperty("java.io.tmpdir") + File.separator);
+			if (!uploadPath.exists())
+				uploadPath.mkdirs();
+			// 设置缓存文件位置
+			factory.setRepository(uploadPath);
+			ServletFileUpload sfUpload = new ServletFileUpload(factory);
+			List<FileItem> lists;
+			try {
+				lists = sfUpload.parseRequest(servletRequest);
+				Iterator<FileItem> iterator = lists.iterator();
+				while (iterator.hasNext()) {
+					FileItem fileItem = iterator.next();
+					if (!fileItem.isFormField()) {
+						if (fileItemList == null)
+							fileItemList = new ArrayList<FileItem>(4);
+						fileItemList.add(fileItem);
+						// 文件域处理
 					}
+				}
+			} catch (FileUploadException e) {
+				log.error(e);
 			}
 		}
+	}
+
 	@Override
 	public Object getParameter(Parameter parameter, Annotation parameterAnnotation) {
 		return null;
 	}
+
 	@Override
 	public Object getParameter(Parameter parameter) throws IOException {
-		if(fileItemList==null||fileItemList.size()==0)
+		if (fileItemList == null || fileItemList.size() == 0)
 			return null;
-		if(parameter.getType().equals(FileItem.class)){
-			if(parameter.getType().isArray()){
+		if (parameter.getType().equals(FileItem.class)) {
+			if (parameter.getType().isArray()) {
 				FileItem[] fileItems = new FileItem[fileItemList.size()];
-				for(int i = 0;i<fileItemList.size();i++){
+				for (int i = 0; i < fileItemList.size(); i++) {
 					fileItems[i] = fileItemList.get(i);
 				}
 				return fileItems;
-			}else{
+			} else {
 				return fileItemList.get(0);
 			}
 		}
-		String tmpDir = System.getProperty("java.io.tmpdir")+File.separator;
-		if(!parameter.getType().isArray()){
+		String tmpDir = System.getProperty("java.io.tmpdir") + File.separator;
+		if (!parameter.getType().isArray()) {
 			FileItem fileItem = fileItemList.get(0);
-			File file = new File(tmpDir,fileItem.getName());
+			File file = new File(tmpDir, fileItem.getName());
 			return this.doUpload(file, fileItem.getInputStream());
-		}else{
+		} else {
 			File[] files = new File[fileItemList.size()];
 			FileItem fileItem = null;
-			for(int i = 0;i<fileItemList.size();fileItem = fileItemList.get(i),i++){
-				files[i] =new File(tmpDir,fileItem.getName());
+			for (int i = 0; i < fileItemList.size(); fileItem = fileItemList.get(i), i++) {
+				files[i] = new File(tmpDir, fileItem.getName());
 				this.doUpload(files[i], fileItem.getInputStream());
 			}
 			return files;
 		}
 	}
+
 	@Override
 	public Object getParameter(Field field, Annotation parameterAnnotation) {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
 	@Override
 	public Object getParameter(Field field) throws IOException {
-		if(fileItemList==null||fileItemList.size()==0)
+		if (fileItemList == null || fileItemList.size() == 0)
 			return null;
-		if(field.getType().equals(FileItem.class)){
-			if(field.getType().isArray()){
+		if (field.getType().equals(FileItem.class)) {
+			if (field.getType().isArray()) {
 				FileItem[] fileItems = new FileItem[fileItemList.size()];
-				for(int i = 0;i<fileItemList.size();i++){
+				for (int i = 0; i < fileItemList.size(); i++) {
 					fileItems[i] = fileItemList.get(i);
 				}
 				return fileItems;
-			}else{
+			} else {
 				return fileItemList.get(0);
 			}
 		}
-		String tmpDir = System.getProperty("java.io.tmpdir")+File.separator;
-		if(!field.getType().isArray()){
+		String tmpDir = System.getProperty("java.io.tmpdir") + File.separator;
+		if (!field.getType().isArray()) {
 			FileItem fileItem = fileItemList.get(0);
-			File file = new File(tmpDir,fileItem.getName());
+			File file = new File(tmpDir, fileItem.getName());
 			return this.doUpload(file, fileItem.getInputStream());
-		}else{
+		} else {
 			File[] files = new File[fileItemList.size()];
 			FileItem fileItem = null;
-			for(int i = 0;i<fileItemList.size();fileItem = fileItemList.get(i),i++){
-				files[i] =new File(tmpDir,fileItem.getName());
+			for (int i = 0; i < fileItemList.size(); fileItem = fileItemList.get(i), i++) {
+				files[i] = new File(tmpDir, fileItem.getName());
 				this.doUpload(files[i], fileItem.getInputStream());
 			}
 			return files;
 		}
 	}
+
 	/**
 	 * 普通文件上传
+	 * 
 	 * @param fileTmp
 	 * @param inputStream
-	 * @return 
+	 * @return
 	 * @throws IOException
 	 */
-	public File doUpload(File fileTmp,InputStream inputStream) throws IOException {
+	public File doUpload(File fileTmp, InputStream inputStream) throws IOException {
 		FileOutputStream fos = new FileOutputStream(fileTmp);
 		byte[] fileBuffer = new byte[1024];
 		int line;
-		while ((line = inputStream.read(fileBuffer)) != -1){
+		while ((line = inputStream.read(fileBuffer)) != -1) {
 			fos.write(fileBuffer, 0, line);
 		}
 		fos.flush();
@@ -169,6 +184,7 @@ public class MultiFormParameterHandler  implements ParameterHandler{
 		inputStream.close();
 		return fileTmp;
 	}
+
 	@Override
 	public ServletBean getServletBean() {
 		return this.servletBean;

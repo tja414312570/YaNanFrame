@@ -4,6 +4,12 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+/**
+ * 此类用于提供JSTL数据的存储以便于JSP中JSTL页面的渲染。
+ * 实现类每次请求将会产生一个新的Model实体，同一请求多个Model参数只有一个Model实体
+ * @author yanan
+ *
+ */
 public interface Model {
 	/**
 	 * 设置HttpServletRequest

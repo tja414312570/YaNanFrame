@@ -20,5 +20,5 @@ public interface Log {
 	  void trace(String s);
 
 	  void warn(String s);
-
+	  
 	}

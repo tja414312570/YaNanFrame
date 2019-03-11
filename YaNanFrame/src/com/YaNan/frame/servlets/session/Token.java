@@ -15,7 +15,11 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.YaNan.frame.logging.Log;
+import com.YaNan.frame.plugin.PlugsFactory;
+import com.YaNan.frame.plugin.RegisterDescription;
 import com.YaNan.frame.servlets.session.entity.TokenCell;
+import com.YaNan.frame.servlets.session.interfaceSupport.TokenListener;
 /**
  * 
  * @author Administrator
@@ -23,12 +27,14 @@ import com.YaNan.frame.servlets.session.entity.TokenCell;
  */
 public class Token {
 	private String tokenId;
-	private int timeOut=864000;//超时
+	private int timeOut=-1;//超时
+	private static List<TokenListener> listenerList;//监听列表
 	private Map<String, Object> arguments = new HashMap<String, Object>();
 	private Map<String,ArrayList<Object>> listArguments = new HashMap<String,ArrayList<Object>>();
 	private volatile Set<String> roles = new HashSet<String>();
 	private boolean valid;
 	private long lastuse;
+	private Log log = PlugsFactory.getPlugsInstance(Log.class, Token.class);
 	/************************超时，有效***************/
 	public int getTimeOut() {
 		return timeOut;
@@ -94,6 +100,24 @@ public class Token {
 	 */
 	private Token(String tokenId) {
 		this.tokenId = tokenId;
+		this.timeOut = TokenManager.Timeout;
+		this.initListener();
+	}
+	private void initListener() {
+		if(listenerList ==null){
+			listenerList = new ArrayList<TokenListener>();
+			List<RegisterDescription> registerList = PlugsFactory.getRegisterList(TokenListener.class);
+			for(RegisterDescription reg : registerList){
+				try {
+					listenerList.add(reg.getRegisterInstance(TokenListener.class));
+				} catch (Exception e) {
+					log.error(e);
+				}
+			}
+		}
+		for(TokenListener listener : listenerList){
+			listener.init(this);
+		}
 	}
 	private Token() {
 	}
@@ -143,7 +167,8 @@ public class Token {
 			TokenCell tokenCell = TokenManager.getHibernateInterface().getToken(tokenId);
 			if(tokenCell !=null){
 				token = new Token(tokenId);
-				token.setTimeOut(tokenCell.getTimeOut());
+				if(token.getTimeOut()<0)
+					token.setTimeOut(tokenCell.getTimeOut());
 				TokenPool.addToken(token);
 			}
 		}
@@ -170,7 +195,6 @@ public class Token {
 	}
 	private static Token addToken(String tokenId) {
 		Token token = new Token(tokenId);
-		token.setTimeOut(TokenManager.Timeout);
 		token.setLastuse(System.currentTimeMillis());
 		TokenPool.addToken(token);
 		return token;
@@ -183,12 +207,7 @@ public class Token {
 	public static Token addToken(HttpServletRequest request,HttpServletResponse response){
 		String tokenId=newTokenId();
 		Token token = addToken(tokenId);
-		Cookie cookie = new Cookie(TokenManager.TokenMark,tokenId);
-		cookie.setPath(request.getContextPath().length()==0?"/":request.getContextPath());
-		cookie.setMaxAge(token.getTimeOut());
-		cookie.setHttpOnly(true);
-//		cookie.setSecure(true); 非 https 不能获取到ID
-		response.addCookie(cookie);
+		writeCookie(request, response);
 		request.setAttribute(TokenManager.TokenMark, tokenId);
 		if(TokenManager.getHibernateInterface()!=null){
 			TokenCell tc = new TokenCell();
@@ -199,6 +218,20 @@ public class Token {
 		}
 		request.setAttribute(TokenManager.TokenMark, tokenId);
 		return token;
+	}
+	private static void writeCookie(HttpServletRequest request,HttpServletResponse response) {
+		if(request==null||response==null)
+			throw new RuntimeException("No servlet context!");
+		Token token = Token.getToken();
+		Cookie cookie = new Cookie(TokenManager.TokenMark,token.getTokenId());
+		String path = TokenManager.path;
+		if(path==null)
+			path = request.getContextPath().length()==0?"/":request.getContextPath();
+		cookie.setPath(path);
+		cookie.setMaxAge(token.getTimeOut());
+		cookie.setHttpOnly(TokenManager.HttpOnly);
+		cookie.setSecure(TokenManager.secure);//启用时 非 https 不能获取到ID
+		response.addCookie(cookie);
 	}
 	/**
 	 * 产生新的token Id
@@ -387,9 +420,11 @@ public class Token {
 	 * 销毁token
 	 */
 	public void destory(){
+		TokenManager.removeToken(tokenId);
+		for(TokenListener listener : listenerList)
+			listener.destory(this);
 		this.arguments.clear();
 		this.roles.clear();
-		TokenManager.removeToken(tokenId);
 		tokenId=null;
 	}
 	public static String digits(long val, int digits) {

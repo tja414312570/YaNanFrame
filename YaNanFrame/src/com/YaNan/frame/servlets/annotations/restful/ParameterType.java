@@ -7,6 +7,11 @@ import java.lang.annotation.Target;
 
 import javax.validation.groups.Default;
 
+/**
+ * Restful接口基础参数类
+ * @author yanan
+ *
+ */
 @Target(ElementType.ANNOTATION_TYPE )
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ParameterType {

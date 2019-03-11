@@ -42,10 +42,12 @@ public class TrimFragment extends FragmentSet implements FragmentBuilder {
 					}
 				}
 			}
-			if (trim.getPrefix() != null)
-				sql = trim.getPrefix() + " " + sql;
-			if (trim.getSuffix() != null)
-				sql = sql + " " + trim.getSuffix();
+			if(!sql.trim().equals("")){
+				if (trim.getPrefix() != null)
+					sql = trim.getPrefix() + " " + sql;
+				if (trim.getSuffix() != null)
+					sql = sql + " " + trim.getSuffix();
+			}
 		}
 		return sql;
 	}
@@ -54,6 +56,7 @@ public class TrimFragment extends FragmentSet implements FragmentBuilder {
 	@Override
 	public PreparedFragment prepared(Object... objects) {
 		PreparedFragment preparedFragment = PlugsFactory.getPlugsInstance(PreparedFragment.class);
+		String sql;
 		if (this.nextSet != null && this.childSet != null) {
 			PreparedFragment child = this.childSet.prepared(objects);
 			PreparedFragment next = this.nextSet.prepared(objects);

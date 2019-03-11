@@ -8,10 +8,14 @@ import com.YaNan.frame.RTDT.entity.NotifyEntity;
 import com.YaNan.frame.RTDT.entity.RequestAction;
 import com.YaNan.frame.RTDT.entity.ResponseAction;
 import com.YaNan.frame.RTDT.entity.interfacer.ACTION_TYPE;
+import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.reflect.ClassLoader;
+import com.YaNan.frame.servlets.parameter.annotations.RequestParam;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -28,7 +32,7 @@ public class ActionDispatcher {
 			if (manager.hasAction(request.getAction())) {
 				ActionEntity action = manager.getAction(request.getAction());
 				request.setActionEntity(action);
-				ClassLoader loader = new ClassLoader(action.getCLASS());
+				ClassLoader loader = new ClassLoader(PlugsFactory.getPlugsInstance(action.getCLASS()));
 				if (loader.hasMethod("doContext", RequestAction.class,ResponseAction.class, ClassLoader.class ))
 					loader.invokeMethod("doContext",request,responseAction, loader);
 				Iterator<String> parametersIterator = request.getParametersKeyIterator();
@@ -36,22 +40,22 @@ public class ActionDispatcher {
 					String parameterName = (String) parametersIterator.next();
 					valuation(loader, parameterName, request.getParameter(parameterName));
 				}
-				invoke(action, responseAction, loader, webSocketListener);
+				invoke(action,request, responseAction, loader, webSocketListener);
 			} else {
 				responseAction.setStatus(4282);
-				responseAction.setData("RTDT action " + request.getAction() + " is not exists!");
+				responseAction.setData("Could not found Action " + request.getAction() + "!");
 				webSocketListener.write(responseAction);
 			}
 		} else {
 				NotifyEntity notifyEntity = NotifyManager.getManager().getEntity(request.getAction());
 				if(notifyEntity==null){
 					responseAction.setStatus(4282);
-					responseAction.setData("RTDT notify " + request.getAction() + " is not exists!");
+					responseAction.setData("Could not found Notify " + request.getAction() + "!");
 					webSocketListener.write(responseAction);
 					return;
 				}
 				notifyEntity.setRequestAction(request);
-				RTDTNotification notifyImp = (RTDTNotification) NotifyManager.getManager().getEntity(request.getAction()).getCLASS().newInstance();
+				RTDTNotification notifyImp = (RTDTNotification) PlugsFactory.getPlugsInstance(NotifyManager.getManager().getEntity(request.getAction()).getCLASS()) ;
 				ClassLoader loader = new ClassLoader(notifyImp);
 				if (loader.hasMethod("doContext", RequestAction.class,ResponseAction.class, ClassLoader.class ))
 					loader.invokeMethod("doContext",request,responseAction, loader);
@@ -60,18 +64,6 @@ public class ActionDispatcher {
 				notify.setToken(request.getToken());
 				request.setNotification(notify);
 				notifyImp.onBind(notify);
-				if (notify.isBind()) {
-					NotifyManager.getManager().bindNotify(notify);
-					responseAction.setStatus(4270);
-					responseAction.setType(4281);
-					responseAction.setData("Notify bind success!");
-					responseAction.write();
-				} else {
-					responseAction.setStatus(4271);
-					responseAction.setType(4281);
-					responseAction.setData(request.getNotification().getReason());
-					responseAction.write();
-				}
 		}
 
 	}
@@ -93,24 +85,56 @@ public class ActionDispatcher {
 			}
 		}
 	}
-
-	private void invoke(ActionEntity action, ResponseAction response, ClassLoader loader, WebSocketListener client) {
+	/**
+	 * 调用目标方法
+	 * @param action
+	 * @param request 
+	 * @param response
+	 * @param loader
+	 * @param client
+	 */
+	private void invoke(ActionEntity action, RequestAction request, ResponseAction response, ClassLoader loader, WebSocketListener client) throws NoSuchMethodException {
 		try {
-			if (loader.hasMethod(action.getMethod().getName())) {
-				Object callBack = loader.invokeMethod(action.getMethod().getName());
-				response.setStatus(4280);
-				response.setData(callBack != null ? callBack.toString() : "");
-				response.write();
-			} else {
-				response.setStatus(4283);
-				response.setData("RTDT action " + action.getName() + " method exception");
-				response.write();
+			//get method
+			Method method = action.getMethod();
+			//获取方法中参数
+			Parameter[] parameters = method.getParameters();
+			Object[] object = new Object[parameters.length];
+			int i = 0;
+			Iterator<String> iterator = request.getParametersKeyIterator();
+			//获取参数判断参数是否有注解@RequestParam()
+			for(Parameter parameter : parameters){
+				if(parameter.getType().equals(RequestAction.class)){
+					object[i++] = request;
+					continue;
+				}
+				if(parameter.getType().equals(ResponseAction.class)){
+					object[i++] = response;
+					continue;
+				}
+				RequestParam requestParam = parameter.getAnnotation(RequestParam.class);
+				if(requestParam!=null){
+					object[i++] = ClassLoader.castType(request.getParameter(requestParam.value()) , parameter.getType());
+				}else{
+					if(iterator.hasNext()){
+						object[i++] = ClassLoader.castType(request.getParameter(iterator.next()) , parameter.getType());
+						iterator.remove();
+					}else{
+						object[i++] = ClassLoader.castType(null , parameter.getType());
+					}
+				}
 			}
-		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
+			method.setAccessible(true);
+			Object callBack = action.getMethod().invoke(loader.getLoadedObject() , object);
+			method.setAccessible(false);
+			response.setStatus(4280);
+			response.setData(callBack);
+			response.write();
+		} catch (SecurityException | IllegalAccessException | IllegalArgumentException
 				| InvocationTargetException e) {
 			e.printStackTrace();
 			response.setStatus(4290);
-			response.setData("RTDT Services Inner Error!");
+			response.setData("Services Inner Error!");
 			response.write();
 		}
 	}

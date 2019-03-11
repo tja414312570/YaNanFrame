@@ -21,7 +21,13 @@ import com.YaNan.frame.reflect.ClassLoader;
 import com.YaNan.frame.util.StringUtil;
 
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
-
+/**
+ * sql片断的默认集合实现，基于二叉树结构
+ * 当前片断仅包含本节点信息以及子节点和下一节点信息
+ * 条件判断使用jdk的Nashorn引擎（javascript引擎）
+ * @author yanan
+ *
+ */
 @Register(attribute = "*.fragment", priority = Integer.MAX_VALUE, model = ProxyModel.CGLIB, signlTon = false)
 public class FragmentSet implements FragmentBuilder {
 	// xml文档
@@ -67,17 +73,44 @@ public class FragmentSet implements FragmentBuilder {
 	public void setChildSet(FragmentSet childSet) {
 		this.childSet = childSet;
 	}
-
+	
+	/**
+	 * 根据参数将SQL片段（FragmentSet）生成具有语义的预执行片段(PreparedFragment)
+	 */
 	@SuppressWarnings("unchecked")
 	@Override
 	public PreparedFragment prepared(Object... objects) {
+		/**
+		 * 通过调用PlugsFactory生成PreparedFragment的实例。
+		 */
 		PreparedFragment preparedFragment = PlugsFactory.getPlugsInstance(PreparedFragment.class);
+		/**
+		 * 将所有的变量都添加到预执行片段中
+		 */
 		preparedFragment.addAllVariable(this.preparedParameter(this.parameters, objects));
+		/**
+		 * if next node is not null and child node is not null
+		 */
 		if (this.nextSet != null && this.childSet != null) {
+			/**
+			 * invoke child node's prepared method to build child node's PreparedFragment object;
+			 */
 			PreparedFragment child = this.childSet.prepared(objects);
+			/**
+			 * invoke next node's prepared method to build next node's PreparedFragment object;
+			 */
 			PreparedFragment next = this.nextSet.prepared(objects);
+			/**
+			 * build child and next prparedFragmet SQL as this fragment SQL.
+			 */
 			preparedFragment.setSql(child.getSql()+" " + next.getSql());
+			/**
+			 * add child and next node all argument to this fragment
+			 */
 			preparedFragment.addParameter(child.getArguments(), next.getArguments());
+			/**
+			 * add child and next node all variable to this fragment
+			 */
 			preparedFragment.addAllVariable(child.getVariable());
 			preparedFragment.addAllVariable(next.getVariable());
 		} else if (this.childSet != null) {
@@ -96,8 +129,13 @@ public class FragmentSet implements FragmentBuilder {
 		}
 		return preparedFragment;
 	}
-
-	private String preparedParameterSql(String sql, Object... parameter) {
+	/**
+	 * 此方法用于将sql语句中的${|args}代替为具体的变量
+	 * @param sql
+	 * @param parameter
+	 * @return
+	 */
+	public String preparedParameterSql(String sql, Object... parameter) {
 		List<String> variable = StringUtil.find(sql, "${", "}");
 		if (variable != null && variable.size() > 0) {
 			StringBuffer sb = new StringBuffer(sql).append(" ");
@@ -115,6 +153,7 @@ public class FragmentSet implements FragmentBuilder {
 			}
 			sql = sb.toString();
 		}
+		//将制表符和换行符替换为空格。
 		sql = sql.replaceAll("\n\t\t", " ").replaceAll("\t\t", " ").replaceAll("\t", " ").replaceAll("\n", " ").trim();
 		return sql;
 	}
@@ -126,7 +165,12 @@ public class FragmentSet implements FragmentBuilder {
 			arguments.add(object.get(key));
 		}
 	}
-
+	/**
+	 * 获取创建sql时所涉及到的参数列表
+	 * @param variables 此片段锁涉及到的变量
+	 * @param parameter 调用接口传入的参数
+	 * @return
+	 */
 	public List<Object> preparedParameter(List<String> variables, Object... parameter) {
 		List<Object> arguments = new ArrayList<Object>();
 		if (parameter != null && variables.size() > 0) {
@@ -146,6 +190,7 @@ public class FragmentSet implements FragmentBuilder {
 				Object object = parameter[0];
 				if (object == null) {
 					arguments.add(object);
+					//如果参数时脚本引擎可以直接使用Binder
 				}else if(ClassLoader.extendsOf(object.getClass(), ScriptObjectMirror.class)){ 
 					for(int i = 0;i<variables.size();i++){
 						try {
@@ -156,10 +201,13 @@ public class FragmentSet implements FragmentBuilder {
 									+ "' at item data " + object, e);
 						}
 					}
+					//如果是Map类型的参数
 				}else if (ClassLoader.implementsOf(object.getClass(), Map.class)) {
 					this.buildMapParameter(variables, arguments, (Map<?, ?>) object);
+					//如果是List类型的参数
 				} else if (ClassLoader.implementsOf(object.getClass(), List.class)) {
 					this.buldListParameter(variables, arguments, (List<?>) object);
+					//如果参数是一个基本类型
 				} else if (ClassLoader.isBaseType(object.getClass())) {
 					if (SqlFragment.removeDuplicate(variables).size() == 1)
 						for (int i = 0; i < variables.size(); i++)
@@ -170,6 +218,7 @@ public class FragmentSet implements FragmentBuilder {
 								+ parameter.length + "\"! at mapping file '" + this.sqlFragment.baseMapping.getXmlFile()
 								+ "' at id '" + this.sqlFragment.baseMapping.getId() + "'");
 				} else {
+					//如果参数是一个POJO类型
 					ClassLoader loader = new ClassLoader(object);
 					for (int i = 0; i < variables.size(); i++)
 						try {
@@ -323,8 +372,10 @@ public class FragmentSet implements FragmentBuilder {
 					this.buldListBinder(binder, argument, (List<?>) object);
 					// 如果参数时基本类型
 				} else if (ClassLoader.isBaseType(object.getClass())) {
-					if (argument.size() == 1)
-						binder.put(argument.get(0), object);
+					if (argument.size() == 1){
+						int pos = this.sqlFragment.getArguments().indexOf(argument.get(0));
+						binder.put(argument.get(0), pos >= objects.length ? null : objects[pos]);
+					}
 					else
 						throw new RuntimeException(
 								"failed to execute \"" + express + "\" expression because the need parameter \""
@@ -365,27 +416,32 @@ public class FragmentSet implements FragmentBuilder {
 		}
 	}
 
-	public Object eval(Map<String, Object> binds, String variable) {
-		ScriptEngineManager manager = new ScriptEngineManager();
-		ScriptEngine engine = manager.getEngineByName("JavaScript");
-		Bindings bind = engine.createBindings();
-		bind.putAll(binds);
-		try {
-			return engine.eval("stu.getAid()", bind);
-		} catch (ScriptException e) {
-			throw new RuntimeException("failed to execute \"" + variable + "\" expression! at mapping file '"
-					+ this.sqlFragment.baseMapping.getXmlFile() + "' at id '" + this.sqlFragment.baseMapping.getId()
-					+ "' at item data " + binds, e);
-		}
-	}
+//	public Object eval(Map<String, Object> binds, String variable) {
+//		ScriptEngineManager manager = new ScriptEngineManager();
+//		ScriptEngine engine = manager.getEngineByName("JavaScript");
+//		Bindings bind = engine.createBindings();
+//		bind.putAll(binds);
+//		try {
+//			return engine.eval("stu.getAid()", bind);
+//		} catch (ScriptException e) {
+//			throw new RuntimeException("failed to execute \"" + variable + "\" expression! at mapping file '"
+//					+ this.sqlFragment.baseMapping.getXmlFile() + "' at id '" + this.sqlFragment.baseMapping.getId()
+//					+ "' at item data " + binds, e);
+//		}
+//	}
 
 	private void buldListBinder(Bindings binder, List<String> argument, List<?> object) {
 		for (int i = 0; i < argument.size(); i++)
 			binder.put(argument.get(i), i < object.size() ? object.get(i) : null);
 	}
-
+	
+	/**
+	 * 将表达式中的and or not 转化为JS可以执行的逻辑符
+	 * @param test
+	 * @return
+	 */
 	public String switchExpress(String test) {
-		test = test.replaceAll(" and ", " && ").replaceAll(" or ", " || ").replaceAll(" not ", " ! ");
+		test = test.replace(" and ", " && ").replace(" or ", " || ").replace(" not ", " ! ");
 		return test;
 	}
 

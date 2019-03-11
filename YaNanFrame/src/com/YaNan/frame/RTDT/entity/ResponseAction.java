@@ -5,7 +5,7 @@ import com.YaNan.frame.RTDT.WebSocketListener;
 public class ResponseAction {
 	private String AUID;
 	private int status;
-	private String data;
+	private Object data;
 	private int type;
 	private transient WebSocketListener client;
 
@@ -25,11 +25,11 @@ public class ResponseAction {
 		this.status = status;
 	}
 
-	public String getData() {
+	public Object getData() {
 		return this.data;
 	}
 
-	public void setData(String data) {
+	public void setData(Object data) {
 		this.data = data;
 	}
 
