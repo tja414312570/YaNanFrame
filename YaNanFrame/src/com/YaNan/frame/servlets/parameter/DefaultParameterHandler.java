@@ -11,6 +11,8 @@ import java.lang.reflect.Parameter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -24,6 +26,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import com.YaNan.frame.logging.Log;
+import com.YaNan.frame.plugin.Plug;
 import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.plugin.annotations.Register;
 import com.YaNan.frame.reflect.ClassLoader;
@@ -43,22 +46,14 @@ import com.YaNan.frame.servlets.parameter.annotations.UUID;
 import com.YaNan.frame.util.PathMatcher;
 
 /**
- * 2018-7-15 重新修改parseBaseType代码，将包装类型和原始类型分开
- * 2018-7-9 重新修改获取参数逻辑
- * 默认的参数调配器，优先级最低
- * 该调配器匹配任何类型的数据，但实际使用中可能存在某些数据不能处理
- * 支持put，delete参数处理
- * 支持int long char等基本类型
- * 支持String，数组等
- * 支持UUID Date标签
- * 支持普通pojo
- * 不支持文件上传，二进制数据
- * 新增Model类型的参数
+ * 2018-7-15 重新修改parseBaseType代码，将包装类型和原始类型分开 2018-7-9 重新修改获取参数逻辑 默认的参数调配器，优先级最低
+ * 该调配器匹配任何类型的数据，但实际使用中可能存在某些数据不能处理 支持put，delete参数处理 支持int long char等基本类型
+ * 支持String，数组等 支持UUID Date标签 支持普通pojo 不支持文件上传，二进制数据 新增Model类型的参数
  * 
  * @author yanan
  *
  */
-@Register(attribute = "*", signlTon = false,priority=Integer.MAX_VALUE)
+@Register(attribute = "*", signlTon = false, priority = Integer.MAX_VALUE)
 public class DefaultParameterHandler implements ParameterHandler {
 	// 路径变量
 	private Map<String, String> pathParameter;
@@ -66,7 +61,7 @@ public class DefaultParameterHandler implements ParameterHandler {
 	private Iterator<String> pathIterator;
 	// 请求参数集合的枚举
 	private Iterator<Entry<String, String[]>> entrySetiterator;
-	//内置模型model
+	// 内置模型model
 	private Model model;
 	// 获取session attribute 名称迭代器
 	private static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -74,13 +69,14 @@ public class DefaultParameterHandler implements ParameterHandler {
 	private HttpServletResponse servletResponse;
 	private ServletBean servletBean;
 	private ParameterHandlerCache parameterHandlerCache;
-	private Log log = PlugsFactory.getPlugsInstance(Log.class,this.getClass());
-	
+	private Log log = PlugsFactory.getPlugsInstance(Log.class, this.getClass());
+
 	@Override
 	public void initHandler(HttpServletRequest request, HttpServletResponse response, ServletBean servletBean,
 			ParameterHandlerCache parameterHandlerCache) {
-		this.pathParameter = PathMatcher.match(servletBean.getPathRegex(), URLSupport.getRelativePath(request)).variableMap();
-		if(pathParameter!=null)
+		this.pathParameter = PathMatcher.match(servletBean.getPathRegex(), URLSupport.getRelativePath(request))
+				.variableMap();
+		if (pathParameter != null)
 			pathIterator = pathParameter.values().iterator();
 		this.servletBean = servletBean;
 		this.servletRequest = request;
@@ -98,7 +94,7 @@ public class DefaultParameterHandler implements ParameterHandler {
 	 * @return
 	 */
 	public Map<String, String> getPathValues(final Map<Integer, String> pathVariables, String path) {
-		if(pathVariables==null)
+		if (pathVariables == null)
 			return null;
 		Map<String, String> pathValues = new LinkedHashMap<String, String>();
 		int Index = path.indexOf("/");
@@ -147,18 +143,34 @@ public class DefaultParameterHandler implements ParameterHandler {
 					return this.service((com.YaNan.frame.plugin.annotations.Service) parameterAnnotation, paras);
 				else
 					return null;// 不支持的的类型
-			} else {
-				// 处理特殊参数 如 pojo session cookie model request response write
-				// header
-				return this.specialParams(paras.getType());
+			} else if (paras.getType().equals(Map.class)) {
+				if (annoType.equals(RequestParam.class)) {
+					Map<String, String> map = new HashMap<String, String>();
+					Enumeration<String> iter = servletRequest.getParameterNames();
+					while (iter.hasMoreElements()) {
+						String key = iter.nextElement();
+						map.put(key, servletRequest.getParameter(key));
+					}
+					return map;
+				} else if (annoType.equals(PathVariable.class)) {
+					return pathParameter;
+				}else{
+					return this.servletRequest.getParameterMap();
+				}
+				
 			}
+			// 处理特殊参数 如 pojo session cookie model request response write
+			// header
+			return this.specialParams(paras.getType());
 		} catch (Throwable e) {
-			log.error("An error occurred while processing the parameters !\r\nat class : "+servletBean.getServletClass().getName()
-					+",\r\nat method : "+servletBean.getMethod().getName()
-					+",\r\nat parameter : "+paras.getName(),e);
-			throw new ServletRuntimeException(HttpServletResponse.SC_BAD_REQUEST,"An error occurred while processing the parameters !\r\nat class : "+servletBean.getServletClass().getName()
-					+",\r\nat method : "+servletBean.getMethod().getName()
-					+",\r\nat parameter : "+paras.getName(),e);
+			log.error("An error occurred while processing the parameters !\r\nat class : "
+					+ servletBean.getServletClass().getName() + ",\r\nat method : " + servletBean.getMethod().getName()
+					+ ",\r\nat parameter : " + paras.getName(), e);
+			throw new ServletRuntimeException(HttpServletResponse.SC_BAD_REQUEST,
+					"An error occurred while processing the parameters !\r\nat class : "
+							+ servletBean.getServletClass().getName() + ",\r\nat method : "
+							+ servletBean.getMethod().getName() + ",\r\nat parameter : " + paras.getName(),
+					e);
 		}
 	}
 
@@ -167,9 +179,10 @@ public class DefaultParameterHandler implements ParameterHandler {
 			return this.servletRequest;
 		else if (type.equals(HttpServletResponse.class))// response
 			return this.servletResponse;
-		else if (type.equals(Model.class)){// model
+		else if (type.equals(Model.class)) // model
 			return this.getModel();
-		}
+		else if (type.equals(Map.class)) // map
+			return this.getServletRequest().getParameterMap();
 		else if (type.equals(PrintWriter.class) || type.equals(Writer.class))// writer
 			return this.servletResponse.getWriter();
 		else if (type.equals(InputStream.class))// inputStream
@@ -187,8 +200,7 @@ public class DefaultParameterHandler implements ParameterHandler {
 			/**
 			 * 第二个参数需要处理
 			 */
-			return this.pojoParameterBind(type, null, servletRequest, servletResponse, servletBean,
-					pathParameter);
+			return this.pojoParameterBind(type, null, servletRequest, servletResponse, servletBean, pathParameter);
 			// ;
 		}
 	}
@@ -211,7 +223,7 @@ public class DefaultParameterHandler implements ParameterHandler {
 		int endIndex = parameterAnnotation.endIndex();
 		if (parameterAnnotation.value() == -1)
 			endIndex = parameterAnnotation.value();
-		if((endIndex<0))
+		if ((endIndex < 0))
 			endIndex = uuid.length();
 		return parseBaseType(paras.getType(), uuid.substring(parameterAnnotation.beginIndex(), endIndex), null);
 	}
@@ -222,11 +234,11 @@ public class DefaultParameterHandler implements ParameterHandler {
 			parameterName = paras.getName();// 此方法只适合 jdk 1.8 以上，并要求编译器编译为
 											// 存储方法参数 否则可能出现 arg0 arg1等编译后修改的参数名
 		String value = pathParameter.get(parameterName);
-		if(value!=null){
+		if (value != null) {
 			return parseBaseType(paras.getType(), value, null);
-		}else if(parameterAnnotation.defaultValue().equals("")){
+		} else if (parameterAnnotation.defaultValue().equals("")) {
 			return parseBaseType(paras.getType(), null, null);
-		}else{
+		} else {
 			return parseBaseType(paras.getType(), parameterAnnotation.defaultValue(), null);
 		}
 	}
@@ -236,16 +248,16 @@ public class DefaultParameterHandler implements ParameterHandler {
 		if (parameterName.trim().equals(""))
 			parameterName = paras.getName();// 此方法只适合 jdk 1.8 以上，并要求编译器编译为
 											// 存储方法参数 否则可能出现 arg0 arg1等编译后修改的参数名
-		if(paras.getType().isArray() ){
+		if (paras.getType().isArray()) {
 			return parseBaseTypeArray(paras.getType(), servletRequest.getParameterValues(parameterName), null);
-		}else{
+		} else {
 			String para = servletRequest.getParameter(parameterName);
-			if(para!=null){
-				return parseBaseType(paras.getType(), para,null);
-			}else if(parameterAnnotation.defaultValue().equals("")){
+			if (para != null) {
+				return parseBaseType(paras.getType(), para, null);
+			} else if (parameterAnnotation.defaultValue().equals("")) {
 				return parseBaseType(paras.getType(), null, null);
-			}else{
-				return parseBaseType(paras.getType(),parameterAnnotation.defaultValue(),null);
+			} else {
+				return parseBaseType(paras.getType(), parameterAnnotation.defaultValue(), null);
 			}
 		}
 	}
@@ -256,11 +268,11 @@ public class DefaultParameterHandler implements ParameterHandler {
 			parameterName = paras.getName();// 此方法只适合 jdk 1.8 以上，并要求编译器编译为
 											// 存储方法参数 否则可能出现 arg0 arg1等编译后修改的参数名
 		String header = this.servletRequest.getHeader(parameterName);
-		if(header!=null){
+		if (header != null) {
 			return parseBaseType(paras.getType(), this.servletRequest.getHeader(parameterName), null);
-		}else if(parameterAnnotation.defaultValue().equals("")){
+		} else if (parameterAnnotation.defaultValue().equals("")) {
 			return parseBaseType(paras.getType(), null, null);
-		}else{
+		} else {
 			return parseBaseType(paras.getType(), parameterAnnotation.defaultValue(), null);
 		}
 	}
@@ -271,8 +283,10 @@ public class DefaultParameterHandler implements ParameterHandler {
 			parameterName = paras.getName();// 此方法只适合 jdk 1.8 以上，并要求编译器编译为
 		return paras.getType().isArray()
 				? parseBaseTypeArray(paras.getType(), servletRequest.getParameterValues(parameterName), null)
-				:servletRequest.getParameter(parameterName)!=null?parseBaseType(paras.getType(), servletRequest.getParameter(parameterName), null):
-					parameterAnnotation.defaultValue().equals("")?parseBaseType(paras.getType(),null, null):parseBaseType(paras.getType(),parameterAnnotation.defaultValue(), null);
+				: servletRequest.getParameter(parameterName) != null
+						? parseBaseType(paras.getType(), servletRequest.getParameter(parameterName), null)
+						: parameterAnnotation.defaultValue().equals("") ? parseBaseType(paras.getType(), null, null)
+								: parseBaseType(paras.getType(), parameterAnnotation.defaultValue(), null);
 	}
 
 	private Object sessionAttributes(SessionAttributes parameterAnnotation, Parameter paras) throws ParseException {
@@ -330,8 +344,10 @@ public class DefaultParameterHandler implements ParameterHandler {
 		}
 		return this.getParameter(paras);
 	}
+
 	/**
-	 * 方法注解  ===》  
+	 * 方法注解 ===》
+	 * 
 	 * @param groups
 	 * @param groups2
 	 * @return
@@ -355,11 +371,11 @@ public class DefaultParameterHandler implements ParameterHandler {
 			parameterName = paras.getName();// 此方法只适合 jdk 1.8 以上，并要求编译器编译为
 											// 存储方法参数 否则可能出现 arg0 arg1等编译后修改的参数名
 		String value = pathParameter.get(parameterName);
-		if(value!=null){
+		if (value != null) {
 			return parseBaseType(paras.getType(), value, null);
-		}else if(parameterAnnotation.defaultValue().equals("")){
+		} else if (parameterAnnotation.defaultValue().equals("")) {
 			return parseBaseType(paras.getType(), null, null);
-		}else{
+		} else {
 			return parseBaseType(paras.getType(), parameterAnnotation.defaultValue(), null);
 		}
 	}
@@ -369,16 +385,16 @@ public class DefaultParameterHandler implements ParameterHandler {
 		if (parameterName.trim().equals(""))
 			parameterName = paras.getName();// 此方法只适合 jdk 1.8 以上，并要求编译器编译为
 											// 存储方法参数 否则可能出现 arg0 arg1等编译后修改的参数名
-		if(paras.getType().isArray() ){
+		if (paras.getType().isArray()) {
 			return parseBaseTypeArray(paras.getType(), servletRequest.getParameterValues(parameterName), null);
-		}else{
+		} else {
 			String para = servletRequest.getParameter(parameterName);
-			if(para!=null){
-				return parseBaseType(paras.getType(), para,null);
-			}else if(parameterAnnotation.defaultValue().equals("")){
+			if (para != null) {
+				return parseBaseType(paras.getType(), para, null);
+			} else if (parameterAnnotation.defaultValue().equals("")) {
 				return parseBaseType(paras.getType(), null, null);
-			}else{
-				return parseBaseType(paras.getType(),parameterAnnotation.defaultValue(),null);
+			} else {
+				return parseBaseType(paras.getType(), parameterAnnotation.defaultValue(), null);
 			}
 		}
 	}
@@ -389,11 +405,11 @@ public class DefaultParameterHandler implements ParameterHandler {
 			parameterName = paras.getName();// 此方法只适合 jdk 1.8 以上，并要求编译器编译为
 											// 存储方法参数 否则可能出现 arg0 arg1等编译后修改的参数名
 		String header = this.servletRequest.getHeader(parameterName);
-		if(header!=null){
+		if (header != null) {
 			return parseBaseType(paras.getType(), this.servletRequest.getHeader(parameterName), null);
-		}else if(parameterAnnotation.defaultValue().equals("")){
+		} else if (parameterAnnotation.defaultValue().equals("")) {
 			return parseBaseType(paras.getType(), null, null);
-		}else{
+		} else {
 			return parseBaseType(paras.getType(), parameterAnnotation.defaultValue(), null);
 		}
 	}
@@ -405,8 +421,10 @@ public class DefaultParameterHandler implements ParameterHandler {
 											// 存储方法参数 否则可能出现 arg0 arg1等编译后修改的参数名
 		return paras.getType().isArray()
 				? parseBaseTypeArray(paras.getType(), servletRequest.getParameterValues(parameterName), null)
-						:servletRequest.getParameter(parameterName)!=null?parseBaseType(paras.getType(), servletRequest.getParameter(parameterName), null):
-							parameterAnnotation.defaultValue().equals("")?null:parseBaseType(paras.getType(), parameterAnnotation.defaultValue(), null);
+				: servletRequest.getParameter(parameterName) != null
+						? parseBaseType(paras.getType(), servletRequest.getParameter(parameterName), null)
+						: parameterAnnotation.defaultValue().equals("") ? null
+								: parseBaseType(paras.getType(), parameterAnnotation.defaultValue(), null);
 	}
 
 	private Object cookieValue(CookieValue anno, Field paras) throws ParseException {
@@ -427,37 +445,40 @@ public class DefaultParameterHandler implements ParameterHandler {
 			try {
 				// 如按循序获取参数 只支持 pathVariable 与 requestParameter
 				// 如果没有的话会造成HttpServletResponse.SC_INTERNAL_SERVER_ERROR
-				if (pathIterator!=null&&pathIterator.hasNext())// 判断pathValues的迭代器是否有下一个值，如果有则赋值
+				if (pathIterator != null && pathIterator.hasNext())// 判断pathValues的迭代器是否有下一个值，如果有则赋值
 					return parseBaseType(paras.getType(), pathIterator.next(), null);
 				else if (entrySetiterator.hasNext()) {// 判断requestParameter参数中是否有该参数
 					Entry<String, String[]> entry = entrySetiterator.next();
-					return parseBaseTypeArray(paras.getType(), entry.getValue().length == 1 && entry.getValue()[0].equals("")
-							? new String[] { entry.getKey() } : entry.getValue(), null);
+					return parseBaseTypeArray(paras.getType(),
+							entry.getValue().length == 1 && entry.getValue()[0].equals("")
+									? new String[] { entry.getKey() } : entry.getValue(),
+							null);
 				}
 				return parseBaseType(paras.getType(), null, null);
 			} catch (Exception e) {
-				log.error("An error occurred while processing the parameters !\r\nat class : "+servletBean.getServletClass().getName()
-						+",\r\nat method : "+servletBean.getMethod().getName()
-						+",\r\nat parameter : "+paras.getName(),e);
+				log.error("An error occurred while processing the parameters !\r\nat class : "
+						+ servletBean.getServletClass().getName() + ",\r\nat method : "
+						+ servletBean.getMethod().getName() + ",\r\nat parameter : " + paras.getName(), e);
 			}
 		} else {
 			try {
 				return this.specialParams(paras.getType());
 			} catch (Exception e) {
-				log.error("An error occurred while processing the parameters !\r\nat class : "+servletBean.getServletClass().getName()
-						+",\r\nat method : "+servletBean.getMethod().getName()
-						+",\r\nat parameter : "+paras.getName(),e);
+				log.error("An error occurred while processing the parameters !\r\nat class : "
+						+ servletBean.getServletClass().getName() + ",\r\nat method : "
+						+ servletBean.getMethod().getName() + ",\r\nat parameter : " + paras.getName(), e);
 			}
 		}
 		return null;
 	}
 
 	private Object getModel() {
-		if(this.model==null)
+		if (this.model == null)
 			synchronized (this) {
-				if(this.model==null){
-					Class<?>[] parameterType = {HttpServletRequest.class};
-					this.model = PlugsFactory.getPlugsInstanceNewByParamType(Model.class,parameterType, this.servletRequest);
+				if (this.model == null) {
+					Class<?>[] parameterType = { HttpServletRequest.class };
+					this.model = PlugsFactory.getPlugsInstanceNewByParamType(Model.class, parameterType,
+							this.servletRequest);
 				}
 			}
 		return this.model;
@@ -477,8 +498,12 @@ public class DefaultParameterHandler implements ParameterHandler {
 	 */
 	protected Object pojoParameterBind(Class<?> pojoClass, String path, HttpServletRequest request,
 			HttpServletResponse response, ServletBean servletBean, Map<String, String> pathParameter) throws Exception {
-		if(pojoClass.isInterface())
-			return null;
+		if (pojoClass.isInterface()){
+			Plug plug = PlugsFactory.getPlug(pojoClass);
+			if(plug!=null){
+				pojoClass=plug.getDefaultRegisterDescription().getRegisterClass();
+			}
+		}
 		// 对pojo类进行ClassLoader的包装，ClassLoader会在内部产生一个pojo类的实例
 		ClassLoader loader = new ClassLoader(pojoClass);
 		// 获取所有的field
@@ -618,6 +643,7 @@ public class DefaultParameterHandler implements ParameterHandler {
 			args[i] = parseBaseType(clzz, arg[i], format);
 		return args;
 	}
+
 	/**
 	 * 将字符类型转换为目标类型
 	 * 
@@ -631,45 +657,45 @@ public class DefaultParameterHandler implements ParameterHandler {
 			return arg;
 		// 8个基本数据类型及其包装类型
 		if (clzz.equals(int.class))
-			return arg==null?0:Integer.parseInt(arg);
-		if(clzz.equals(Integer.class))
-			return arg==null?null:Integer.valueOf(arg);
-		
+			return arg == null ? 0 : Integer.parseInt(arg);
+		if (clzz.equals(Integer.class))
+			return arg == null ? null : Integer.valueOf(arg);
+
 		if (clzz.equals(boolean.class))
-			return arg==null?false:Boolean.parseBoolean(arg);
-		if(clzz.equals(Boolean.class))
-			return arg==null?null:Boolean.valueOf(arg);
-		
+			return arg == null ? false : Boolean.parseBoolean(arg);
+		if (clzz.equals(Boolean.class))
+			return arg == null ? null : Boolean.valueOf(arg);
+
 		if (clzz.equals(float.class))
-			return arg==null?0.0f:Float.parseFloat(arg);
-		if(clzz.equals(Float.class))
-			return arg==null?null:Float.valueOf(arg);
-		
+			return arg == null ? 0.0f : Float.parseFloat(arg);
+		if (clzz.equals(Float.class))
+			return arg == null ? null : Float.valueOf(arg);
+
 		if (clzz.equals(short.class))
-			return arg==null?0:Short.parseShort(arg);
-		if( clzz.equals(Short.class))
-			return arg==null?null:Short.valueOf(arg);
-					
+			return arg == null ? 0 : Short.parseShort(arg);
+		if (clzz.equals(Short.class))
+			return arg == null ? null : Short.valueOf(arg);
+
 		if (clzz.equals(long.class))
-			return arg==null?0l:Long.parseLong(arg);
-		if(clzz.equals(Long.class))
-			return arg==null?null:Long.valueOf(arg);
-		
-		if (clzz.equals(double.class) )
-			return arg==null?0.0f:Double.parseDouble(arg);
-		if(clzz.equals(Double.class))
-			return arg==null?null:Double.valueOf(arg);
-		
-		if (clzz.equals(char.class) )
-			return arg==null?null:arg.charAt(0);
-		if(clzz.equals(Character.class))
-			return arg==null?null:Character.valueOf(arg.charAt(0));
-		
+			return arg == null ? 0l : Long.parseLong(arg);
+		if (clzz.equals(Long.class))
+			return arg == null ? null : Long.valueOf(arg);
+
+		if (clzz.equals(double.class))
+			return arg == null ? 0.0f : Double.parseDouble(arg);
+		if (clzz.equals(Double.class))
+			return arg == null ? null : Double.valueOf(arg);
+
+		if (clzz.equals(char.class))
+			return arg == null ? null : arg.charAt(0);
+		if (clzz.equals(Character.class))
+			return arg == null ? null : Character.valueOf(arg.charAt(0));
+
 		if (clzz.equals(char[].class))
-			return arg==null?null:arg.toCharArray();
-		
-		if (clzz.equals(byte.class)||clzz.equals(Byte.class))
-			return arg==null?null:Byte.parseByte(arg);
+			return arg == null ? null : arg.toCharArray();
+
+		if (clzz.equals(byte.class) || clzz.equals(Byte.class))
+			return arg == null ? null : Byte.parseByte(arg);
 		// 日期
 		if (clzz.equals(Date.class))
 			return format == null ? DATE_FORMAT.parse(arg) : new SimpleDateFormat(format).parse(arg);
@@ -737,9 +763,9 @@ public class DefaultParameterHandler implements ParameterHandler {
 				return this.specialParams(field.getType());
 			}
 		} catch (Exception e) {
-			log.error("An error occurred while processing the parameters !\r\nat class : "+servletBean.getServletClass().getName()
-					+",\r\nat method : "+servletBean.getMethod().getName()
-					+",\r\nat field : "+field.getName(),e);
+			log.error("An error occurred while processing the parameters !\r\nat class : "
+					+ servletBean.getServletClass().getName() + ",\r\nat method : " + servletBean.getMethod().getName()
+					+ ",\r\nat field : " + field.getName(), e);
 		}
 		return null;
 	}
@@ -752,7 +778,7 @@ public class DefaultParameterHandler implements ParameterHandler {
 				// 如按循序获取参数 只支持 pathVariable 与 requestParameter
 				// 如果没有的话会造成HttpServletResponse.SC_INTERNAL_SERVER_ERROR
 				String value = null;
-				if(pathParameter!=null)
+				if (pathParameter != null)
 					value = pathParameter.get(name);
 				if (value != null)
 					return parseBaseType(field.getType(), value, null);
@@ -773,17 +799,17 @@ public class DefaultParameterHandler implements ParameterHandler {
 				}
 
 			} catch (Exception e) {
-				log.error("An error occurred while processing the parameters !\r\nat class : "+servletBean.getServletClass().getName()
-						+",\r\nat method : "+servletBean.getMethod().getName()
-						+",\r\nat field : "+field.getName(),e);
+				log.error("An error occurred while processing the parameters !\r\nat class : "
+						+ servletBean.getServletClass().getName() + ",\r\nat method : "
+						+ servletBean.getMethod().getName() + ",\r\nat field : " + field.getName(), e);
 			}
 		} else {
 			try {
 				return this.specialParams(field.getType());
 			} catch (Exception e) {
-				log.error("An error occurred while processing the parameters !\r\nat class : "+servletBean.getServletClass().getName()
-						+",\r\nat method : "+servletBean.getMethod().getName()
-						+",\r\nat field : "+field.getName(),e);
+				log.error("An error occurred while processing the parameters !\r\nat class : "
+						+ servletBean.getServletClass().getName() + ",\r\nat method : "
+						+ servletBean.getMethod().getName() + ",\r\nat field : " + field.getName(), e);
 			}
 		}
 		return null;

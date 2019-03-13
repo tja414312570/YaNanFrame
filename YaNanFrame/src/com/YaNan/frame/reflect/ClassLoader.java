@@ -32,6 +32,13 @@ public class ClassLoader {
 	/*
 	 * static method
 	 */
+	public Object getLoadObject() {
+		return loadObject;
+	}
+
+	public void setLoadObject(Object loadObject) {
+		this.loadObject = loadObject;
+	}
 	/**
 	 * 判断类是否存在，参数 完整类名
 	 * 
