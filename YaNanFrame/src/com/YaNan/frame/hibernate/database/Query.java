@@ -32,6 +32,7 @@ public class Query extends OperateImplement {
 	protected List<String> order = new ArrayList<String>();
 	protected Map<Field, DBColumn> fieldMap = new LinkedHashMap<Field, DBColumn>();
 	protected String limit = "";
+	protected boolean cache = true;
 
 	public Object getDataTablesObject() {
 		return dataTablesObject;
@@ -459,9 +460,11 @@ public class Query extends OperateImplement {
 
 	@Override
 	public String create() {
-		String sql = SqlCache.getCache().getSql(this.ident());
-		if (sql != null)
-			return sql;
+		if(this.cache){
+			String sql = SqlCache.getCache().getSql(this.ident());
+			if (sql != null)
+				return sql;
+		}
 		StringBuilder sb = new StringBuilder("SELECT ");
 		if (this.key.size() == 0)
 			sb.append("* ");
@@ -690,6 +693,16 @@ public class Query extends OperateImplement {
 			this.innerJoin = innerJoin;
 		}
 
+	}
+
+	public void disableCache() {
+		cache = false;
+	}
+	public void enableCache(){
+		cache = true;
+	}
+	public boolean isEnableCache(){
+		return cache;
 	}
 
 }

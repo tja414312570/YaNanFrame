@@ -537,9 +537,12 @@ public class DBTab implements mySqlInterface {
 				throw new RuntimeException("DataTable mapping class " + this.dataTablesClass.getName()
 						+ " datatable is null,please try to configure the @Tab attribute DB to declare database ");
 		String sql = query.create();
-		List<T> dataTablesObjects = QueryCache.getCache().getQuery(sql);
-		if (dataTablesObjects != null)
-			return dataTablesObjects;
+		List<T> dataTablesObjects;
+		if(query.isEnableCache()){
+			dataTablesObjects = QueryCache.getCache().getQuery(sql);
+			if (dataTablesObjects != null)
+				return dataTablesObjects;
+		}
 		dataTablesObjects = new ArrayList<T>();
 		try {
 			PreparedStatement ps = this.dataBase.executeQuery(sql);
