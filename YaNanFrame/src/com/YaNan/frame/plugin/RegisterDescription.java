@@ -721,6 +721,8 @@ public class RegisterDescription {
 							.getRegisterDescriptionListByAttribute(clzz.getName() + "." + method.getName());
 					for (int i = 0; i < registerList.size(); i++) {
 						RegisterDescription register = registerList.get(i);
+						if(register.getRegisterClass().equals(this.getRegisterClass()))
+							continue;
 						Class<?> registerClass = register.getRegisterClass();
 						Support support = registerClass.getAnnotation(Support.class);
 						try {
