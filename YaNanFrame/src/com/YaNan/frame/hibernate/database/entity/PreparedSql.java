@@ -128,7 +128,7 @@ public class PreparedSql {
 					return (T) result;
 				}
 			}
-			return null;
+			return (T) result;
 		} catch (Throwable t) {
 			throw t;
 		} finally {
@@ -158,7 +158,7 @@ public class PreparedSql {
 					return (T) ((Object) ((int) result > 0));
 				}
 			}
-			return null;
+			return (T) result;
 		} catch (Throwable t) {
 			throw t;
 		} finally {
