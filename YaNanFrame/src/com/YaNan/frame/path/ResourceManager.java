@@ -13,17 +13,21 @@ import com.YaNan.frame.path.Path.PathInter;
  */
 public class ResourceManager {
 	final static String CLASSPATH = "classpath:";
+	public static String getPathExress(String pathExpress){
+		if(pathExpress==null)
+			throw new RuntimeException("path express is null");
+		int cpIndex = pathExpress.indexOf(CLASSPATH);
+		if(cpIndex>-1)
+			pathExpress= ResourceManager.class.getClassLoader().getResource("").getPath().replace("%20"," ")+pathExpress.substring(cpIndex+CLASSPATH.length());
+		return pathExpress;
+	}
 	/**
 	 * 通过路径表达式获取符合该路劲的所有资源
 	 * @param pathExpress
 	 * @return
 	 */
 	public static List<File> getResource(String pathExpress){
-		if(pathExpress==null)
-			throw new RuntimeException("path express is null");
-		int cpIndex = pathExpress.indexOf(CLASSPATH);
-		if(cpIndex>-1)
-			pathExpress= ResourceManager.class.getClassLoader().getResource("").getPath().replace("%20"," ")+pathExpress.substring(cpIndex+CLASSPATH.length());
+		pathExpress = getPathExress(pathExpress);
 		int index = pathExpress.indexOf("*");
 		int qndex = pathExpress.indexOf("?");
 		if(qndex>-1&&qndex<index)

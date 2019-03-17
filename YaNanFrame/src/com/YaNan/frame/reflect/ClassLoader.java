@@ -1003,7 +1003,7 @@ public class ClassLoader {
 			return null;
 		// 整形
 		if (targetType.equals(int.class))
-			return Integer.parseInt((orgin.toString()).equals("") ? "0" : orgin.toString());
+			return (int)(Integer.parseInt((orgin.toString()).equals("") ? "0" : orgin.toString()));
 		if (targetType.equals(short.class))
 			return Short.parseShort((String) orgin);
 		if (targetType.equals(long.class))

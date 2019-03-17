@@ -111,7 +111,7 @@ public class PlugsHandler implements InvocationHandler, PlugsListener, MethodInt
 	 * @param proxyClass
 	 * @param parameters
 	 */
-	public PlugsHandler(Class<?> proxyClass, Object[] parameters, RegisterDescription registerDescription) {
+	public PlugsHandler(Class<?> proxyClass,Class<?>[] parameterType, Object[] parameters, RegisterDescription registerDescription) {
 		this.proxyClass = proxyClass;
 		this.proxyType = ProxyType.CGLIB;
 		Enhancer enhancer = new Enhancer();
@@ -121,7 +121,7 @@ public class PlugsHandler implements InvocationHandler, PlugsListener, MethodInt
 		if (parameters.length == 0)
 			this.proxyObject = enhancer.create();
 		else
-			this.proxyObject = enhancer.create(com.YaNan.frame.reflect.ClassLoader.getParameterTypes(parameters),
+			this.proxyObject = enhancer.create(parameterType,
 					parameters);
 	}
 
@@ -197,9 +197,9 @@ public class PlugsHandler implements InvocationHandler, PlugsListener, MethodInt
 		return (T) Proxy.newProxyInstance(classLoader, interfaces, plugsHandler);
 	}
 
-	public static <T> T newCglibProxy(Class<?> proxyClass, RegisterDescription registerDescription,
+	public static <T> T newCglibProxy(Class<?> proxyClass, RegisterDescription registerDescription,Class<?>[] parameterType,
 			Object... parameters) {
-		return new PlugsHandler(proxyClass, parameters, registerDescription).getProxyObject();
+		return new PlugsHandler(proxyClass, parameterType,parameters, registerDescription).getProxyObject();
 	}
 
 	@Override

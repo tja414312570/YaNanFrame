@@ -51,7 +51,7 @@ public class PlugsFactory {
 	private Map<Object, RegisterDescription> objectRegister = new HashMap<Object, RegisterDescription>();
 	private Map<String, RegisterDescription> objectIdRegister = new HashMap<String, RegisterDescription>();
 
-	static void addBeanRegister(Object object, RegisterDescription description) {
+	public static void addBeanRegister(Object object, RegisterDescription description) {
 		instance.objectRegister.put(object, description);
 		instance.objectIdRegister.put(description.getConfig().getString("id"), description);
 	}
@@ -260,7 +260,7 @@ public class PlugsFactory {
 			if (type.equals(".conf")) {
 				Config config = ConfigFactory.parseFile(file);
 				config.allowKeyNull(true);
-				List<? extends Object> list = config.getSimpleObjectList("plugins");
+				List<? extends Object> list = config.getValueListUnwrapper("plugins");
 				for (Object conf : list) {
 					if (conf == null)
 						continue;
