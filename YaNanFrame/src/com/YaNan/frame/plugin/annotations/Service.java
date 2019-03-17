@@ -28,4 +28,14 @@ public @interface Service {
 	 * @return
 	 */
 	ProxyModel model() default ProxyModel.DEFAULT;
+	/**
+	 * bean的ID注入
+	 * @return
+	 */
+	String id() default "";
+	/**
+	 * bean的ID注入
+	 * @return
+	 */
+	String value() default "";
 }
