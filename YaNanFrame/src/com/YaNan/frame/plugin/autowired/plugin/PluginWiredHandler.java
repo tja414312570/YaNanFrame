@@ -12,12 +12,17 @@ import com.YaNan.frame.plugin.RegisterDescription;
 import com.YaNan.frame.plugin.annotations.Register;
 import com.YaNan.frame.plugin.annotations.Service;
 import com.YaNan.frame.plugin.annotations.Support;
+import com.YaNan.frame.plugin.beans.BeanContext;
 import com.YaNan.frame.plugin.handler.FieldHandler;
 import com.YaNan.frame.plugin.handler.InstanceHandler;
 import com.YaNan.frame.plugin.handler.InvokeHandler;
 import com.YaNan.frame.plugin.handler.MethodHandler;
-import com.YaNan.frame.plugin.handler.PlugsHandler;
 
+/**
+ * 组件注入
+ * @author yanan
+ *
+ */
 @Support(Service.class)
 @Register(attribute="*",description="Service服务的注入")
 public class PluginWiredHandler implements InvokeHandler,FieldHandler,InstanceHandler{
@@ -33,17 +38,25 @@ public class PluginWiredHandler implements InvokeHandler,FieldHandler,InstanceHa
 			if(service!=null){
 				if(arguments[i]==null){
 					Class<?> type = parameters[i].getType();
-					if(type.isArray()){
+					if(!service.id().trim().equals("")){
+						arguments[i] = BeanContext.getContext().getBean(service.id());
+						if(arguments[i]==null)
+							throw new PluginRuntimeException("could not found bean id for \""+service.id()+"\" at parameter \""+parameter+"\" at method \""+methodHandler.getMethod().getName() +"\" at "+methodHandler.getPlugsProxy().getRegisterDescription().getRegisterClass());
+					}else if(type.isArray()){
 						List<?> obj = PlugsFactory.getPlugsInstanceListByAttribute(type, service.attribute());
 						arguments[i] = obj;
 					}else if(type.getClass().equals(List.class)){
 						List<?> obj = PlugsFactory.getPlugsInstanceListByAttribute(type, service.attribute());
 						arguments[i] = obj;
 					}else{
-						Object obj =  PlugsFactory.getPlugsInstanceByAttributeStrict(type,service.attribute());
-						PlugsHandler handler = PlugsFactory.getPlugsHandler(obj);
-						handler.setAttribute("INVOKER_INSTANCE", methodHandler.getPlugsProxy());
-						handler.setAttribute("INVOKER_METHOD", methodHandler.getMethod());
+						Object obj = null;
+						try{
+							obj=  PlugsFactory.getPlugsInstanceByAttributeStrict(type,service.attribute());
+						}catch(Throwable t){
+							obj = BeanContext.getContext().getBean(type);
+						}
+						if(obj==null)
+							throw new PluginRuntimeException("could not found register or bean at parameter \""+parameter+"\" at method \""+methodHandler.getMethod().getName() +"\" at "+methodHandler.getPlugsProxy().getRegisterDescription().getRegisterClass());
 						arguments[i] = obj;
 					}
 					
@@ -68,14 +81,26 @@ public class PluginWiredHandler implements InvokeHandler,FieldHandler,InstanceHa
 			try {
 				field.setAccessible(true);
 				Class<?> type = field.getType();
-				if(type.isArray()){
+				if(!service.id().trim().equals("")){
+					Object object = BeanContext.getContext().getBean(service.id());
+					if(object==null)
+						throw new PluginRuntimeException("could not found bean id for \""+service.id()+"\" at Field \""+field +"\" at "+registerDescription.getRegisterClass());
+					field.set(target,object);
+				}else if(type.isArray()){
 					List<?> obj = PlugsFactory.getPlugsInstanceListByAttribute(type, service.attribute());
 					field.set(target, obj.toArray());
 				}else if(type.getClass().equals(List.class)){
 					List<?> obj = PlugsFactory.getPlugsInstanceListByAttribute(type, service.attribute());
 					field.set(target, obj);
 				}else{
-					Object obj =  PlugsFactory.getPlugsInstanceByAttributeStrict(type,service.attribute());
+					Object obj = null;
+					try{
+						obj=  PlugsFactory.getPlugsInstanceByAttributeStrict(type,service.attribute());
+					}catch(Throwable t){
+						obj = BeanContext.getContext().getBean(type);
+					}
+					if(obj==null)
+						throw new PluginRuntimeException("could not found register or bean at Field \""+field +"\" at "+registerDescription.getRegisterClass());
 					field.set(target, obj);
 				}
 				field.setAccessible(false);
@@ -103,21 +128,27 @@ public class PluginWiredHandler implements InvokeHandler,FieldHandler,InstanceHa
 			if(service!=null){
 				if(arguments[i]==null){
 					Class<?> type = parameters[i].getType();
-					if(type.isArray()){
+					if(!service.id().trim().equals("")){
+						arguments[i] = BeanContext.getContext().getBean(service.id());
+						if(arguments[i]==null)
+							throw new PluginRuntimeException("could not found bean id for \""+service.id()+"\" at parameter \""+parameter + "\" at construct \""+ constructor+"\" at "+registerDescription.getRegisterClass());
+					}else if(type.isArray()){
 						List<?> obj = PlugsFactory.getPlugsInstanceListByAttribute(type, service.attribute());
 						arguments[i] = obj;
 					}else if(type.getClass().equals(List.class)){
 						List<?> obj = PlugsFactory.getPlugsInstanceListByAttribute(type, service.attribute());
 						arguments[i] = obj;
 					}else{
-						Object obj =  PlugsFactory.getPlugsInstanceByAttributeStrict(type,service.attribute());
-						PlugsHandler handler = PlugsFactory.getPlugsHandler(obj);
-						PlugsHandler invokeHandler = PlugsFactory.getPlugsHandler(proxyObject);
-						handler.setAttribute("INVOKER_INSTANCE", invokeHandler.getProxyObject());
-						handler.setAttribute("INVOKER_CONSTRUCTOR",constructor);
+						Object obj = null;
+						try{
+							obj=  PlugsFactory.getPlugsInstanceByAttributeStrict(type,service.attribute());
+						}catch(Throwable t){
+							obj = BeanContext.getContext().getBean(type);
+						}
+						if(obj==null)
+							throw new PluginRuntimeException("could not found register or bean at parameter \""+parameter + "\" at construct \""+ constructor+"\" at "+registerDescription.getRegisterClass());
 						arguments[i] = obj;
 					}
-					
 				}
 			}
 		}
