@@ -2,6 +2,8 @@ package a.test.plugin;
 
 import java.io.File;
 
+import com.YaNan.frame.plugin.PlugsFactory;
+
 public class Factory {
 	private File location;
 	int i;
@@ -29,6 +31,12 @@ public class Factory {
 		return "Factory [location=" + location + "]";
 	}
 	public void init(){
-		System.out.println("初始化后调用方法"+(i++)+this.location);
+		System.out.println((i++)+"初始化后调用方法"+this.location);
+	}
+	public void init(String key,int id){
+		System.out.println((i++)+"初始化后调用方法key:"+key+"   id:"+id);
+	}
+	public void init2(int id,String key){
+		System.out.println((i++)+"初始化后调用方法id:"+id+"   key:"+key);
 	}
 }

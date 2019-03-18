@@ -21,6 +21,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import com.YaNan.frame.path.ResourceManager;
+import com.YaNan.frame.plugin.ParameterUtils.MethodDesc;
 import com.YaNan.frame.plugin.annotations.Register;
 import com.YaNan.frame.plugin.annotations.Support;
 import com.YaNan.frame.plugin.beans.BeanContainer;
@@ -36,6 +37,7 @@ import com.sun.xml.internal.ws.wsdl.writer.document.Service;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
+import com.typesafe.config.impl.SimpleConfigObject;
 
 /**
  * 组件描述类 用于创建组件时的组件信息 v1.0 支持通过Class的Builder方式 v1.1 支持通过Comp文件的Builder方式 v1.2
@@ -133,7 +135,6 @@ public class RegisterDescription {
 	/**
 	 * 初始化后执行的方法
 	 */
-	private String[] method;
 	private Method[] initMethod;
 	private String id;
 
@@ -163,15 +164,6 @@ public class RegisterDescription {
 		this.attribute = register.attribute();
 		this.description = register.description();
 		this.proxyModel = register.model();
-		if (register.method().length > 0) {
-			this.method = register.method();
-			for (int i = 0; i < register.method().length; i++) {
-				Method method = loader.getMethod(register.method()[i]);
-				if (method == null)
-					throw new PluginInitException("register class " + this.clzz.getName()
-							+ " could not found no parameter method \"" + register.method()[i] + "\"");
-			}
-		}
 		checkPlugs(this.plugs);
 		PlugsFactory.getInstance().addRegisterHandlerQueue(this);
 	}
@@ -277,16 +269,7 @@ public class RegisterDescription {
 				throw new RuntimeException("could not fond class property and no reference any at \""
 						+ config.origin().url() + "\" at line : " + config.origin().lineNumber());
 			if (config.hasPath("init")) {
-				if (this.config.isList("init")) {
-					List<String> methods = this.config.getStringList("init");
-					this.method = new String[methods.size()];
-					for (int i = 0; i < methods.size(); i++) {
-						this.method[i] = methods.get(i);
-					}
-				} else {
-					this.method = new String[1];
-					this.method[0] = config.getString("init");
-				}
+				
 			}
 
 			if (className != null) {
@@ -706,6 +689,9 @@ public class RegisterDescription {
 						this.initConstructorHandlerMapping(this.clzz);
 						this.initFieldHandlerMapping();
 						checkPlugs(this.plugs);
+					}
+					if (instance == null){
+						instance = this.getNewBean();
 						if (this.config.hasPath("init")) {
 							try {
 								this.initProxyMethod(instance);
@@ -714,9 +700,6 @@ public class RegisterDescription {
 							}
 						}
 					}
-
-					if (instance == null)
-						instance = this.getNewBean();
 					PlugsFactory.addBeanRegister(instance, this);
 				} catch (Exception e) {
 					throw new PluginInitException("failed to init bean for id \""+id+"\"",e);
@@ -1293,20 +1276,50 @@ public class RegisterDescription {
 				method.invoke(proxy);
 				method.setAccessible(false);
 			}
-		} else if (this.method != null) {
+		} else if (this.config!=null && this.config.hasPath("init")) {
 			ClassHelper helper = ClassHelper.getClassHelper(proxy.getClass());
-			this.initMethod = new Method[this.method.length];
-			for (int i = 0; i < this.method.length; i++) {
-				Method method = helper.getMethod(this.method[i]);
-				if (method == null) {
-					this.initMethod = null;
-					throw new PluginRuntimeException("could not found proxy init method \"" + this.method[i]
-							+ "\" at register class " + this.clzz.getName()
-							+ ",mabye the service class not the method and the proxy model is jdk.");
+			//判断初始化后调用方法是否是一个列表
+			if (this.config.isList("init")) {
+				//获取列表的无包裹类型
+				List<? extends Object> methodList = this.config.getValueListUnwrapper("init");
+				//初始化方法列表
+				Method method;
+				//对列表进行遍历
+				for(int i = 0;i<methodList.size();i++){
+					Object methodConf = methodList.get(i);
+					if(methodConf.getClass().equals(String.class)){
+						method = helper.getMethod(methodConf.toString());
+						method.setAccessible(true);
+						method.invoke(proxy);
+						method.setAccessible(false);
+					}else if(methodConf.getClass().equals(SimpleConfigObject.class)){
+						MethodDesc[] methodDescs = ParameterUtils.transformToMethod(((SimpleConfigObject) methodConf).toConfig(), this);
+//						method[i] = methodDesc.getMethod();
+//						parameters[i] = methodDesc.getParameter();
+						for(MethodDesc methodDesc : methodDescs){
+							methodDesc.getMethod().setAccessible(true);
+							methodDesc.getMethod().invoke(proxy,methodDesc.getParameter());
+							methodDesc.getMethod().setAccessible(false);
+						}
+					}
 				}
-				this.initMethod[i] = method;
+			} else {
+				if(config.getType("init") == ConfigValueType.STRING){
+					Method method = helper.getMethod(config.getString("init"));
+					method.setAccessible(true);
+					method.invoke(proxy);
+					method.setAccessible(false);
+				}else if(config.getType("init") == ConfigValueType.OBJECT){
+					MethodDesc[] methodDescs = ParameterUtils.transformToMethod(config.getConfig("init"), this);
+					for(MethodDesc methodDesc : methodDescs){
+						Method method = methodDesc.getMethod();
+						method.setAccessible(true);
+						method.invoke(proxy,methodDesc.getParameter());
+						method.setAccessible(false);
+					}
+				}
 			}
-			this.initProxyMethod(proxy);
+//			this.initProxyMethod(proxy);
 		}
 	}
 
