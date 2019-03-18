@@ -586,7 +586,7 @@ public class RegisterDescription {
 									}
 									Method method = helper.getMethod(methodName, parameterTypes);
 									if (method == null)
-										throw new PluginInitException("could not found method for parameter "
+										throw new PluginInitException("could not found method name is \""+methodName+"\" for parameter "
 												+ values + " at bean id " + id);
 									instance = this.instanceBeanByMethod(config, method, parameters);
 								} else {// 普通数据列表
@@ -599,7 +599,7 @@ public class RegisterDescription {
 									}
 									Method method = helper.getMethod(methodName, parameterTypes);
 									if (method == null)
-										throw new PluginInitException("could not found method for parameter "
+										throw new PluginInitException("could not found method name is \""+methodName+"\" for parameter "
 												+ values + " at bean id " + id);
 									instance = this.instanceBeanByMethod(config, method, parameters);
 								}
@@ -639,14 +639,14 @@ public class RegisterDescription {
 									}
 									Method method = helper.getMethod(methodName, parameterTypes);
 									if (method == null)
-										throw new PluginInitException("could not found method for parameter " + entrySet
+										throw new PluginInitException("could not found method name is \""+methodName+"\" for parameter " + entrySet
 												+ " at bean id " + id);
 									instance = this.instanceBeanByMethod(config, method, parameters);
 								} else {
 									Object value = config.getSimpleObject("args");
 									Method method = helper.getMethod(methodName, value.getClass());
 									if (method == null)
-										throw new PluginInitException("could not found method for parameter "
+										throw new PluginInitException("could not found method name is \""+methodName+"\" for parameter "
 												+ value + " at bean id " + id);
 									instance = this.instanceBeanByMethod(config, method, value);
 								}
