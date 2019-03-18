@@ -37,7 +37,6 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
 
-
 /**
  * 组件描述类 用于创建组件时的组件信息 v1.0 支持通过Class的Builder方式 v1.1 支持通过Comp文件的Builder方式 v1.2
  * 支持创建默认的Builder方式 v1.3 支持描述器的属性 v1.4 将InvokeHandler的创建迁移到组件初始化时，大幅度提高代理执行效率
@@ -137,12 +136,15 @@ public class RegisterDescription {
 	private String[] method;
 	private Method[] initMethod;
 	private String id;
+
 	public ClassLoader getProxyClassLoader() {
 		return loader;
 	}
+
 	public String getBeanId() {
 		return id;
 	}
+
 	/**
 	 * 支持注解类型的构造器 register为注解 clzz为注册器的类名 impls 为注册器实现的接口
 	 * 
@@ -416,205 +418,345 @@ public class RegisterDescription {
 		if (this.config != null) {
 			// 配置文件专用
 			this.id = config.getString("id");
-			
 			if (id != null) {
 				Object instance = null;
-				 //判断是否有参数
-				 if(config.hasPath("args")){
-					 //获取所有的构造器
-					 List<Constructor<?>> constructorList = new ArrayList<Constructor<?>>();
-					 Constructor<?>[] ctrs = this.clzz.getConstructors();
-					 for(Constructor<?> ctr : ctrs)
-						 constructorList.add(ctr);
-					 //判断是否是列表
-					 if(config.isList("args")){
-						 //判断是否是conf集合
-						 if(config.isConfigList("args")){
-							 List<? extends Config> values = config.getConfigList("args");
-							 Object[] parameters = new Object[values.size()];
-							 Class<?>[] parameterTypes = new Class<?>[values.size()];
-							 for(int i=0;i<values.size();i++){
-								Config conf = values.get(i);
-								Iterator<Entry<String, Object>> iterator = conf.simpleObjectEntrySet().iterator();
-								if(iterator.hasNext()){
-									Entry<String, Object> entry = iterator.next();
-									String key = entry.getKey();
-									Object value = entry.getValue();
-									parameterTypes[i] = ParameterUtils.getParameterType(key);
-									if(parameterTypes[i].equals(File.class)){//文件类型特俗处理
-										File file ;
-										try{
-											List<File> files = ResourceManager.getResource(value.toString());
-											file = files.get(0);
-										}catch (Throwable t){
-											file = new File(ResourceManager.getPathExress(value.toString()));
-										}
-										parameters[i] = file;
-									}else if(parameterTypes[i].equals(Service.class)){
-										String beanId = value.toString();
-										Object bean = BeanContext.getContext().getBean(beanId);
-										parameters[i] = bean;
-									}else{
-										parameters[i] = ClassLoader.castType(value, parameterTypes[i]);
-									}
-								}
-							 }
-							 Constructor<?> constructor = this.getConstructor(parameterTypes);
-							 if(constructor == null)
-									throw new PluginInitException("could not found any constructor for parameter "+values+" at bean id "+id);
-							 instance =  this.getNewInstance(this.clzz, constructor,parameters);
-						 }else{//普通数据列表
-							List<? extends Object> values=  config.getSimpleObjectList("args");
-							int argSize = values.size();
-							this.cleanSizeNotEquals(constructorList,argSize);
-							if(constructorList.size()==0)
-								throw new PluginInitException("could not found any constructor for parameter "+values+" at bean id "+id);
-							//找到一个合适的构造器
-							 Constructor<?> constructor = ParameterUtils.getEffectiveConstructor(constructorList,values);
-							 if(constructor == null)
-								throw new PluginInitException("could not found any constructor for parameter "+values+" at bean id "+id);
-							 Object[] parameters = new Object[values.size()];
-							 Class<?>[] parameterTypes = constructor.getParameterTypes();
-							 for(int i = 0;i<values.size();i++){
-								parameters[i] = ClassLoader.castType(values.get(i), parameterTypes[i]);
-							 }
-							 instance =  this.getNewInstance(this.clzz, constructor,values.toArray(parameters));
-							 
-						 }
-					 }else{//单参数
-						ConfigValueType valueType = config.getType("args");
-						//如果是config类型
-						if(valueType==ConfigValueType.OBJECT){
-							//获取到config
-							//获取参数的数量
-							Set<Entry<String, ConfigValue>> entrySet = config.getConfig("args").entrySet();
-							int argSize = entrySet.size();
-							//排除数量不同的构造器
-							this.cleanSizeNotEquals(constructorList,argSize);
-							Iterator<Entry<String, ConfigValue>> argIterator = entrySet.iterator();
-							if(constructorList.size()==0)
-								throw new PluginInitException("could not found any constructor for parameter "+entrySet+" at bean id "+id);
-							Class<?>[] parameterType = new Class<?>[argSize];
-							Object[] parameters = new Object[argSize];
-							int i = 0;
-							while(argIterator.hasNext()){
-								Entry<String, ConfigValue> entry = argIterator.next();
-								parameterType[i] = ParameterUtils.getParameterType(entry.getKey());
-								Object value = entry.getValue().unwrapped();
-								if(parameterType[i].equals(File.class)){//文件类型特俗处理
-									File file ;
-									try{
-										List<File> files = ResourceManager.getResource(value.toString());
-										file = files.get(0);
-										
-									}catch (Throwable t){
-										file = new File(ResourceManager.getPathExress(value.toString()));
-									}
-									parameters[i] = file;
-								}else if(parameterType[i].equals(Service.class)){//bean类型
-									String beanId = value.toString();
-									parameters[i] = BeanContext.getContext().getBean(beanId);
-								}else{
-									parameters[i] = ClassLoader.castType(entry.getValue().unwrapped(), parameterType[i]);
-								}
-								i++;
-							}
-							Constructor<?> constructor = this.getConstructor(parameterType);
-							if(constructor == null)
-								throw new PluginInitException("could not found any constructor for parameter "+entrySet+" at bean id "+id);
-							instance =  this.getNewInstance(this.clzz, constructor,parameters);
-							
-						}else{
-							this.cleanSizeNotEquals(constructorList,1);
-							Object value = config.getSimpleObject("args");
-							Constructor<?> constructor = this.getConstructor(value);
-							 if(constructor == null)
-									throw new PluginInitException("could not found any constructor for parameter "+value+" at bean id "+id);
-							instance = this.getNewInstance(this.clzz, constructor, value);
-						}
-					 }
-				 }
-				Object ref = null;
-				String refConf = config.getString("ref");
-				if (refConf != null) {
-					ref = PlugsFactory.getBean(refConf);
-					this.loader = new ClassLoader(ref.getClass(), false);
-					this.clzz = loader.getLoadedClass();
-					try {
-						RegisterDescription register = PlugsFactory.getBeanRegister(ref);
-						this.priority = config.getInt("priority", register.priority);
-						this.signlton = config.getBoolean("signlton", register.signlton);
-						String attr = config.getString("attribute");
-						if (attr == null)
-							this.attribute = register.attribute;
-						else
-							this.attribute = attr.split(",");
-						this.description = config.getString("description", register.description);
-						String model = config.getString("model");
-
-						this.proxyModel = ProxyModel.getProxyModel(model);
-						// 获取实现类
-						this.fieldParam = register.fieldParam;
-						// 获取实现类所在的接口
-						this.plugs = register.plugs;
-						this.fieldParam = register.fieldParam;
-					} catch (Throwable t) {
-						this.priority = config.getInt("priority", 0);
-						this.signlton = config.getBoolean("signlton", true);
-						this.attribute = config.getString("attribute", "*").split(",");
-						this.description = config.getString("description", "");
-						String model = config.getString("model", "DEFAULT");
-						this.proxyModel = ProxyModel.getProxyModel(model);
-						// 获取实现类
-						if (config.isConfigList("field")) {
-							List<? extends Config> fields = config.getConfigList("field");
-							for (Config field : fields)
-								this.configField(field);
-						} else {
-							Config field = config.getConfig("field");
-							if (field != null)
-								this.configField(field);
-						}
-						// 获取实现类所在的接口
-						String declareRegister = config.getString("service", "*");
-						this.plugs = getPlugs(clzz, declareRegister);
-					}
-					// if (this.plugs == null || this.plugs.length == 0)
-					// throw new Exception("register " + clzz.getName() + " not
-					// implements any interface");
-					this.initHandlerMapping(this.clzz);
-					this.initConstructorHandlerMapping(this.clzz);
-					this.initFieldHandlerMapping();
-					checkPlugs(this.plugs);
-					if (this.config.hasPath("init")) {
-						try {
-							this.initProxyMethod(instance);
-						} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-							throw new PluginInitException("failed to invoke register init method", e);
-						}
-					}
-				}
 				try {
-					if(instance==null)
+					// 判断是否有参数
+					if (config.hasPath("args")) {
+						// 若果配置中无method方法
+						if (!config.hasPath("method")) {
+							// 获取所有的构造器
+							List<Constructor<?>> constructorList = new ArrayList<Constructor<?>>();
+							Constructor<?>[] ctrs = this.clzz.getConstructors();
+							for (Constructor<?> ctr : ctrs)
+								constructorList.add(ctr);
+							// 判断是否是列表
+							if (config.isList("args")) {
+								// 判断是否是conf集合
+								if (config.isConfigList("args")) {
+									List<? extends Config> values = config.getConfigList("args");
+									Object[] parameters = new Object[values.size()];
+									Class<?>[] parameterTypes = new Class<?>[values.size()];
+									for (int i = 0; i < values.size(); i++) {
+										Config conf = values.get(i);
+										Iterator<Entry<String, Object>> iterator = conf.simpleObjectEntrySet()
+												.iterator();
+										if (iterator.hasNext()) {
+											Entry<String, Object> entry = iterator.next();
+											String key = entry.getKey();
+											Object value = entry.getValue();
+											parameterTypes[i] = ParameterUtils.getParameterType(key);
+											if (parameterTypes[i].equals(File.class)) {// 文件类型特俗处理
+												File file;
+												try {
+													List<File> files = ResourceManager.getResource(value.toString());
+													file = files.get(0);
+												} catch (Throwable t) {
+													file = new File(ResourceManager.getPathExress(value.toString()));
+												}
+												parameters[i] = file;
+											} else if (parameterTypes[i].equals(Service.class)) {
+												String beanId = value.toString();
+												Object bean = BeanContext.getContext().getBean(beanId);
+												parameters[i] = bean;
+											} else {
+												parameters[i] = ClassLoader.castType(value, parameterTypes[i]);
+											}
+										}
+									}
+									Constructor<?> constructor = this.getConstructor(parameterTypes);
+									if (constructor == null)
+										throw new PluginInitException("could not found any constructor for parameter "
+												+ values + " at bean id " + id);
+									instance = this.getNewInstance(this.clzz, constructor, parameters);
+								} else {// 普通数据列表
+									List<? extends Object> values = config.getSimpleObjectList("args");
+									int argSize = values.size();
+									this.cleanSizeNotEquals(constructorList, argSize);
+									if (constructorList.size() == 0)
+										throw new PluginInitException("could not found any constructor for parameter "
+												+ values + " at bean id " + id);
+									// 找到一个合适的构造器
+									Constructor<?> constructor = ParameterUtils.getEffectiveConstructor(constructorList,
+											values);
+									if (constructor == null)
+										throw new PluginInitException("could not found any constructor for parameter "
+												+ values + " at bean id " + id);
+									Object[] parameters = new Object[values.size()];
+									Class<?>[] parameterTypes = constructor.getParameterTypes();
+									for (int i = 0; i < values.size(); i++) {
+										parameters[i] = ClassLoader.castType(values.get(i), parameterTypes[i]);
+									}
+									instance = this.getNewInstance(this.clzz, constructor, values.toArray(parameters));
+
+								}
+							} else {// 单参数
+								ConfigValueType valueType = config.getType("args");
+								// 如果是config类型
+								if (valueType == ConfigValueType.OBJECT) {
+									// 获取到config
+									// 获取参数的数量
+									Set<Entry<String, ConfigValue>> entrySet = config.getConfig("args").entrySet();
+									int argSize = entrySet.size();
+									// 排除数量不同的构造器
+									this.cleanSizeNotEquals(constructorList, argSize);
+									Iterator<Entry<String, ConfigValue>> argIterator = entrySet.iterator();
+									if (constructorList.size() == 0)
+										throw new PluginInitException("could not found any constructor for parameter "
+												+ entrySet + " at bean id " + id);
+									Class<?>[] parameterType = new Class<?>[argSize];
+									Object[] parameters = new Object[argSize];
+									int i = 0;
+									while (argIterator.hasNext()) {
+										Entry<String, ConfigValue> entry = argIterator.next();
+										parameterType[i] = ParameterUtils.getParameterType(entry.getKey());
+										Object value = entry.getValue().unwrapped();
+										if (parameterType[i].equals(File.class)) {// 文件类型特俗处理
+											File file;
+											try {
+												List<File> files = ResourceManager.getResource(value.toString());
+												file = files.get(0);
+
+											} catch (Throwable t) {
+												file = new File(ResourceManager.getPathExress(value.toString()));
+											}
+											parameters[i] = file;
+										} else if (parameterType[i].equals(Service.class)) {// bean类型
+											String beanId = value.toString();
+											parameters[i] = BeanContext.getContext().getBean(beanId);
+										} else {
+											parameters[i] = ClassLoader.castType(entry.getValue().unwrapped(),
+													parameterType[i]);
+										}
+										i++;
+									}
+									Constructor<?> constructor = this.getConstructor(parameterType);
+									if (constructor == null)
+										throw new PluginInitException("could not found any constructor for parameter "
+												+ entrySet + " at bean id " + id);
+									instance = this.getNewInstance(this.clzz, constructor, parameters);
+
+								} else {
+									this.cleanSizeNotEquals(constructorList, 1);
+									Object value = config.getSimpleObject("args");
+									Constructor<?> constructor = this.getConstructor(value);
+									if (constructor == null)
+										throw new PluginInitException("could not found any constructor for parameter "
+												+ value + " at bean id " + id);
+									instance = this.getNewInstance(this.clzz, constructor, value);
+								}
+							}
+						} else {// 通过方法实例化
+								// 获取实例化的方法名
+							String methodName = config.getString("method");
+							ClassHelper helper = ClassHelper.getClassHelper(this.getRegisterClass());
+							// 判断是否是列表
+							if (config.isList("args")) {
+								// 判断是否是conf集合
+								if (config.isConfigList("args")) {
+									List<? extends Config> values = config.getConfigList("args");
+									Object[] parameters = new Object[values.size()];
+									Class<?>[] parameterTypes = new Class<?>[values.size()];
+									for (int i = 0; i < values.size(); i++) {
+										Config conf = values.get(i);
+										Iterator<Entry<String, Object>> iterator = conf.simpleObjectEntrySet()
+												.iterator();
+										if (iterator.hasNext()) {
+											Entry<String, Object> entry = iterator.next();
+											String key = entry.getKey();
+											Object value = entry.getValue();
+											parameterTypes[i] = ParameterUtils.getParameterType(key);
+											if (parameterTypes[i].equals(File.class)) {// 文件类型特俗处理
+												File file;
+												try {
+													List<File> files = ResourceManager.getResource(value.toString());
+													file = files.get(0);
+												} catch (Throwable t) {
+													file = new File(ResourceManager.getPathExress(value.toString()));
+												}
+												parameters[i] = file;
+											} else if (parameterTypes[i].equals(Service.class)) {
+												String beanId = value.toString();
+												Object bean = BeanContext.getContext().getBean(beanId);
+												parameters[i] = bean;
+											} else {
+												parameters[i] = ClassLoader.castType(value, parameterTypes[i]);
+											}
+										}
+									}
+									Method method = helper.getMethod(methodName, parameterTypes);
+									if (method == null)
+										throw new PluginInitException("could not found method for parameter "
+												+ values + " at bean id " + id);
+									instance = this.instanceBeanByMethod(config, method, parameters);
+								} else {// 普通数据列表
+									List<? extends Object> values = config.getSimpleObjectList("args");
+									Object[] parameters = new Object[values.size()];
+									Class<?>[] parameterTypes = new Class<?>[values.size()];
+									for (int i = 0; i < values.size(); i++) {
+										parameters[i] = values.get(i);
+										parameterTypes[i] = values.get(i).getClass();
+									}
+									Method method = helper.getMethod(methodName, parameterTypes);
+									if (method == null)
+										throw new PluginInitException("could not found method for parameter "
+												+ values + " at bean id " + id);
+									instance = this.instanceBeanByMethod(config, method, parameters);
+								}
+							} else {// 单参数
+								ConfigValueType valueType = config.getType("args");
+								// 如果是config类型
+								if (valueType == ConfigValueType.OBJECT) {
+									// 获取到config
+									Set<Entry<String, ConfigValue>> entrySet = config.getConfig("args").entrySet();
+									int argSize = entrySet.size();
+									Class<?>[] parameterTypes = new Class<?>[argSize];
+									Object[] parameters = new Object[argSize];
+									int i = 0;
+									Iterator<Entry<String, ConfigValue>> argIterator = entrySet.iterator();
+									while (argIterator.hasNext()) {
+										Entry<String, ConfigValue> entry = argIterator.next();
+										parameterTypes[i] = ParameterUtils.getParameterType(entry.getKey());
+										Object value = entry.getValue().unwrapped();
+										if (parameterTypes[i].equals(File.class)) {// 文件类型特俗处理
+											File file;
+											try {
+												List<File> files = ResourceManager.getResource(value.toString());
+												file = files.get(0);
+
+											} catch (Throwable t) {
+												file = new File(ResourceManager.getPathExress(value.toString()));
+											}
+											parameters[i] = file;
+										} else if (parameterTypes[i].equals(Service.class)) {// bean类型
+											String beanId = value.toString();
+											parameters[i] = BeanContext.getContext().getBean(beanId);
+										} else {
+											parameters[i] = ClassLoader.castType(entry.getValue().unwrapped(),
+													parameterTypes[i]);
+										}
+										i++;
+									}
+									Method method = helper.getMethod(methodName, parameterTypes);
+									if (method == null)
+										throw new PluginInitException("could not found method for parameter " + entrySet
+												+ " at bean id " + id);
+									instance = this.instanceBeanByMethod(config, method, parameters);
+								} else {
+									Object value = config.getSimpleObject("args");
+									Method method = helper.getMethod(methodName, value.getClass());
+									if (method == null)
+										throw new PluginInitException("could not found method for parameter "
+												+ value + " at bean id " + id);
+									instance = this.instanceBeanByMethod(config, method, value);
+								}
+							}
+						}
+					}
+					Object ref = null;
+					String refConf = config.getString("ref");
+					if (refConf != null) {
+						ref = PlugsFactory.getBean(refConf);
+						this.loader = new ClassLoader(ref.getClass(), false);
+						this.clzz = loader.getLoadedClass();
+						try {
+							RegisterDescription register = PlugsFactory.getBeanRegister(ref);
+							this.priority = config.getInt("priority", register.priority);
+							this.signlton = config.getBoolean("signlton", register.signlton);
+							String attr = config.getString("attribute");
+							if (attr == null)
+								this.attribute = register.attribute;
+							else
+								this.attribute = attr.split(",");
+							this.description = config.getString("description", register.description);
+							String model = config.getString("model");
+
+							this.proxyModel = ProxyModel.getProxyModel(model);
+							// 获取实现类
+							this.fieldParam = register.fieldParam;
+							// 获取实现类所在的接口
+							this.plugs = register.plugs;
+							this.fieldParam = register.fieldParam;
+						} catch (Throwable t) {
+							this.priority = config.getInt("priority", 0);
+							this.signlton = config.getBoolean("signlton", true);
+							this.attribute = config.getString("attribute", "*").split(",");
+							this.description = config.getString("description", "");
+							String model = config.getString("model", "DEFAULT");
+							this.proxyModel = ProxyModel.getProxyModel(model);
+							// 获取实现类
+							if (config.isConfigList("field")) {
+								List<? extends Config> fields = config.getConfigList("field");
+								for (Config field : fields)
+									this.configField(field);
+							} else {
+								Config field = config.getConfig("field");
+								if (field != null)
+									this.configField(field);
+							}
+							// 获取实现类所在的接口
+							String declareRegister = config.getString("service", "*");
+							this.plugs = getPlugs(clzz, declareRegister);
+						}
+						// if (this.plugs == null || this.plugs.length == 0)
+						// throw new Exception("register " + clzz.getName() + "
+						// not
+						// implements any interface");
+						this.initHandlerMapping(this.clzz);
+						this.initConstructorHandlerMapping(this.clzz);
+						this.initFieldHandlerMapping();
+						checkPlugs(this.plugs);
+						if (this.config.hasPath("init")) {
+							try {
+								this.initProxyMethod(instance);
+							} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+								throw new PluginInitException("failed to invoke register init method", e);
+							}
+						}
+					}
+
+					if (instance == null)
 						instance = this.getNewBean();
 					PlugsFactory.addBeanRegister(instance, this);
 				} catch (Exception e) {
-					throw new RuntimeException(e);
+					throw new PluginInitException("failed to init bean for id \""+id+"\"",e);
 				}
 				if (this.fieldParam != null) {
 					for (FieldDesc desc : this.fieldParam.values()) {
 						desc.getFieldHandler().preparedField(this, null, instance, desc, null);
 					}
 				}
-				BeanContext.getContext().addBean(id, instance,this);
+				BeanContext.getContext().addBean(id, instance, this);
 			}
+		}
+	}
+
+	/**
+	 * 获取实例化的bean
+	 * 
+	 * @param config
+	 * @param method
+	 * @param parameters
+	 * @return
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 * @throws InvocationTargetException
+	 */
+	private Object instanceBeanByMethod(Config config, Method method, Object... parameters)
+			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		String refConf = config.getString("ref");
+		if (refConf != null) {
+			Object ref = PlugsFactory.getBean(refConf);
+			return method.invoke(ref, parameters);
+		} else {
+			return method.invoke(null, parameters);
 		}
 	}
 
 	private void cleanSizeNotEquals(List<Constructor<?>> constructorList, int argSize) {
 		Iterator<Constructor<?>> iterator = constructorList.iterator();
-		while(iterator.hasNext()){
-			if(argSize != iterator.next().getParameterCount())
+		while (iterator.hasNext()) {
+			if (argSize != iterator.next().getParameterCount())
 				iterator.remove();
 		}
 	}
@@ -823,7 +965,7 @@ public class RegisterDescription {
 							.getRegisterDescriptionListByAttribute(clzz.getName() + "." + method.getName());
 					for (int i = 0; i < registerList.size(); i++) {
 						RegisterDescription register = registerList.get(i);
-						if(register.getRegisterClass().equals(this.getRegisterClass()))
+						if (register.getRegisterClass().equals(this.getRegisterClass()))
 							continue;
 						Class<?> registerClass = register.getRegisterClass();
 						Support support = registerClass.getAnnotation(Support.class);
@@ -1076,10 +1218,12 @@ public class RegisterDescription {
 					proxy = PlugsHandler.newMapperProxy(plug, this, target);
 					break;
 				case CGLIB:
-					target = proxy = PlugsHandler.newCglibProxy(this.getRegisterClass(), this,constructor.getParameterTypes(), args);
+					target = proxy = PlugsHandler.newCglibProxy(this.getRegisterClass(), this,
+							constructor.getParameterTypes(), args);
 					break;
 				case BOTH:
-					target = PlugsHandler.newCglibProxy(this.getRegisterClass(), this,constructor.getParameterTypes(), args);
+					target = PlugsHandler.newCglibProxy(this.getRegisterClass(), this, constructor.getParameterTypes(),
+							args);
 					proxy = PlugsHandler.newMapperProxy(plug, this, target);
 					break;
 				default:
@@ -1091,7 +1235,8 @@ public class RegisterDescription {
 					break;
 				}
 			} else {
-				target = proxy = PlugsHandler.newCglibProxy(this.getRegisterClass(), this, constructor.getParameterTypes(),args);
+				target = proxy = PlugsHandler.newCglibProxy(this.getRegisterClass(), this,
+						constructor.getParameterTypes(), args);
 			}
 			if (this.fieldParam != null) {
 				for (FieldDesc desc : this.fieldParam.values()) {
