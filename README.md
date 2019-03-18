@@ -63,20 +63,27 @@ conf:{
 ```
 代码
 ```java
-	Jedis jedis = PlugsFactory.getBean("jedis");
-	@service(id="jedis") Jedis jedis;
+	public class JedisTest {
+		@Service(id="jedis")
+		private Jedis jediswired;
+		public static void jedisTest(){
+			Jedis jedis = PlugsFactory.getBean("jedis");
+			jedis.append("key1", "value1");
+			System.out.println(jedis.get("key1"));
+
+			JedisTest test = PlugsFactory.getPlugsInstance(JedisTest.class);
+			System.out.println(test.jediswired.get("key1"));
+
+			System.out.println(test.jediswired == jedis);
+		}
+	}
 	
 ```
 结果
 ```
-初始化后调用方法
-testFacotory
-a.test.plugin.Factory@2133c8f8
-/Volumes/GENERAL/git/YaNanFrame/YaNanFrame/WebRoot/WEB-INF/classes/hibernate.xml   hello
-a.test.plugin.Factory@43a25848
-/Volumes/GENERAL/git/YaNanFrame/YaNanFrame/WebRoot/WEB-INF/classes/hibernate.xml   hello2
-a.test.plugin.Factory@3ac3fd8b
-/Volumes/GENERAL/git/YaNanFrame/YaNanFrame/WebRoot/WEB-INF/classes/hibernate.xml   hello3
+value1
+value1
+true
 ```
 2、方法调用权限认证与无状态Token
 java:
