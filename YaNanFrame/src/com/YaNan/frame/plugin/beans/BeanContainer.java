@@ -6,15 +6,15 @@ import java.util.Map;
 import com.YaNan.frame.plugin.RegisterDescription;
 
 
-public class BeanContext {
-	private static BeanContext beanContext;
+public class BeanContainer {
+	private static BeanContainer beanContext;
 	private Map<String,Object> beanContainer;
 	private Map<Class<?>,Object> beanClassContainer;
-	public static BeanContext getContext(){
+	public static BeanContainer getContext(){
 		if(beanContext==null)
-			synchronized (BeanContext.class) {
+			synchronized (BeanContainer.class) {
 				if(beanContext==null){
-					beanContext = new BeanContext();
+					beanContext = new BeanContainer();
 				}
 			}
 		return beanContext;

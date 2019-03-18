@@ -23,7 +23,7 @@ import java.util.Set;
 import com.YaNan.frame.path.ResourceManager;
 import com.YaNan.frame.plugin.annotations.Register;
 import com.YaNan.frame.plugin.annotations.Support;
-import com.YaNan.frame.plugin.beans.BeanContext;
+import com.YaNan.frame.plugin.beans.BeanContainer;
 import com.YaNan.frame.plugin.handler.FieldHandler;
 import com.YaNan.frame.plugin.handler.InstanceHandler;
 import com.YaNan.frame.plugin.handler.InvokeHandler;
@@ -457,7 +457,7 @@ public class RegisterDescription {
 												parameters[i] = file;
 											} else if (parameterTypes[i].equals(Service.class)) {
 												String beanId = value.toString();
-												Object bean = BeanContext.getContext().getBean(beanId);
+												Object bean = BeanContainer.getContext().getBean(beanId);
 												parameters[i] = bean;
 											} else {
 												parameters[i] = ClassLoader.castType(value, parameterTypes[i]);
@@ -523,7 +523,7 @@ public class RegisterDescription {
 											parameters[i] = file;
 										} else if (parameterType[i].equals(Service.class)) {// bean类型
 											String beanId = value.toString();
-											parameters[i] = BeanContext.getContext().getBean(beanId);
+											parameters[i] = BeanContainer.getContext().getBean(beanId);
 										} else {
 											parameters[i] = ClassLoader.castType(entry.getValue().unwrapped(),
 													parameterType[i]);
@@ -577,7 +577,7 @@ public class RegisterDescription {
 												parameters[i] = file;
 											} else if (parameterTypes[i].equals(Service.class)) {
 												String beanId = value.toString();
-												Object bean = BeanContext.getContext().getBean(beanId);
+												Object bean = BeanContainer.getContext().getBean(beanId);
 												parameters[i] = bean;
 											} else {
 												parameters[i] = ClassLoader.castType(value, parameterTypes[i]);
@@ -630,7 +630,7 @@ public class RegisterDescription {
 											parameters[i] = file;
 										} else if (parameterTypes[i].equals(Service.class)) {// bean类型
 											String beanId = value.toString();
-											parameters[i] = BeanContext.getContext().getBean(beanId);
+											parameters[i] = BeanContainer.getContext().getBean(beanId);
 										} else {
 											parameters[i] = ClassLoader.castType(entry.getValue().unwrapped(),
 													parameterTypes[i]);
@@ -726,7 +726,7 @@ public class RegisterDescription {
 						desc.getFieldHandler().preparedField(this, null, instance, desc, null);
 					}
 				}
-				BeanContext.getContext().addBean(id, instance, this);
+				BeanContainer.getContext().addBean(id, instance, this);
 			}
 		}
 	}

@@ -20,7 +20,7 @@ import com.YaNan.frame.path.PackageScanner.ClassInter;
 import com.YaNan.frame.path.Path.PathInter;
 import com.YaNan.frame.plugin.annotations.Register;
 import com.YaNan.frame.plugin.annotations.Service;
-import com.YaNan.frame.plugin.beans.BeanContext;
+import com.YaNan.frame.plugin.beans.BeanContainer;
 import com.YaNan.frame.plugin.handler.InvokeHandler;
 import com.YaNan.frame.plugin.handler.PlugsHandler;
 import com.YaNan.frame.plugin.interfacer.PlugsListener;
@@ -882,12 +882,17 @@ public class PlugsFactory {
 	}
 
 	public static <T> T getBean(String beanId) {
-		T t = BeanContext.getContext().getBean(beanId);
+		T t = BeanContainer.getContext().getBean(beanId);
 		if (t == null)
 			throw new RuntimeException("colud not find bean defined id is \"" + beanId + "\"");
 		return t;
 	}
-
+	public static <T> T getBean(Class<?> beanClass) {
+		T t = BeanContainer.getContext().getBean(beanClass);
+		if (t == null)
+			throw new RuntimeException("colud not find bean defined class is \"" + beanClass.getName() + "\"");
+		return t;
+	}
 	public static <T> T getPlugsInstanceNewByParamType(Class<T> impl, Class<?>[] parameterType, Object... arguments) {
 		try {
 			// 获取一个注册描述

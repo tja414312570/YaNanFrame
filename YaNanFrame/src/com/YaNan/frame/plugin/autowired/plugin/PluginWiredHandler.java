@@ -12,7 +12,7 @@ import com.YaNan.frame.plugin.RegisterDescription;
 import com.YaNan.frame.plugin.annotations.Register;
 import com.YaNan.frame.plugin.annotations.Service;
 import com.YaNan.frame.plugin.annotations.Support;
-import com.YaNan.frame.plugin.beans.BeanContext;
+import com.YaNan.frame.plugin.beans.BeanContainer;
 import com.YaNan.frame.plugin.handler.FieldHandler;
 import com.YaNan.frame.plugin.handler.InstanceHandler;
 import com.YaNan.frame.plugin.handler.InvokeHandler;
@@ -39,7 +39,7 @@ public class PluginWiredHandler implements InvokeHandler,FieldHandler,InstanceHa
 				if(arguments[i]==null){
 					Class<?> type = parameters[i].getType();
 					if(!service.id().trim().equals("")){
-						arguments[i] = BeanContext.getContext().getBean(service.id());
+						arguments[i] = BeanContainer.getContext().getBean(service.id());
 						if(arguments[i]==null)
 							throw new PluginRuntimeException("could not found bean id for \""+service.id()+"\" at parameter \""+parameter.getName()+"\" at method \""+methodHandler.getMethod().getName() +"\" at "+methodHandler.getPlugsProxy().getRegisterDescription().getRegisterClass());
 					}else if(type.isArray()){
@@ -53,7 +53,7 @@ public class PluginWiredHandler implements InvokeHandler,FieldHandler,InstanceHa
 						try{
 							obj=  PlugsFactory.getPlugsInstanceByAttributeStrict(type,service.attribute());
 						}catch(Throwable t){
-							obj = BeanContext.getContext().getBean(type);
+							obj = BeanContainer.getContext().getBean(type);
 						}
 						if(obj==null)
 							throw new PluginRuntimeException("could not found register or bean at parameter \""+parameter.getName()+"\" at method \""+methodHandler.getMethod().getName() +"\" at "+methodHandler.getPlugsProxy().getRegisterDescription().getRegisterClass());
@@ -82,7 +82,7 @@ public class PluginWiredHandler implements InvokeHandler,FieldHandler,InstanceHa
 				field.setAccessible(true);
 				Class<?> type = field.getType();
 				if(!service.id().trim().equals("")){
-					Object object = BeanContext.getContext().getBean(service.id());
+					Object object = BeanContainer.getContext().getBean(service.id());
 					if(object==null)
 						throw new PluginRuntimeException("could not found bean id for \""+service.id()+"\" at field \""+field.getName() +"\" at "+registerDescription.getRegisterClass());
 					field.set(target,object);
@@ -97,7 +97,7 @@ public class PluginWiredHandler implements InvokeHandler,FieldHandler,InstanceHa
 					try{
 						obj=  PlugsFactory.getPlugsInstanceByAttributeStrict(type,service.attribute());
 					}catch(Throwable t){
-						obj = BeanContext.getContext().getBean(type);
+						obj = BeanContainer.getContext().getBean(type);
 					}
 					if(obj==null)
 						throw new PluginRuntimeException("could not found register or bean at field \""+field.getName() +"\" at "+registerDescription.getRegisterClass());
@@ -129,7 +129,7 @@ public class PluginWiredHandler implements InvokeHandler,FieldHandler,InstanceHa
 				if(arguments[i]==null){
 					Class<?> type = parameters[i].getType();
 					if(!service.id().trim().equals("")){
-						arguments[i] = BeanContext.getContext().getBean(service.id());
+						arguments[i] = BeanContainer.getContext().getBean(service.id());
 						if(arguments[i]==null)
 							throw new PluginRuntimeException("could not found bean id for \""+service.id()+"\" at parameter \""+parameter.getName() + "\" at construct \""+ constructor+"\" at "+registerDescription.getRegisterClass());
 					}else if(type.isArray()){
@@ -143,7 +143,7 @@ public class PluginWiredHandler implements InvokeHandler,FieldHandler,InstanceHa
 						try{
 							obj=  PlugsFactory.getPlugsInstanceByAttributeStrict(type,service.attribute());
 						}catch(Throwable t){
-							obj = BeanContext.getContext().getBean(type);
+							obj = BeanContainer.getContext().getBean(type);
 						}
 						if(obj==null)
 							throw new PluginRuntimeException("could not found register or bean at parameter \""+parameter.getName() + "\" at construct \""+ constructor+"\" at "+registerDescription.getRegisterClass());
