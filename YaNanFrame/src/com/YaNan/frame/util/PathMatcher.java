@@ -468,12 +468,10 @@ iterator: while (index < express.length()) {
 			this.resource = resource;
 			this.result = result;
 		}
-
-		@Override
-		public String toString() {
-			return "Matcher [tokens=" + tokens + ", variables=" + variables + ", regex=" + regex + ", resource="
-					+ resource + ", result=" + result + "]";
-		}
-		
 	}
+
+	
+
+	
+
 }
