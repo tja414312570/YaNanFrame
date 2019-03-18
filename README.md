@@ -19,56 +19,71 @@
 1、配置文件配置bean，框架调用
 配置文件：
 ```
-plugins:[
-		{
+###################### plugin list
+	plugins:[
+		com.YaNan.frame.plugin.autowired.plugin.PluginWiredHandler, ##服务注入提供
+		com.YaNan.frame.plugin.autowired.resource.ResourceWiredHandler, ##资源类注入
+		com.YaNan.frame.plugin.autowired.property.PropertyWiredHandler, ##属性注入
+		com.YaNan.frame.plugin.autowired.exception.ErrorPlugsHandler, ##错误记录
+		##	 com.YaNan.frame.util.quartz.QuartzManager,##Quartz corn注解服务
+		{ ## 数据库
 			class:com.YaNan.frame.hibernate.database.HibernateContextInit,##组件类
 			priority:0,##优先级
 			signlton:true,##是否启用单例模式
-			attribute:"RESTFUL_STYLE",
-			service:"javax.servlet.Servlet,*",
+			attribute:"DB",
+			service:"javax.servlet.Servlet,*",##注册服务类
 			field:{location:{Resource:"classpath:hibernate.xml"}}
-		},{
-			id:testFacotory,
-			class:a.test.plugin.Factory,
-			method:newInstance,
-			init:init,
-			field:{location:{Resource:"classpath:hibernate.xml"}}
-		},{
-			id:testFacotory2,
-			ref:testFacotory,
-			field:{location:{Resource:"hibernate.xmls"}}
-		},{
-			id:testFacotory3,
-			ref:testFacotory,
-			method:newBean
-		}
+		},
+		{ ## jedis
+			id:jedis,
+			class:redis.clients.jedis.Jedis,##组件类
+			##signlton:true,##bean配置强制单例模式
+			init:connect,##实例化后调用connect方法
+			args:[localhost,6379]##使用String,int的构造器
+		},
+		com.YaNan.frame.logging.Log,##日志接口
+		com.YaNan.frame.logging.DefaultLog,##日志接口和默认实现
 	]
+####################### global configure
+conf:{
+	Plugin:{
+		ScanPackage:[com.YaNan], ##扫描包位置，多个包用逗号分开或使用数组ScanPackage:[com.YaNan.DZCT,com.YaNan.debug]
+													  ##可以写为ScanPackage:"com.YaNan.DZCT,com.YaNan.debug"
+	},
+	SecurityFilter:{
+		x-frame-options:true,
+		xss-wrapper:{"/**":true}
+		},
+	Token:{
+		Timeout:4000,
+		Secure:false,
+		HttpOnly:true,
+	}
+}
 ```
 代码
 ```java
-public static void main(String[] args) {
-	PluginAppincationContext.setWebContext(true);
-	Factory factory = PlugsFactory.getBean("testFacotory");
-	System.out.println(factory);
-	factory.Out("hello");
-	Factory factory1 = PlugsFactory.getBean("testFacotory2");
-	System.out.println(factory1);
-	factory1.Out("hello2");
-	Factory factory2 = PlugsFactory.getBean("testFacotory3");
-	System.out.println(factory2);
-	factory2.Out("hello3");
-}
+	public class JedisTest {
+		@Service(id="jedis")
+		private Jedis jediswired;
+		public static void jedisTest(){
+			Jedis jedis = PlugsFactory.getBean("jedis");
+			jedis.append("key1", "value1");
+			System.out.println(jedis.get("key1"));
+
+			JedisTest test = PlugsFactory.getPlugsInstance(JedisTest.class);
+			System.out.println(test.jediswired.get("key1"));
+
+			System.out.println(test.jediswired == jedis);
+		}
+	}
+	
 ```
 结果
 ```
-初始化后调用方法
-testFacotory
-a.test.plugin.Factory@2133c8f8
-/Volumes/GENERAL/git/YaNanFrame/YaNanFrame/WebRoot/WEB-INF/classes/hibernate.xml   hello
-a.test.plugin.Factory@43a25848
-/Volumes/GENERAL/git/YaNanFrame/YaNanFrame/WebRoot/WEB-INF/classes/hibernate.xml   hello2
-a.test.plugin.Factory@3ac3fd8b
-/Volumes/GENERAL/git/YaNanFrame/YaNanFrame/WebRoot/WEB-INF/classes/hibernate.xml   hello3
+value1
+value1
+true
 ```
 2、方法调用权限认证与无状态Token
 java:
