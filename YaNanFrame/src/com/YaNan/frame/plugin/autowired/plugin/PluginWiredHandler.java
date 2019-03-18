@@ -41,7 +41,7 @@ public class PluginWiredHandler implements InvokeHandler,FieldHandler,InstanceHa
 					if(!service.id().trim().equals("")){
 						arguments[i] = BeanContext.getContext().getBean(service.id());
 						if(arguments[i]==null)
-							throw new PluginRuntimeException("could not found bean id for \""+service.id()+"\" at parameter \""+parameter+"\" at method \""+methodHandler.getMethod().getName() +"\" at "+methodHandler.getPlugsProxy().getRegisterDescription().getRegisterClass());
+							throw new PluginRuntimeException("could not found bean id for \""+service.id()+"\" at parameter \""+parameter.getName()+"\" at method \""+methodHandler.getMethod().getName() +"\" at "+methodHandler.getPlugsProxy().getRegisterDescription().getRegisterClass());
 					}else if(type.isArray()){
 						List<?> obj = PlugsFactory.getPlugsInstanceListByAttribute(type, service.attribute());
 						arguments[i] = obj;
@@ -56,7 +56,7 @@ public class PluginWiredHandler implements InvokeHandler,FieldHandler,InstanceHa
 							obj = BeanContext.getContext().getBean(type);
 						}
 						if(obj==null)
-							throw new PluginRuntimeException("could not found register or bean at parameter \""+parameter+"\" at method \""+methodHandler.getMethod().getName() +"\" at "+methodHandler.getPlugsProxy().getRegisterDescription().getRegisterClass());
+							throw new PluginRuntimeException("could not found register or bean at parameter \""+parameter.getName()+"\" at method \""+methodHandler.getMethod().getName() +"\" at "+methodHandler.getPlugsProxy().getRegisterDescription().getRegisterClass());
 						arguments[i] = obj;
 					}
 					
@@ -84,7 +84,7 @@ public class PluginWiredHandler implements InvokeHandler,FieldHandler,InstanceHa
 				if(!service.id().trim().equals("")){
 					Object object = BeanContext.getContext().getBean(service.id());
 					if(object==null)
-						throw new PluginRuntimeException("could not found bean id for \""+service.id()+"\" at Field \""+field +"\" at "+registerDescription.getRegisterClass());
+						throw new PluginRuntimeException("could not found bean id for \""+service.id()+"\" at field \""+field.getName() +"\" at "+registerDescription.getRegisterClass());
 					field.set(target,object);
 				}else if(type.isArray()){
 					List<?> obj = PlugsFactory.getPlugsInstanceListByAttribute(type, service.attribute());
@@ -100,7 +100,7 @@ public class PluginWiredHandler implements InvokeHandler,FieldHandler,InstanceHa
 						obj = BeanContext.getContext().getBean(type);
 					}
 					if(obj==null)
-						throw new PluginRuntimeException("could not found register or bean at Field \""+field +"\" at "+registerDescription.getRegisterClass());
+						throw new PluginRuntimeException("could not found register or bean at field \""+field.getName() +"\" at "+registerDescription.getRegisterClass());
 					field.set(target, obj);
 				}
 				field.setAccessible(false);
@@ -131,7 +131,7 @@ public class PluginWiredHandler implements InvokeHandler,FieldHandler,InstanceHa
 					if(!service.id().trim().equals("")){
 						arguments[i] = BeanContext.getContext().getBean(service.id());
 						if(arguments[i]==null)
-							throw new PluginRuntimeException("could not found bean id for \""+service.id()+"\" at parameter \""+parameter + "\" at construct \""+ constructor+"\" at "+registerDescription.getRegisterClass());
+							throw new PluginRuntimeException("could not found bean id for \""+service.id()+"\" at parameter \""+parameter.getName() + "\" at construct \""+ constructor+"\" at "+registerDescription.getRegisterClass());
 					}else if(type.isArray()){
 						List<?> obj = PlugsFactory.getPlugsInstanceListByAttribute(type, service.attribute());
 						arguments[i] = obj;
@@ -146,7 +146,7 @@ public class PluginWiredHandler implements InvokeHandler,FieldHandler,InstanceHa
 							obj = BeanContext.getContext().getBean(type);
 						}
 						if(obj==null)
-							throw new PluginRuntimeException("could not found register or bean at parameter \""+parameter + "\" at construct \""+ constructor+"\" at "+registerDescription.getRegisterClass());
+							throw new PluginRuntimeException("could not found register or bean at parameter \""+parameter.getName() + "\" at construct \""+ constructor+"\" at "+registerDescription.getRegisterClass());
 						arguments[i] = obj;
 					}
 				}
