@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import com.YaNan.frame.path.Path;
 import com.YaNan.frame.path.Path.PathInter;
@@ -16,6 +18,7 @@ public class CodeGeneral {
 	public static int sumUnit = 0;// 总字数
 	public static int maxLine = 0;//最大行数
 	public static long size;
+	public static long millSec = Long.MAX_VALUE;
 
 	public static void main(String[] args) {
 		try {
@@ -53,6 +56,8 @@ public class CodeGeneral {
 						if(lineCount>=maxLine)
 							maxLine = lineCount;
 						br.close();
+						if(file.lastModified()<millSec)
+							millSec = file.lastModified();
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -60,7 +65,9 @@ public class CodeGeneral {
 			});
 			System.out.println("一共：" + sumFile + " 个文件\t\t" + allLine + " 行代码！");
 			System.out.println( sumLine + " 行有效代码\t\t" + sumUnit + " 个有效字符");
-			System.out.println( "其中最多行数: "+maxLine+"  "+size);
+			 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			  Date date = new Date(millSec);
+			System.out.println( "其中 最多行数: "+maxLine+"  "+size+" 最早日期:"+sdf.format(date));
 
 		} catch (Exception e) {
 			e.printStackTrace();
