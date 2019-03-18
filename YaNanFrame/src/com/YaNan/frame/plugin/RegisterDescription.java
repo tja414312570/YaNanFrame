@@ -136,11 +136,13 @@ public class RegisterDescription {
 	 */
 	private String[] method;
 	private Method[] initMethod;
-
+	private String id;
 	public ClassLoader getProxyClassLoader() {
 		return loader;
 	}
-
+	public String getBeanId() {
+		return id;
+	}
 	/**
 	 * 支持注解类型的构造器 register为注解 clzz为注册器的类名 impls 为注册器实现的接口
 	 * 
@@ -413,7 +415,8 @@ public class RegisterDescription {
 		}
 		if (this.config != null) {
 			// 配置文件专用
-			String id = config.getString("id");
+			this.id = config.getString("id");
+			
 			if (id != null) {
 				Object instance = null;
 				 //判断是否有参数
