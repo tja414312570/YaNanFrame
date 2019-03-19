@@ -103,6 +103,12 @@ public class ParameterUtils {
 		}
 		return constructor;
 	}
+	/**
+	 * 获取一个合适的方法。匹配规则是参数可以转换为对应的参数
+	 * @param methods
+	 * @param parameters
+	 * @return
+	 */
 	public static Method getEffectiveMethod(Method[] methods,
 			Object[] parameters) {
 		Method method = null;
@@ -158,7 +164,12 @@ public class ParameterUtils {
 			return false;
 		}
 	}
-
+	/**
+	 * 将config转化为参数和方法的集
+	 * @param config
+	 * @param register
+	 * @return
+	 */
 	public static MethodDesc[] transformToMethod(Config config, RegisterDescription register) {
 		ClassHelper helper = ClassHelper.getClassHelper(register.getRegisterClass());
 		MethodDesc[] methodDescs = new MethodDesc[config.entrySet().size()];
@@ -252,7 +263,7 @@ public class ParameterUtils {
 		return methodDescs;
 	}
 
-	private static Object getParameter(Class<?> type,Object value) {
+	public static Object getParameter(Class<?> type,Object value) {
 		if (type.equals(File.class)) {// 文件类型特俗处理
 			File file;
 			try {

@@ -44,7 +44,7 @@ import com.typesafe.config.impl.SimpleConfigObject;
  * 支持创建默认的Builder方式 v1.3 支持描述器的属性 v1.4 将InvokeHandler的创建迁移到组件初始化时，大幅度提高代理执行效率
  * v1.5 20180910 重新构建InvokeHandler的逻辑，提高aop的效率 v1.6 20180921
  * 添加FieldHandler和ConstructorHandler 实现方法拦截与构造器拦截
- * 
+ * v1.6 20190319 支持构造器参数，支持初始化后调用方法参数，支持构造器和方法匹配，参数数据结构多种支持，参数类型自动匹配
  * 
  * @author yanan
  *
@@ -549,22 +549,7 @@ public class RegisterDescription {
 											String key = entry.getKey();
 											Object value = entry.getValue();
 											parameterTypes[i] = ParameterUtils.getParameterType(key);
-											if (parameterTypes[i].equals(File.class)) {// 文件类型特俗处理
-												File file;
-												try {
-													List<File> files = ResourceManager.getResource(value.toString());
-													file = files.get(0);
-												} catch (Throwable t) {
-													file = new File(ResourceManager.getPathExress(value.toString()));
-												}
-												parameters[i] = file;
-											} else if (parameterTypes[i].equals(Service.class)) {
-												String beanId = value.toString();
-												Object bean = BeanContainer.getContext().getBean(beanId);
-												parameters[i] = bean;
-											} else {
-												parameters[i] = ClassLoader.castType(value, parameterTypes[i]);
-											}
+											parameters[i] = ParameterUtils.getParameter(parameterTypes[i], value);
 										}
 									}
 									Method method = helper.getMethod(methodName, parameterTypes);
@@ -601,23 +586,7 @@ public class RegisterDescription {
 										Entry<String, ConfigValue> entry = argIterator.next();
 										parameterTypes[i] = ParameterUtils.getParameterType(entry.getKey());
 										Object value = entry.getValue().unwrapped();
-										if (parameterTypes[i].equals(File.class)) {// 文件类型特俗处理
-											File file;
-											try {
-												List<File> files = ResourceManager.getResource(value.toString());
-												file = files.get(0);
-
-											} catch (Throwable t) {
-												file = new File(ResourceManager.getPathExress(value.toString()));
-											}
-											parameters[i] = file;
-										} else if (parameterTypes[i].equals(Service.class)) {// bean类型
-											String beanId = value.toString();
-											parameters[i] = BeanContainer.getContext().getBean(beanId);
-										} else {
-											parameters[i] = ClassLoader.castType(entry.getValue().unwrapped(),
-													parameterTypes[i]);
-										}
+										parameters[i] = ParameterUtils.getParameter(parameterTypes[i], value);
 										i++;
 									}
 									Method method = helper.getMethod(methodName, parameterTypes);
