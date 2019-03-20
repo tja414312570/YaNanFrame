@@ -42,9 +42,9 @@ import com.typesafe.config.impl.SimpleConfigObject;
 /**
  * 组件描述类 用于创建组件时的组件信息 v1.0 支持通过Class的Builder方式 v1.1 支持通过Comp文件的Builder方式 v1.2
  * 支持创建默认的Builder方式 v1.3 支持描述器的属性 v1.4 将InvokeHandler的创建迁移到组件初始化时，大幅度提高代理执行效率
- * v1.5 20180910 重新构建InvokeHandler的逻辑，提高aop的效率 v1.6 20180921
- * 添加FieldHandler和ConstructorHandler 实现方法拦截与构造器拦截
- * v1.6 20190319 支持构造器参数，支持初始化后调用方法参数，支持构造器和方法匹配，参数数据结构多种支持，参数类型自动匹配
+ * v1.5 20180910 重新构建InvokeHandler的逻辑，提高aop的效率 
+ * v1.6 20180921 添加FieldHandler和ConstructorHandler 实现方法拦截与构造器拦截
+ * v1.7 20190319 支持构造器参数，支持初始化后调用方法参数，支持构造器和方法匹配，参数数据结构多种支持，参数类型自动匹配
  * 
  * @author yanan
  *
