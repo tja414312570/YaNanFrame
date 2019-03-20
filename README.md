@@ -1,5 +1,4 @@
-# YaNanFrame 2.0 
-# 全新PLUGIN组件，带给您高效的开发效率
+# YaNanFrame 2.0 - PLUGIN
 
            PLUGINPLUGIN     PLUG         PLUG       PLUG      PLUGINPLUGIN    PLUGINPLUGIN   PLUG         PLUG
           PLUG      PLUG   PLUG         PLUG       PLUG    PLUG                  PLUG       PLUGPLUG     PLUG
