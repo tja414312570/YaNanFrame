@@ -8,45 +8,62 @@
       PLUG             PLUG         PLUG       PLUG   PLUG         PLUG      PLUG       PLUG    PLUG PLUG
      PLUG             PLUG         PLUG       PLUG     PLUG       PLUG      PLUG       PLUG     PLUGINPL
     PLUG             PLUGINPLUGI   PLUGINPLUGINP        PLUGINPLUGIN    PLUGINPLUGIN  PLUG         PLUG
-    
+## 介绍    
 基于AOP的编程模式，自带mvc组件，持久层组件，基于AOP的设计模式，用接口规范您的代码，实现团队解耦。用JAVA Bean来做数据库对象，让您无需知道sql就可以实现数据库的CURD，支持子查询，联表查询。将项目的各种模块声明为Service，通过PluginFactory来管理Service的创建，装配，注入。
 
 更新日志：
 	20181218：1.修复Delete传入参数为Class的bug，2.支持无状态Token的获取，支持方法的权限认证（对象由Plugin代理）。3.支持hocon配置，用hocon配置代替prop文件作为配置，新增优化的Config库。实验性功能：支持方法参数加密，修改plugin的异常处理的bug，新增Bean的支持。
 	future:完善方法参数加密，完善bean支持。
 
-* [Getting Started with plugin](https://github.com/onevcat/Kingfisher/wiki/Getting-Started-with-Kingfisher)
-    * [Install Plugin](https://github.com/onevcat/Kingfisher/wiki/Installation-Guide)
-    * [Cheat Sheet](https://github.com/onevcat/Kingfisher/wiki/Cheat-Sheet)
-* [API Reference](http://onevcat.github.io/Kingfisher/)
-
 ## 开始使用
 
-* [1.0 安装](https://github.com/onevcat/Kingfisher/wiki/Kingfisher-3.0-Migration-Guide)
-* [2.0 HelloWorld](https://github.com/onevcat/Kingfisher/wiki/Kingfisher-2.0-Migration-Guide)
+* [1.0 安装](https://github.com/tja414312570/YaNanFrame/wiki/)
+* [2.0 HelloWorld](https://github.com/tja414312570/YaNanFrame/wiki/)
 
 ## API
 
-* [MVC](https://github.com/onevcat/Kingfisher/wiki/FAQ)
-    * [常用注解](https://github.com/onevcat/Kingfisher/wiki/Installation-Guide)
-* [持久化](http://stackoverflow.com/search?q=kingfisher)
-    * [初始化持久层](https://github.com/onevcat/Kingfisher/wiki/Installation-Guide)
-    * [对象编程](https://github.com/onevcat/Kingfisher/wiki/Installation-Guide)
-    * [对象编程可用注解](https://github.com/onevcat/Kingfisher/wiki/Installation-Guide)
-    * [Mapper文件模式](https://github.com/onevcat/Kingfisher/wiki/Installation-Guide)
-* [组件化编程](https://github.com/onevcat/Kingfisher/issues/new)
-    * [初始化组件上下文](https://github.com/onevcat/Kingfisher/wiki/Installation-Guide)
-    * [定义服务组件](https://github.com/onevcat/Kingfisher/wiki/Installation-Guide)
-    * [定义服务实体](https://github.com/onevcat/Kingfisher/wiki/Installation-Guide)
-    * [Plugin.conf文件配置](https://github.com/onevcat/Kingfisher/wiki/Installation-Guide)
-    * [注入bean的方式](https://github.com/onevcat/Kingfisher/wiki/Installation-Guide)
-* [Hocon配置文件](https://github.com/onevcat/Kingfisher/compare)
-## 所有组件
-* [mvc组件](https://github.com/onevcat/Kingfisher/compare)
+* [MVC组件](https://github.com/tja414312570/YaNanFrame/wiki/)
+    * [路径匹配](https://github.com/tja414312570/YaNanFrame/wiki/)
+    * [参数获取](https://github.com/tja414312570/YaNanFrame/wiki/)
+    * [数据响应](https://github.com/tja414312570/YaNanFrame/wiki/)
+    * [参数验证](https://github.com/tja414312570/YaNanFrame/wiki/)
+    * [扩展](https://github.com/tja414312570/YaNanFrame/wiki/)
+* [Token令牌](https://github.com/tja414312570/YaNanFrame/wiki/)
+    * [路径拦截](https://github.com/tja414312570/YaNanFrame/wiki/)
+    * [接口拦截](https://github.com/tja414312570/YaNanFrame/wiki/)
+    * [无状态Token](https://github.com/tja414312570/YaNanFrame/wiki/)
+    * [持久化接口](https://github.com/tja414312570/YaNanFrame/wiki/)
+    * [扩展](https://github.com/tja414312570/YaNanFrame/wiki/)
+* [数据库支持Hibernate](https://github.com/tja414312570/YaNanFrame/wiki/)
+    * [初始化持久层](https://github.com/tja414312570/YaNanFrame/wiki/)
+    * [对象编程](https://github.com/tja414312570/YaNanFrame/wiki/)
+    * [对象编程可用注解](https://github.com/tja414312570/YaNanFrame/wiki/)
+    * [Mapper文件模式](https://github.com/tja414312570/YaNanFrame/wiki/)
+* [组件化编程Plugin](https://github.com/tja414312570/YaNanFrame/wiki/plugin)
+    * [初始化组件上下文](https://github.com/tja414312570/YaNanFrame/wiki/plug_init)
+    * [定义服务组件](https://github.com/tja414312570/YaNanFrame/wiki/plugin)
+    * [定义服务实体](https://github.com/tja414312570/YaNanFrame/wiki/plugin)
+    * [Plugin.conf文件配置](https://github.com/tja414312570/YaNanFrame/wiki/plugin)
+    * [注入bean的方式](https://github.com/tja414312570/YaNanFrame/wiki/plugin)
+* [RTDT即时数据传输](https://github.com/tja414312570/YaNanFrame/wiki/plugin)
+    * [初始化组件上下文](https://github.com/tja414312570/YaNanFrame/wiki/plug_init)
+    * [创建一个Action](https://github.com/tja414312570/YaNanFrame/wiki/plugin)
+    * [发起一个通知](https://github.com/tja414312570/YaNanFrame/wiki/plugin)
+* [Hocon配置文件](https://github.com/tja414312570/YaNanFrame/wiki/)
+## 工具类
+* [config](https://github.com/tja414312570/YaNanFrame/wiki/)
+* [XMLHelper](https://github.com/tja414312570/YaNanFrame/wiki/xmlHelper)
+    * [更多使用](https://github.com/tja414312570/YaNanFrame/wiki/plugin)
+    * [默认支持的注解](https://github.com/tja414312570/YaNanFrame/wiki/xmlHelperDefault)
+    * [扩展支持的类型、注解](https://github.com/tja414312570/YaNanFrame/wiki/plugin)
+* [ant路径匹配](https://github.com/tja414312570/YaNanFrame/wiki/antPath)
+* [ClassHelper](https://github.com/tja414312570/YaNanFrame/wiki/antPath)
+* [ClassLoader](https://github.com/tja414312570/YaNanFrame/wiki/antPath)
+## 其它组件
+* [Corn表达式组件](https://github.com/tja414312570/YaNanFrame/wiki/corn)
 ## Information
 
-* [Change Log](https://github.com/onevcat/Kingfisher/blob/master/CHANGELOG.md)
-
+* [Change Log](https://github.com/tja414312570/YaNanFrame/wiki/)
 实例
 1、配置文件配置bean，框架调用
 配置文件：
