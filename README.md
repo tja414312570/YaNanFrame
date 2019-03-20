@@ -20,13 +20,29 @@
 配置文件：
 ```
 ###################### plugin list
-	plugins:[
+plugins:[
 		com.YaNan.frame.plugin.autowired.plugin.PluginWiredHandler, ##服务注入提供
 		com.YaNan.frame.plugin.autowired.resource.ResourceWiredHandler, ##资源类注入
 		com.YaNan.frame.plugin.autowired.property.PropertyWiredHandler, ##属性注入
 		com.YaNan.frame.plugin.autowired.exception.ErrorPlugsHandler, ##错误记录
 		##	 com.YaNan.frame.util.quartz.QuartzManager,##Quartz corn注解服务
-		{ ## 数据库
+		com.YaNan.frame.servlets.validator.ParameterValitationRegister, ##参数验证拦截器
+		com.YaNan.frame.servlets.validator.DefaultParameterValidator, ##默认jsr 303 参数验证器
+		com.YaNan.frame.servlets.session.plugin.TokenHandler, ##无状态Token拦截器
+		com.YaNan.frame.servlets.session.parameter.TokenParameterHandler, ##Token参数注入 @TokenAttribute
+		com.YaNan.frame.RTDT.context.init.RTDTContextInit, ##RTDT功能 @RAction @RNotify
+		com.YaNan.frame.plugin.autowired.exception.ErrorPlugsHandler, ##异常捕获 @Error
+		com.YaNan.frame.plugin.autowired.plugin.PluginWiredHandler, ##组件注入服务 @Service
+		com.YaNan.frame.plugin.autowired.property.PropertyWiredHandler, ##属性注入服务 @Property
+		com.YaNan.frame.plugin.autowired.resource.ResourceWiredHandler, ##资源注入服务 @Resource
+		{ ##Restful调配器 @RequestMapping @GetMapping @PostMapping @DeleteMapping @RequestParam @RequestPath
+			class:com.YaNan.frame.servlets.RestfulDispatcher,
+			priority:0,
+			signlton:true,
+			attribute=RESTFUL_STYLE,
+			register="javax.servlet.Servlet,*"
+		},
+		{ ## 持久化框架
 			class:com.YaNan.frame.hibernate.database.HibernateContextInit,##组件类
 			priority:0,##优先级
 			signlton:true,##是否启用单例模式
