@@ -16,6 +16,8 @@
 	future:完善方法参数加密，完善bean支持。
 
 
+## [介绍](https://github.com/tja414312570/YaNanFrame/wiki/home)
+
 ## 开始使用
 
 * [1.0 安装](https://github.com/tja414312570/YaNanFrame/wiki/)
@@ -23,52 +25,54 @@
 
 ## API
 
-* [MVC组件](https://github.com/tja414312570/YaNanFrame/wiki/)
-    * [路径匹配](https://github.com/tja414312570/YaNanFrame/wiki/)
-    * [参数获取](https://github.com/tja414312570/YaNanFrame/wiki/)
-    * [数据响应](https://github.com/tja414312570/YaNanFrame/wiki/)
-    * [参数验证](https://github.com/tja414312570/YaNanFrame/wiki/)
-    * [扩展](https://github.com/tja414312570/YaNanFrame/wiki/)
-* [Token令牌](https://github.com/tja414312570/YaNanFrame/wiki/)
-    * [路径拦截](https://github.com/tja414312570/YaNanFrame/wiki/)
-    * [接口拦截](https://github.com/tja414312570/YaNanFrame/wiki/)
-    * [无状态Token](https://github.com/tja414312570/YaNanFrame/wiki/)
-    * [持久化接口](https://github.com/tja414312570/YaNanFrame/wiki/)
-    * [扩展](https://github.com/tja414312570/YaNanFrame/wiki/)
-* [数据库支持Hibernate](https://github.com/tja414312570/YaNanFrame/wiki/)
-    * [初始化持久层](https://github.com/tja414312570/YaNanFrame/wiki/)
-    * [对象编程](https://github.com/tja414312570/YaNanFrame/wiki/)
-    * [对象编程可用注解](https://github.com/tja414312570/YaNanFrame/wiki/)
-    * [Mapper文件模式](https://github.com/tja414312570/YaNanFrame/wiki/)
+* [MVC组件](https://github.com/tja414312570/YaNanFrame/wiki/servlets)
+    * [路径映射](https://github.com/tja414312570/YaNanFrame/wiki/servletsMapping)
+    * [参数获取](https://github.com/tja414312570/YaNanFrame/wiki/servletsParameter)
+    * [数据响应](https://github.com/tja414312570/YaNanFrame/wiki/servletsResponse)
+    * [参数验证](https://github.com/tja414312570/YaNanFrame/wiki/servletsVailed)
+    * [扩展](https://github.com/tja414312570/YaNanFrame/wiki/servletsExpand)
+* [Token令牌](https://github.com/tja414312570/YaNanFrame/wiki/token)
+    * [路径拦截](https://github.com/tja414312570/YaNanFrame/wiki/tokenUrl)
+    * [接口拦截](https://github.com/tja414312570/YaNanFrame/wiki/tokenServlets)
+    * [无状态Token](https://github.com/tja414312570/YaNanFrame/wiki/noStatusToken)
+    * [持久化接口](https://github.com/tja414312570/YaNanFrame/wiki/tokenHibernate)
+    * [扩展](https://github.com/tja414312570/YaNanFrame/wiki/tokenExpand)
+* [数据库支持Hibernate](https://github.com/tja414312570/YaNanFrame/wiki/hibernate)
+    * [初始化持久层](https://github.com/tja414312570/YaNanFrame/wiki/hibernateInit)
+    * [数据源配置](https://github.com/tja414312570/YaNanFrame/wiki/dataSource)
+    * [对象编程](https://github.com/tja414312570/YaNanFrame/wiki/objectHibernate)
+    * [对象编程可用注解](https://github.com/tja414312570/YaNanFrame/wiki/hibernateAnnotations)
+    * [Mapper文件模式](https://github.com/tja414312570/YaNanFrame/wiki/hibernaterMapper)
 * [组件化编程Plugin](https://github.com/tja414312570/YaNanFrame/wiki/plugin)
     * [初始化组件上下文](https://github.com/tja414312570/YaNanFrame/wiki/plug_init)
-    * [定义服务组件](https://github.com/tja414312570/YaNanFrame/wiki/plugin)
-    * [定义服务实体](https://github.com/tja414312570/YaNanFrame/wiki/plugin)
-    * [Plugin.conf文件配置](https://github.com/tja414312570/YaNanFrame/wiki/plugin)
-    * [注入bean的方式](https://github.com/tja414312570/YaNanFrame/wiki/plugin)
-* [RTDT即时数据传输](https://github.com/tja414312570/YaNanFrame/wiki/plugin)
-    * [初始化组件上下文](https://github.com/tja414312570/YaNanFrame/wiki/plug_init)
-    * [创建一个Action](https://github.com/tja414312570/YaNanFrame/wiki/plugin)
-    * [发起一个通知](https://github.com/tja414312570/YaNanFrame/wiki/plugin)
+    * [定义服务组件](https://github.com/tja414312570/YaNanFrame/wiki/plug_service)
+    * [定义服务实体](https://github.com/tja414312570/YaNanFrame/wiki/plug_register)
+    * [Plugin.conf文件配置](https://github.com/tja414312570/YaNanFrame/wiki/plug_conf)
+    * [注入bean的方式](https://github.com/tja414312570/YaNanFrame/wiki/plug_wired)
+* [RTDT即时数据传输](https://github.com/tja414312570/YaNanFrame/wiki/RTDT)
+    * [初始化组件上下文](https://github.com/tja414312570/YaNanFrame/wiki/RTDT_init)
+    * [创建一个Action](https://github.com/tja414312570/YaNanFrame/wiki/RTDT_Action)
+    * [发起一个通知](https://github.com/tja414312570/YaNanFrame/wiki/RTDT_Notify)
 * [切面编程](https://github.com/tja414312570/YaNanFrame/wiki/aop)
     * [构造器拦截器InstanceHandler](https://github.com/tja414312570/YaNanFrame/wiki/InstanceHandler)
     * [Field初始化FieldHandler](https://github.com/tja414312570/YaNanFrame/wiki/FieldHandler)
     * [方法拦截器InvokeHandler](https://github.com/tja414312570/YaNanFrame/wiki/InvokeHandler)
 * [Hocon配置文件](https://github.com/tja414312570/YaNanFrame/wiki/)
 ## 工具类
-* [config](https://github.com/tja414312570/YaNanFrame/wiki/)
+* [config](https://github.com/tja414312570/YaNanFrame/wiki/config)
 * [XMLHelper](https://github.com/tja414312570/YaNanFrame/wiki/xmlHelper)
-    * [更多使用](https://github.com/tja414312570/YaNanFrame/wiki/plugin)
+    * [更多使用](https://github.com/tja414312570/YaNanFrame/wiki/xmlHelperMore)
     * [默认支持的注解](https://github.com/tja414312570/YaNanFrame/wiki/xmlHelperDefault)
-    * [扩展支持的类型、注解](https://github.com/tja414312570/YaNanFrame/wiki/plugin)
+    * [扩展支持的类型、注解](https://github.com/tja414312570/YaNanFrame/wiki/xmlHelperExpand)
 * [ant路径匹配](https://github.com/tja414312570/YaNanFrame/wiki/antPath)
-* [ClassHelper](https://github.com/tja414312570/YaNanFrame/wiki/antPath)
-* [ClassLoader](https://github.com/tja414312570/YaNanFrame/wiki/antPath)
+* [ClassHelper](https://github.com/tja414312570/YaNanFrame/wiki/ClassHelper)
+* [ClassLoader](https://github.com/tja414312570/YaNanFrame/wiki/ClassLoader)
 ## 其它组件
 * [Corn表达式组件](https://github.com/tja414312570/YaNanFrame/wiki/corn)
 ## Information
 
 * [Change Log](https://github.com/tja414312570/YaNanFrame/wiki/)
+
 实例
 1、配置文件配置bean，框架调用
 配置文件：
