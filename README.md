@@ -14,8 +14,6 @@
 更新日志：
 	20181218：1.修复Delete传入参数为Class的bug，2.支持无状态Token的获取，支持方法的权限认证（对象由Plugin代理）。3.支持hocon配置，用hocon配置代替prop文件作为配置，新增优化的Config库。实验性功能：支持方法参数加密，修改plugin的异常处理的bug，新增Bean的支持。
 	future:完善方法参数加密，完善bean支持。
-
-
 ## [介绍](https://github.com/tja414312570/YaNanFrame/wiki/home)
 
 ## 开始使用
@@ -39,7 +37,8 @@
     * [扩展](https://github.com/tja414312570/YaNanFrame/wiki/tokenExpand)
 * [数据库支持Hibernate](https://github.com/tja414312570/YaNanFrame/wiki/hibernate)
     * [初始化持久层](https://github.com/tja414312570/YaNanFrame/wiki/hibernateInit)
-    * [数据源配置](https://github.com/tja414312570/YaNanFrame/wiki/dataSource)
+    * [数据源配置](https://github.com/tja414312570/YaNanFrame/wiki/objectOrm)
+    * [对象映射](https://github.com/tja414312570/YaNanFrame/wiki/objectHibernate)
     * [对象编程](https://github.com/tja414312570/YaNanFrame/wiki/objectHibernate)
     * [对象编程可用注解](https://github.com/tja414312570/YaNanFrame/wiki/hibernateAnnotations)
     * [Mapper文件模式](https://github.com/tja414312570/YaNanFrame/wiki/hibernaterMapper)
