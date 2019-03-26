@@ -17,7 +17,6 @@ import com.YaNan.frame.logging.Log;
  * @author yanan
  *
  */
-@WebListener
 public class PluginAppincationContext implements ServletContextListener {
 	private static boolean isWebContext;
 	private Log log;
@@ -40,6 +39,10 @@ public class PluginAppincationContext implements ServletContextListener {
 		isWebContext = true;
 		try{
 			long t = System.currentTimeMillis();
+			String locations = servletContextEvent.getServletContext().getInitParameter("contextConfigure");
+			if(locations!=null)
+				locations = locations.replace("project:", servletContextEvent.getServletContext().getRealPath(""));
+			PlugsFactory.init(locations);
 			log = PlugsFactory.getPlugsInstance(Log.class,PluginAppincationContext.class);
 			this.servletContextEvent = servletContextEvent;
 			this.servletContext = servletContextEvent.getServletContext();

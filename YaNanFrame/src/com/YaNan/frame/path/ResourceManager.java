@@ -1,6 +1,7 @@
 package com.YaNan.frame.path;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,12 +14,20 @@ import com.YaNan.frame.path.Path.PathInter;
  */
 public class ResourceManager {
 	final static String CLASSPATH = "classpath:";
+	final static String PROJECT = "project:";
 	public static String getPathExress(String pathExpress){
 		if(pathExpress==null)
 			throw new RuntimeException("path express is null");
 		int cpIndex = pathExpress.indexOf(CLASSPATH);
 		if(cpIndex>-1)
 			pathExpress= ResourceManager.class.getClassLoader().getResource("").getPath().replace("%20"," ")+pathExpress.substring(cpIndex+CLASSPATH.length());
+		cpIndex = pathExpress.indexOf(PROJECT);
+		if(cpIndex>-1)
+			try {
+				pathExpress= new File("").getCanonicalPath().replace("%20"," ")+pathExpress.substring(cpIndex+PROJECT.length());
+			} catch (IOException e) {
+				throw new RuntimeException("failed to get project director",e);
+			}
 		return pathExpress;
 	}
 	/**
@@ -35,7 +44,7 @@ public class ResourceManager {
 		if(index==-1){
 			File file = new File(pathExpress);
 			if(!file.exists())
-				throw new RuntimeException("resource \"" +pathExpress+"\" is not exists!");
+				throw new RuntimeException("resource \"" +pathExpress+"\" is not exists! absolute:\""+file.getAbsolutePath()+"\"");
 			List<File> fileList = new ArrayList<File>();
 			fileList.add(file);
 			return fileList;
@@ -44,6 +53,12 @@ public class ResourceManager {
 		qndex = path.lastIndexOf("/");
 		if(qndex>0)
 			path = path.substring(0,qndex);
+		if(path==null||path.trim().equals(""))
+			try {
+				path = new File("").getCanonicalPath();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		return getMatchFile(path,pathExpress);
 	}
 	private static List<File> getMatchFile(String pathExpress,String regex) {
@@ -57,10 +72,5 @@ public class ResourceManager {
 			}
 		});
 		return fileList;
-	}
-	public static void main(String[] args) {
-		String path = "/Volumes/GENERAL/webProjects/BaTuMapping/conf/wrapper/*.xml";
-		List<File> list = getResource(path);
-		System.out.println(list);
 	}
 }

@@ -8,4 +8,19 @@
     <error-code>500</error-code>
     <location>/html/pages-500.html</location>
   </error-page>
+  <!-- 
+  	如果不使用参数，默认加载所有的.conf文件
+   -->
+  <context-param> 
+        <param-name>contextConfigure</param-name> 
+        <param-value> 
+            project:/WEB-INF/classes/plugin.conf
+        </param-value> 
+   </context-param> 
+   <!-- 
+   	设置监听器
+    -->
+   <listener>
+        <listener-class>com.YaNan.frame.plugin.PluginAppincationContext</listener-class>
+    </listener>
 </web-app>

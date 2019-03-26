@@ -18,6 +18,7 @@ import com.YaNan.frame.path.PackageScanner;
 import com.YaNan.frame.path.Path;
 import com.YaNan.frame.path.PackageScanner.ClassInter;
 import com.YaNan.frame.path.Path.PathInter;
+import com.YaNan.frame.path.ResourceManager;
 import com.YaNan.frame.plugin.annotations.Register;
 import com.YaNan.frame.plugin.annotations.Service;
 import com.YaNan.frame.plugin.beans.BeanContainer;
@@ -39,8 +40,9 @@ import com.YaNan.frame.reflect.ClassLoader;
  *
  */
 public class PlugsFactory {
-	private static PlugsFactory instance;
+	private static volatile PlugsFactory instance;
 	private boolean available = false;
+	private List<File> configureLocation;
 	/**
 	 * 组件的容器
 	 */
@@ -86,12 +88,20 @@ public class PlugsFactory {
 
 	// registerClass >> registerInstance
 	// Register >> Service array
-	static {
-		if (instance == null)
-			instance = new PlugsFactory();
+	/**
+	 * 初始化组件
+	 * @param resources
+	 */
+	public static void init(String... resources){
+		PlugsFactory instance = getInstance();
+		for(String res : resources){
+			List<File> resourceFiles = ResourceManager.getResource(res);
+			for(File file : resourceFiles)
+				instance.configureLocation.add(file);
+		}
 		instance.init();
 	}
-
+	
 	/**
 	 * 获取所有注册器
 	 * 
@@ -111,6 +121,15 @@ public class PlugsFactory {
 	}
 
 	public static PlugsFactory getInstance() {
+		if (instance == null){
+			synchronized (PlugsFactory.class) {
+				if (instance == null)
+					synchronized (PlugsFactory.class) {
+						instance = new PlugsFactory();
+						instance.configureLocation = new ArrayList<File>();
+					}
+			}
+		}
 		return instance;
 	}
 
@@ -122,14 +141,28 @@ public class PlugsFactory {
 													// PlugsListener
 													// 用于组件初始化完成时的监听
 		this.addPlugsByDefault(InvokeHandler.class);// InvokeHandler用于提供方法拦截接口的支持
-		Path path = new Path(this.getClass().getClassLoader().getResource("").getPath().replace("%20", " "));
-		path.filter("**.plugs", "**.comps", "**.conf");
-		path.scanner(new PathInter() {
-			@Override
-			public void find(File file) {
+		//判断资源文件是否存在,如果无资源文件，直接扫描所有的plugs文件
+		if(this.configureLocation.isEmpty()){
+			//获取基础的配置文件
+			File baseFile = new File(this.getClass().getClassLoader().getResource("").getPath().replace("%20", " "),"plugin.conf");
+			//如果文件不存在，扫描所有的文件
+			if(!baseFile.exists()){
+				Path path = new Path(this.getClass().getClassLoader().getResource("").getPath().replace("%20", " "));
+				path.filter("**.plugs", "**.comps", "**.conf");
+				path.scanner(new PathInter() {
+					@Override
+					public void find(File file) {
+						addPlugs(file);
+					}
+				});
+			}else{//否则加入文件
+				addPlugs(baseFile);
+			}
+		}else{
+			for(File file : this.configureLocation){
 				addPlugs(file);
 			}
-		});
+		}
 		Config conf = ConfigContext.getConfig("Plugin");
 		String[] packageDirs = new String[1];
 		if (conf == null) {
@@ -175,7 +208,29 @@ public class PlugsFactory {
 			} else {
 				packageDirs[0] = ".";
 			}
+			if (conf.hasPath("includes")) {
+				if (conf.isList("includes")) {
+					List<String> dirs = conf.getStringList("includes");
+					for(String dir : dirs){
+						List<File> resource = ResourceManager.getResource(dir);
+						for(File file : resource){
+							addPlugs(file);
+						}
+					}
+				} else {
+					String confDirs = conf.getString("includes");
+					String[] dirs = confDirs.split(",");
+					for(String dir : dirs){
+						List<File> resource = ResourceManager.getResource(dir);
+						for(File file : resource){
+							addPlugs(file);
+						}
+					}
+				}
+			}
 		}
+		
+		//扫描类
 		for (String packDir : packageDirs) {
 			if (packDir == null)
 				continue;
@@ -188,6 +243,8 @@ public class PlugsFactory {
 				}
 			});
 		}
+		
+		
 		this.associate();
 		available = true;
 		this.initRegisterDescriptionHandler();
@@ -915,5 +972,9 @@ public class PlugsFactory {
 		} catch (Exception e) {
 			throw new RuntimeException("failed to get plugin instance at plugin class " + impl, e);
 		}
+	}
+
+	public List<File> getConfigureLocation() {
+		return configureLocation;
 	}
 }

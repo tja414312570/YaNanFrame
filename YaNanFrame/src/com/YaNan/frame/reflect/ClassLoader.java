@@ -4,6 +4,9 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -1241,5 +1244,45 @@ public class ClassLoader {
 			   type.equals(short.class)||
 			   type.equals(boolean.class)?true:false;
 	}
-
+	/**
+	 * 获取field为List的泛型
+	 * @param field
+	 * @return
+	 */
+	public static Class<?> getListGenericType(Field field) {
+		Type genericType = field.getGenericType(); 
+		if(genericType != null && genericType instanceof ParameterizedType){   
+			ParameterizedType pt = (ParameterizedType) genericType;
+			//得到泛型里的class类型对象  
+			Class<?> genericClazz = (Class<?>)pt.getActualTypeArguments()[0]; 
+			return genericClazz;
+		}   
+		return null;
+	}
+	/**
+	 * 获取Parameter为List的泛型
+	 * @param field
+	 * @return
+	 */
+	public static Class<?> getListGenericType(Parameter parm) {
+		Type genericType = parm.getParameterizedType(); 
+		if(genericType != null && genericType instanceof ParameterizedType){   
+			ParameterizedType pt = (ParameterizedType) genericType;
+			//得到泛型里的class类型对象  
+			Class<?> genericClazz = (Class<?>)pt.getActualTypeArguments()[0]; 
+			return genericClazz;
+		}   
+		return null;
+	}
+	/**
+	 * 获取数组的类型
+	 * @param arrayClass
+	 * @return
+	 */
+	public static Class<?> getArrayType(Class<?> arrayClass){
+		if(arrayClass.isArray()){
+			return arrayClass.getComponentType();
+		}
+		return null;
+	}
 }

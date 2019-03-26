@@ -1,5 +1,6 @@
 package com.YaNan.frame.plugin.autowired.plugin;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Parameter;
@@ -17,6 +18,7 @@ import com.YaNan.frame.plugin.handler.FieldHandler;
 import com.YaNan.frame.plugin.handler.InstanceHandler;
 import com.YaNan.frame.plugin.handler.InvokeHandler;
 import com.YaNan.frame.plugin.handler.MethodHandler;
+import com.YaNan.frame.reflect.ClassLoader;
 
 /**
  * 组件注入
@@ -121,24 +123,38 @@ public class PluginWiredHandler implements InvokeHandler,FieldHandler,InstanceHa
 	public void after(RegisterDescription registerDescription, Class<?> plugClass, Constructor<?> constructor,
 			Object proxyObject, Object... arguments) {
 		Service service;
+		//获取构造方法所有的参数
 		Parameter[] parameters = constructor.getParameters();
 		for(int i = 0;i<parameters.length;i++){
 			Parameter parameter = parameters[i];
+			//获取参数的Service注解
 			service = parameter.getAnnotation(Service.class);
 			if(service!=null){
+				//如果参数不为Null时，不注入此参数
 				if(arguments[i]==null){
+					//获取参数的类型
 					Class<?> type = parameters[i].getType();
+					//如果Service的注解具有id属性，说明为Bean注入
 					if(!service.id().trim().equals("")){
+						//将该参数为设置为获取到的Bean
 						arguments[i] = BeanContainer.getContext().getBean(service.id());
 						if(arguments[i]==null)
 							throw new PluginRuntimeException("could not found bean id for \""+service.id()+"\" at parameter \""+parameter.getName() + "\" at construct \""+ constructor+"\" at "+registerDescription.getRegisterClass());
+					//如果获取到的参数类型为数组
 					}else if(type.isArray()){
-						List<?> obj = PlugsFactory.getPlugsInstanceListByAttribute(type, service.attribute());
-						arguments[i] = obj;
+						//获得数组的真实类型
+						Class<?> typeClass = ClassLoader.getListGenericType(parameters[i]);
+						List<?> obj = PlugsFactory.getPlugsInstanceListByAttribute(typeClass, service.attribute());
+						Object[] arr = (Object[]) Array.newInstance(typeClass, obj.size());
+						arguments[i] = obj.toArray(arr);
 					}else if(type.getClass().equals(List.class)){
-						List<?> obj = PlugsFactory.getPlugsInstanceListByAttribute(type, service.attribute());
+						//获取数组参数的类型
+						Class<?> typeClass = ClassLoader.getListGenericType(parameters[i]);
+						//获取服务返回的所有实现的实例
+						List<?> obj = PlugsFactory.getPlugsInstanceListByAttribute(typeClass, service.attribute());
 						arguments[i] = obj;
 					}else{
+						//如果以上都没有匹配到，则首先从服务里获取，没有获取到时重Bean容器里获取。
 						Object obj = null;
 						try{
 							obj=  PlugsFactory.getPlugsInstanceByAttributeStrict(type,service.attribute());
