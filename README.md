@@ -57,6 +57,8 @@
     * [Field初始化FieldHandler](https://github.com/tja414312570/YaNanFrame/wiki/FieldHandler)
     * [方法拦截器InvokeHandler](https://github.com/tja414312570/YaNanFrame/wiki/InvokeHandler)
 * [Hocon配置文件](https://github.com/tja414312570/YaNanFrame/wiki/)
+* [实验性功能](https://github.com/tja414312570/YaNanFrame/wiki/future)
+    * [热更新](https://github.com/tja414312570/YaNanFrame/wiki/hotUpdate)
 ## 工具类
 * [config](https://github.com/tja414312570/YaNanFrame/wiki/config)
 * [XMLHelper](https://github.com/tja414312570/YaNanFrame/wiki/xmlHelper)
@@ -71,7 +73,6 @@
 ## Information
 
 * [Change Log](https://github.com/tja414312570/YaNanFrame/wiki/)
-
 实例
 1、配置文件配置bean，框架调用
 配置文件：
