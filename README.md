@@ -12,8 +12,11 @@
 基于AOP的编程模式，自带mvc组件，持久层组件，基于AOP的设计模式，用接口规范您的代码，实现团队解耦。用JAVA Bean来做数据库对象，让您无需知道sql就可以实现数据库的CURD，支持子查询，联表查询。将项目的各种模块声明为Service，通过PluginFactory来管理Service的创建，装配，注入。
 
 更新日志：
-	20181218：1.修复Delete传入参数为Class的bug，2.支持无状态Token的获取，支持方法的权限认证（对象由Plugin代理）。3.支持hocon配置，用hocon配置代替prop文件作为配置，新增优化的Config库。实验性功能：支持方法参数加密，修改plugin的异常处理的bug，新增Bean的支持。
-	future：热加载。
+	20181218：
+	* 1.修复Delete传入参数为Class的bug，
+	* 2.支持无状态Token的获取，支持方法的权限认证（对象由Plugin代理）。
+	* 3.支持hocon配置，用hocon配置代替prop文件作为配置，新增优化的Config库。实验性功能：支持方法参数加密，修改plugin的异常处理的bug，新增Bean的支持。
+	* future：热加载。
 ## [介绍](https://github.com/tja414312570/YaNanFrame/wiki/home)
 
 ## 开始使用
