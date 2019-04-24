@@ -121,7 +121,7 @@ public class DBFactory {
 				try {
 					Class<?> clzz = Class.forName(namespace);
 					classHelper = ClassHelper.getClassHelper(clzz);
-				} catch (ClassNotFoundException e) {
+				} catch (Throwable e) {
 //						throw new HibernateInitException("wrapper interface class \""+namespace+"\" is not exists ! at file \""+file.getAbsolutePath()+"\"");
 				}
 				while (mappingIterator.hasNext()) {

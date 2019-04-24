@@ -56,7 +56,6 @@ public class TrimFragment extends FragmentSet implements FragmentBuilder {
 	@Override
 	public PreparedFragment prepared(Object... objects) {
 		PreparedFragment preparedFragment = PlugsFactory.getPlugsInstance(PreparedFragment.class);
-		String sql;
 		if (this.nextSet != null && this.childSet != null) {
 			PreparedFragment child = this.childSet.prepared(objects);
 			PreparedFragment next = this.nextSet.prepared(objects);

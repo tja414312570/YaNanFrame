@@ -134,7 +134,7 @@ public abstract class SqlFragment implements FragmentBuilder {
 				}
 			} else {
 				try {
-					typeClass = ClassLoader.loadClass(typeString);
+					typeClass = Class.forName(typeString);
 				} catch (ClassNotFoundException e) {
 					e.printStackTrace();
 					throw new RuntimeException(
