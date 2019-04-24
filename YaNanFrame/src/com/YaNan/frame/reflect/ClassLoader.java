@@ -22,7 +22,7 @@ import com.YaNan.frame.reflect.cache.ClassInfoCache;
  * @author YaNan
  *
  */
-public class ClassLoader {
+public class ClassLoader extends java.lang.ClassLoader{
 	private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	private Object loadObject;
 	private Class<?> loadClass;
@@ -393,20 +393,6 @@ public class ClassLoader {
 		return this.loadObject;
 	}
 
-	/*
-	 * set get loaded object or class
-	 */
-	/**
-	 * 加载类到此加载器
-	 * 
-	 * @param className
-	 * @return
-	 * @throws ClassNotFoundException
-	 */
-	public static Class<?> loadClass(String className) throws ClassNotFoundException {
-		return new ClassLoader(Class.forName(className)).getLoadedClass();
-	}
-
 	/**
 	 * 加载对象到该加载器，传入完整String完整类名，如果该类实例化需要 参数，请依次传入参数，否则第二个参数为空
 	 * 
@@ -717,6 +703,8 @@ public class ClassLoader {
 	public Object invokeMethod(Object object, String methodName, Class<?>[] parameterType, Object... args)
 			throws NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		Method method = this.infoCache.getMethod(methodName, parameterType);
+		if(method==null)
+			method = this.infoCache.getDeclaredMethod(methodName, parameterType);
 		if (method == null) {
 			StringBuilder ptStr = new StringBuilder(this.loadClass.getName()).append(".").append(methodName)
 					.append("(");
@@ -727,6 +715,7 @@ public class ClassLoader {
 			}
 			throw new NoSuchMethodException(ptStr.append(")").toString());
 		}
+		method.setAccessible(true);
 		return method.invoke(object, args);
 	}
 
@@ -1244,6 +1233,12 @@ public class ClassLoader {
 			   type.equals(short.class)||
 			   type.equals(boolean.class)?true:false;
 	}
+
+	public Class<?> loadClass(String clzzName, byte[] bytes) {
+		this.loadClass = defineClass(clzzName, bytes, 0,bytes.length);
+		return this.loadClass;
+	}
+
 	/**
 	 * 获取field为List的泛型
 	 * @param field
