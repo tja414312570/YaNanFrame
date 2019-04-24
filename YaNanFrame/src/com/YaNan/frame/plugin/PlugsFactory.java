@@ -6,6 +6,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -43,6 +44,7 @@ public class PlugsFactory {
 	private static volatile PlugsFactory instance;
 	private boolean available = false;
 	private List<File> configureLocation;
+	private String[] packageDirs;
 	/**
 	 * 组件的容器
 	 */
@@ -52,7 +54,10 @@ public class PlugsFactory {
 	private volatile List<RegisterDescription> registerList = new LinkedList<RegisterDescription>();
 	private Map<Object, RegisterDescription> objectRegister = new HashMap<Object, RegisterDescription>();
 	private Map<String, RegisterDescription> objectIdRegister = new HashMap<String, RegisterDescription>();
-
+	
+	public String[] getScanPath() {
+		return Arrays.copyOf(packageDirs, packageDirs.length);
+	}
 	public static void addBeanRegister(Object object, RegisterDescription description) {
 		instance.objectRegister.put(object, description);
 		instance.objectIdRegister.put(description.getConfig().getString("id"), description);
@@ -99,7 +104,7 @@ public class PlugsFactory {
 			for(File file : resourceFiles)
 				instance.configureLocation.add(file);
 		}
-		instance.init();
+		instance.init0();
 	}
 	
 	/**
@@ -136,7 +141,7 @@ public class PlugsFactory {
 	/**
 	 * 初始化组件，当所有的组件扫描完成之后，需要使用{@link #associate()}完成组件的关联
 	 */
-	public void init() {
+	public void init0() {
 		this.addPlugsByDefault(PlugsListener.class);// 添加两个Plugin自身支持需要的组件接口
 													// PlugsListener
 													// 用于组件初始化完成时的监听
@@ -164,7 +169,7 @@ public class PlugsFactory {
 			}
 		}
 		Config conf = ConfigContext.getConfig("Plugin");
-		String[] packageDirs = new String[1];
+		packageDirs = new String[1];
 		if (conf == null) {
 			packageDirs[0] = ".";
 		} else {
@@ -451,6 +456,8 @@ public class PlugsFactory {
 	 * @throws Exception
 	 */
 	public static boolean checkAvaliable() throws Exception {
+		if (instance == null)
+			PlugsFactory.init();
 		if (instance == null)
 			throw new Exception("YaNan.plugs service not initd");
 		if (!instance.isAvailable())
@@ -944,8 +951,10 @@ public class PlugsFactory {
 			throw new RuntimeException("colud not find bean defined id is \"" + beanId + "\"");
 		return t;
 	}
-	public static <T> T getBean(Class<?> beanClass) {
+	public static <T> T getBean(Class<T> beanClass) {
 		T t = BeanContainer.getContext().getBean(beanClass);
+		if (t == null)
+			t = getPlugsInstance(beanClass);
 		if (t == null)
 			throw new RuntimeException("colud not find bean defined class is \"" + beanClass.getName() + "\"");
 		return t;

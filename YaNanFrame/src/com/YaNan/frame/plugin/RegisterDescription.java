@@ -30,6 +30,7 @@ import com.YaNan.frame.plugin.handler.InstanceHandler;
 import com.YaNan.frame.plugin.handler.InvokeHandler;
 import com.YaNan.frame.plugin.handler.InvokeHandlerSet;
 import com.YaNan.frame.plugin.handler.PlugsHandler;
+import com.YaNan.frame.plugin.handler.ProxyHandler;
 import com.YaNan.frame.reflect.ClassLoader;
 import com.YaNan.frame.reflect.cache.ClassHelper;
 import com.YaNan.frame.reflect.cache.ClassInfoCache;
@@ -42,15 +43,15 @@ import com.typesafe.config.impl.SimpleConfigObject;
 /**
  * 组件描述类 用于创建组件时的组件信息 v1.0 支持通过Class的Builder方式 v1.1 支持通过Comp文件的Builder方式 v1.2
  * 支持创建默认的Builder方式 v1.3 支持描述器的属性 v1.4 将InvokeHandler的创建迁移到组件初始化时，大幅度提高代理执行效率
- * v1.5 20180910 重新构建InvokeHandler的逻辑，提高aop的效率 
- * v1.6 20180921 添加FieldHandler和ConstructorHandler 实现方法拦截与构造器拦截
- * v1.7 20190319 支持构造器参数，支持初始化后调用方法参数，支持构造器和方法匹配，参数数据结构多种支持，参数类型自动匹配
+ * v1.5 20180910 重新构建InvokeHandler的逻辑，提高aop的效率 v1.6 20180921
+ * 添加FieldHandler和ConstructorHandler 实现方法拦截与构造器拦截
+ * v1.6 20190319 支持构造器参数，支持初始化后调用方法参数，支持构造器和方法匹配，参数数据结构多种支持，参数类型自动匹配
  * 
  * @author yanan
  *
  */
 public class RegisterDescription {
-	private Map<Integer, Object> proxyContainer;
+	private volatile Map<Integer, Object> proxyContainer;
 	/**
 	 * 组件类
 	 */
@@ -137,6 +138,22 @@ public class RegisterDescription {
 	 */
 	private Method[] initMethod;
 	private String id;
+	/**
+	 * 链接对象
+	 */
+	private RegisterDescription linkRegister;
+	/**
+	 * 链接之后的原代理的代理对象
+	 */
+	private Object linkProxy;
+
+	public RegisterDescription getLinkRegister() {
+		return linkRegister;
+	}
+
+	public Object getLinkProxy() {
+		return linkProxy;
+	}
 
 	public ClassLoader getProxyClassLoader() {
 		return loader;
@@ -164,6 +181,15 @@ public class RegisterDescription {
 		this.attribute = register.attribute();
 		this.description = register.description();
 		this.proxyModel = register.model();
+		String[] methods = register.method();
+		this.initMethod = new Method[methods.length];
+		int i = 0;
+		for(;i<methods.length;i++)
+			try {
+				this.initMethod[i] = this.loader.getDeclaredMethod(methods[i]);
+			} catch (NoSuchMethodException | SecurityException e) {
+				throw new PluginInitException("failed to get init method \""+methods[i]+"\"",e);
+			}
 		checkPlugs(this.plugs);
 		PlugsFactory.getInstance().addRegisterHandlerQueue(this);
 	}
@@ -1143,6 +1169,19 @@ public class RegisterDescription {
 
 	@SuppressWarnings("unchecked")
 	private <T> T getNewInstance(Class<T> plug, Constructor<?> constructor, Object... args) {
+		if(this.linkRegister!=null){//如果有链接的注册器
+			//获取链接类的相同构造器
+			try {
+				if(this.linkProxy==null){
+					Object linkObject = this.linkRegister.getRegisterInstance(plug, args);
+					this.linkProxy = ProxyHandler.newCglibProxy(this.getRegisterClass(), this,
+							constructor.getParameterTypes(),linkObject, args);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return (T) linkProxy;
+		}
 		Object proxy = null;
 		Object target = null;
 		InvokeHandlerSet invokeHandlerSet = null;
@@ -1309,7 +1348,6 @@ public class RegisterDescription {
 			proxy = this.getProxyInstance(plug, hashKey, args);
 			if (proxy == null)
 				proxy = this.getRegisterNewInstance(plug, args);
-			this.createProxyContainer();
 			proxyContainer.put(hash(plug, args), proxy);
 		} else {
 			proxy = this.getRegisterNewInstance(plug, args);
@@ -1337,7 +1375,8 @@ public class RegisterDescription {
 	@SuppressWarnings("unchecked")
 	private <T> T getProxyInstance(Class<T> plug, int hashKey, Object... args) {
 		Object proxy = null;
-		this.createProxyContainer();
+		if(this.proxyContainer==null)
+			this.createProxyContainer();
 		proxy = this.proxyContainer.get(hashKey);
 		return (T) proxy;
 	}
@@ -1454,5 +1493,13 @@ public class RegisterDescription {
 
 	public void setConfig(Config config) {
 		this.config = config;
+	}
+
+	public void updateRegister(Class<?> registerClass) {
+		this.signlton = true;//启用单例
+		if(this.proxyContainer != null)
+			this.proxyContainer.clear();//清理代理容器
+		this.linkRegister = new RegisterDescription(registerClass);//设置链接注册器
+		this.linkProxy = null;//此时应将代理重置，以更新具体对象
 	}
 }

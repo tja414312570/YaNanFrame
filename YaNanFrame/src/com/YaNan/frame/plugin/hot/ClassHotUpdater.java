@@ -70,7 +70,6 @@ public class ClassHotUpdater implements Runnable, ServletContextListener {
 			md.update(bytes, 0, bytes.length);
 			BigInteger bigInt = new BigInteger(1, md.digest());
 			long h = bigInt.longValue();
-			System.out.println(h<0l?~h+1:h);
 			return h<0l?~h+1:h;
 		} catch (NoSuchAlgorithmException e) {
 			return file.hashCode() + file.lastModified();
