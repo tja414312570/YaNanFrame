@@ -3,6 +3,7 @@ package com.YaNan.frame.plugin.beans;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.plugin.RegisterDescription;
 
 
@@ -39,14 +40,19 @@ public class BeanContainer {
 	}
 	@SuppressWarnings("unchecked")
 	public <T> T getBean(String beanId) {
-		if(this.beanContainer==null)
-			throw new RuntimeException("bean context is not init or no bean defined");
+		checkPluginAvailable();
 		return (T) this.beanContainer.get(beanId);
+	}
+	private void checkPluginAvailable() {
+		if(this.beanContainer==null){
+			PlugsFactory.init();
+			if(this.beanContainer==null)
+				throw new RuntimeException("bean context is not init or no bean defined");
+		}
 	}
 	@SuppressWarnings("unchecked")
 	public <T> T getBean(Class<?> beanClass) {
-		if(this.beanContainer==null)
-			throw new RuntimeException("bean context is not init or no bean defined");
+		checkPluginAvailable();
 		return (T) this.beanClassContainer.get(beanClass);
 	}
 }

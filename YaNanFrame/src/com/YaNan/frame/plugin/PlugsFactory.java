@@ -54,10 +54,11 @@ public class PlugsFactory {
 	private volatile List<RegisterDescription> registerList = new LinkedList<RegisterDescription>();
 	private Map<Object, RegisterDescription> objectRegister = new HashMap<Object, RegisterDescription>();
 	private Map<String, RegisterDescription> objectIdRegister = new HashMap<String, RegisterDescription>();
-	
+
 	public String[] getScanPath() {
 		return Arrays.copyOf(packageDirs, packageDirs.length);
 	}
+
 	public static void addBeanRegister(Object object, RegisterDescription description) {
 		instance.objectRegister.put(object, description);
 		instance.objectIdRegister.put(description.getConfig().getString("id"), description);
@@ -95,18 +96,19 @@ public class PlugsFactory {
 	// Register >> Service array
 	/**
 	 * 初始化组件
+	 * 
 	 * @param resources
 	 */
-	public static void init(String... resources){
+	public static void init(String... resources) {
 		PlugsFactory instance = getInstance();
-		for(String res : resources){
+		for (String res : resources) {
 			List<File> resourceFiles = ResourceManager.getResource(res);
-			for(File file : resourceFiles)
+			for (File file : resourceFiles)
 				instance.configureLocation.add(file);
 		}
 		instance.init0();
 	}
-	
+
 	/**
 	 * 获取所有注册器
 	 * 
@@ -126,7 +128,7 @@ public class PlugsFactory {
 	}
 
 	public static PlugsFactory getInstance() {
-		if (instance == null){
+		if (instance == null) {
 			synchronized (PlugsFactory.class) {
 				if (instance == null)
 					synchronized (PlugsFactory.class) {
@@ -146,12 +148,13 @@ public class PlugsFactory {
 													// PlugsListener
 													// 用于组件初始化完成时的监听
 		this.addPlugsByDefault(InvokeHandler.class);// InvokeHandler用于提供方法拦截接口的支持
-		//判断资源文件是否存在,如果无资源文件，直接扫描所有的plugs文件
-		if(this.configureLocation.isEmpty()){
-			//获取基础的配置文件
-			File baseFile = new File(this.getClass().getClassLoader().getResource("").getPath().replace("%20", " "),"plugin.conf");
-			//如果文件不存在，扫描所有的文件
-			if(!baseFile.exists()){
+		// 判断资源文件是否存在,如果无资源文件，直接扫描所有的plugs文件
+		if (this.configureLocation.isEmpty()) {
+			// 获取基础的配置文件
+			File baseFile = new File(this.getClass().getClassLoader().getResource("").getPath().replace("%20", " "),
+					"plugin.conf");
+			// 如果文件不存在，扫描所有的文件
+			if (!baseFile.exists()) {
 				Path path = new Path(this.getClass().getClassLoader().getResource("").getPath().replace("%20", " "));
 				path.filter("**.plugs", "**.comps", "**.conf");
 				path.scanner(new PathInter() {
@@ -160,11 +163,11 @@ public class PlugsFactory {
 						addPlugs(file);
 					}
 				});
-			}else{//否则加入文件
+			} else {// 否则加入文件
 				addPlugs(baseFile);
 			}
-		}else{
-			for(File file : this.configureLocation){
+		} else {
+			for (File file : this.configureLocation) {
 				addPlugs(file);
 			}
 		}
@@ -216,26 +219,26 @@ public class PlugsFactory {
 			if (conf.hasPath("includes")) {
 				if (conf.isList("includes")) {
 					List<String> dirs = conf.getStringList("includes");
-					for(String dir : dirs){
+					for (String dir : dirs) {
 						List<File> resource = ResourceManager.getResource(dir);
-						for(File file : resource){
+						for (File file : resource) {
 							addPlugs(file);
 						}
 					}
 				} else {
 					String confDirs = conf.getString("includes");
 					String[] dirs = confDirs.split(",");
-					for(String dir : dirs){
+					for (String dir : dirs) {
 						List<File> resource = ResourceManager.getResource(dir);
-						for(File file : resource){
+						for (File file : resource) {
 							addPlugs(file);
 						}
 					}
 				}
 			}
 		}
-		
-		//扫描类
+
+		// 扫描类
 		for (String packDir : packageDirs) {
 			if (packDir == null)
 				continue;
@@ -248,8 +251,7 @@ public class PlugsFactory {
 				}
 			});
 		}
-		
-		
+
 		this.associate();
 		available = true;
 		this.initRegisterDescriptionHandler();
@@ -273,13 +275,13 @@ public class PlugsFactory {
 			if (plugs != null)
 				for (Class<?> plugInterface : plugs) {
 					Plug plug = this.plugsList.get(plugInterface);
-					if (plug == null){
+					if (plug == null) {
 						this.addPlugsService(plugInterface);
 						plug = this.plugsList.get(plugInterface);
 						if (plug == null)
 							try {
-								throw new Exception("register " + registerDescription.getRegisterClass().getName() + " implements "
-										+ plugInterface.getName() + " not exists ");
+								throw new Exception("register " + registerDescription.getRegisterClass().getName()
+										+ " implements " + plugInterface.getName() + " not exists ");
 							} catch (Exception e) {
 								throw new PluginInitException(e);
 							}
@@ -326,14 +328,15 @@ public class PlugsFactory {
 				for (Object conf : list) {
 					if (conf == null)
 						continue;
-					if(conf.getClass().equals(String.class)){
-						Class<?> clzz = Class.forName((String)conf);
-						if(clzz.isInterface()){
+					if (conf.getClass().equals(String.class)) {
+						Class<?> clzz = Class.forName((String) conf);
+						if (clzz.isInterface()) {
 							this.addPlugsService(clzz);
-						}else
+						} else
 							this.addPlugsAuto(clzz);
-					}else if(conf.getClass().equals(SimpleConfigObject.class)){
-						RegisterDescription registerDescription = new RegisterDescription(((SimpleConfigObject)conf).toConfig());
+					} else if (conf.getClass().equals(SimpleConfigObject.class)) {
+						RegisterDescription registerDescription = new RegisterDescription(
+								((SimpleConfigObject) conf).toConfig());
 						RegisterContatiner.put(registerDescription.getRegisterClass(), registerDescription);
 					}
 				}
@@ -369,10 +372,11 @@ public class PlugsFactory {
 			}
 		}
 	}
+
 	public void addPlugsAuto(Class<?> cls) {
 		Service service = cls.getAnnotation(Service.class);
 		Register register = cls.getAnnotation(Register.class);
-		if(service!=null||register!=null){
+		if (service != null || register != null) {
 			if (service != null) {// 如果是Service
 				PlugsDescription plugsDescrption = new PlugsDescription(service, cls);
 				Plug plug = new Plug(plugsDescrption);
@@ -386,11 +390,11 @@ public class PlugsFactory {
 					throw e;
 				}
 			}
-		}else if(cls.isInterface()){
+		} else if (cls.isInterface()) {
 			PlugsDescription plugsDescrption = new PlugsDescription(service, cls);
 			Plug plug = new Plug(plugsDescrption);
 			this.plugsList.put(cls, plug);
-		}else{
+		} else {
 			try {
 				RegisterDescription registerDescription = new RegisterDescription(cls);
 				RegisterContatiner.put(cls, registerDescription);
@@ -398,14 +402,16 @@ public class PlugsFactory {
 				throw e;
 			}
 		}
-		
+
 	}
+
 	public void addPlugsService(Class<?> cls) {
 		Service service = cls.getAnnotation(Service.class);
 		PlugsDescription plugsDescrption = new PlugsDescription(service, cls);
 		Plug plug = new Plug(plugsDescrption);
 		this.plugsList.put(cls, plug);
 	}
+
 	public void addPlugsRegister(Class<?> cls) {
 		Register register = cls.getAnnotation(Register.class);
 		try {
@@ -415,6 +421,7 @@ public class PlugsFactory {
 			throw e;
 		}
 	}
+
 	/**
 	 * 通过默认的方式添加组件
 	 * 
@@ -456,10 +463,11 @@ public class PlugsFactory {
 	 * @throws Exception
 	 */
 	public static boolean checkAvaliable() throws Exception {
-		if (instance == null)
+		if (instance == null) {
 			PlugsFactory.init();
-		if (instance == null)
-			throw new Exception("YaNan.plugs service not initd");
+			if (instance == null)
+				throw new Exception("YaNan.plugs service not initd");
+		}
 		if (!instance.isAvailable())
 			throw new Exception(
 					"plugs unavailable ! this error may arise because a static field uses the PlugsFactory's proxy");
@@ -951,6 +959,7 @@ public class PlugsFactory {
 			throw new RuntimeException("colud not find bean defined id is \"" + beanId + "\"");
 		return t;
 	}
+
 	public static <T> T getBean(Class<T> beanClass) {
 		T t = BeanContainer.getContext().getBean(beanClass);
 		if (t == null)
@@ -959,6 +968,7 @@ public class PlugsFactory {
 			throw new RuntimeException("colud not find bean defined class is \"" + beanClass.getName() + "\"");
 		return t;
 	}
+
 	public static <T> T getPlugsInstanceNewByParamType(Class<T> impl, Class<?>[] parameterType, Object... arguments) {
 		try {
 			// 获取一个注册描述
