@@ -20,15 +20,18 @@ public class ResourceManager {
 			throw new RuntimeException("path express is null");
 		int cpIndex = pathExpress.indexOf(CLASSPATH);
 		if(cpIndex>-1)
-			pathExpress= ResourceManager.class.getClassLoader().getResource("").getPath().replace("%20"," ")+pathExpress.substring(cpIndex+CLASSPATH.length());
+			pathExpress= classPath()+pathExpress.substring(cpIndex+CLASSPATH.length());
 		cpIndex = pathExpress.indexOf(PROJECT);
 		if(cpIndex>-1)
 			try {
-				pathExpress= new File("").getCanonicalPath().replace("%20"," ")+pathExpress.substring(cpIndex+PROJECT.length());
+				pathExpress= projectPath()+pathExpress.substring(cpIndex+PROJECT.length());
 			} catch (IOException e) {
 				throw new RuntimeException("failed to get project director",e);
 			}
 		return pathExpress;
+	}
+	public static String projectPath() throws IOException {
+		return new File("").getCanonicalPath().replace("%20"," ");
 	}
 	/**
 	 * 通过路径表达式获取符合该路劲的所有资源
@@ -72,5 +75,11 @@ public class ResourceManager {
 			}
 		});
 		return fileList;
+	}
+	public static String classPath() {
+		return ResourceManager.class.getClassLoader().getResource("").getPath().replace("%20"," ");
+	}
+	public static String getClassPath(String name) {
+		return name.replace("%20"," ").replace(ResourceManager.classPath(), "").replaceAll("/|\\\\", ".");
 	}
 }
