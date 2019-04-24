@@ -3,7 +3,6 @@ package com.YaNan.frame.RTDT;
 import java.io.IOException;
 
 import javax.websocket.CloseReason;
-import javax.websocket.CloseReason.CloseCodes;
 import javax.websocket.EndpointConfig;
 import javax.websocket.OnClose;
 import javax.websocket.OnError;

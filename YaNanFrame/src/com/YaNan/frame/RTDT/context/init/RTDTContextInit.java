@@ -58,17 +58,15 @@ public class RTDTContextInit implements javax.servlet.ServletContextListener {
 			Iterator<String> iterator = map.keySet().iterator();
 			while (iterator.hasNext()) {
 				String name = (String) iterator.next();
-				System.out.println("***********************************");
-				System.out.println("action:" + name);
-				System.out.println("info:" + (map.get(name)).toString());
+				log.debug("action:" + name);
+				log.debug("info:" + (map.get(name)).toString());
 			}
 			Map<String, NotifyEntity> nm = NotifyManager.getManager().getNotifyEntitys();
 			iterator = nm.keySet().iterator();
 			while (iterator.hasNext()) {
 				String name = (String) iterator.next();
-				System.out.println("***********************************");
-				System.out.println("notify:" + name);
-				System.out.println("info:" + nm.get(name).toString());
+				log.debug("notify:" + name);
+				log.debug("info:" + nm.get(name).toString());
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
