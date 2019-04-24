@@ -17,6 +17,7 @@ import com.YaNan.frame.hibernate.WebPath;
 import com.YaNan.frame.logging.Log;
 import com.YaNan.frame.path.PackageScanner;
 import com.YaNan.frame.path.PackageScanner.ClassInter;
+import com.YaNan.frame.path.ResourceManager;
 import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.servlets.annotations.RESPONSE_METHOD;
 /**
@@ -94,7 +95,7 @@ public class ServletBuilder{
 	}
 	public void initByScanner(){
 		if(this.classPath==null)
-			this.classPath = new File(this.getClass().getClassLoader().getResource("").getPath().replace("%20"," "));
+			this.classPath = new File(ResourceManager.classPath());
 		PackageScanner scanner = new PackageScanner();
 		scanner.setClassPath(classPath.getPath());
 		scanner.doScanner(new ClassInter(){
