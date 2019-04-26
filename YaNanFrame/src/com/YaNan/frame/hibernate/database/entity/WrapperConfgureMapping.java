@@ -3,7 +3,7 @@ package com.YaNan.frame.hibernate.database.entity;
 import java.util.Arrays;
 
 import com.YaNan.frame.hibernate.database.DataBaseConfigure;
-import com.YaNan.frame.util.beans.xml.Element;
+import com.YaNan.frame.utils.beans.xml.Element;
 
 @Element(name="/Hibernate")
 public class WrapperConfgureMapping {

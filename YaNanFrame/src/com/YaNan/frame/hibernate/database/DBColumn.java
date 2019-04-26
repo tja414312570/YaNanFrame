@@ -3,11 +3,12 @@ package com.YaNan.frame.hibernate.database;
 import java.lang.reflect.Field;
 import java.sql.Date;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.YaNan.frame.hibernate.database.DBInterface.MySql;
 import com.YaNan.frame.hibernate.database.DBInterface.mySqlInterface;
 import com.YaNan.frame.hibernate.database.annotation.Column;
-import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugin.PlugsFactory;
 
 /**
  * java字段与数据库的列的映射实体类</br>
@@ -32,7 +33,7 @@ public class DBColumn implements mySqlInterface {
 	private String Annotations;
 	private String charset="";
 	private String collate="";
-	private final transient Log log = PlugsFactory.getPlugsInstance(Log.class,DBColumn.class);
+	private final transient Logger log = LoggerFactory.getLogger(DBColumn.class);
 
 	public DBColumn(Field field, Column column) {
 		setField(field);

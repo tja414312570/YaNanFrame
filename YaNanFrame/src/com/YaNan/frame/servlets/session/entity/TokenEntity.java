@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.YaNan.frame.servlets.session.Token;
-import com.YaNan.frame.util.PathMatcher;
+import com.YaNan.frame.utils.PathMatcher;
 
 public class TokenEntity {
 	private String namespace;

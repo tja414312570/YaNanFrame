@@ -3,10 +3,11 @@ package com.YaNan.frame.plugin.autowired.property;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Parameter;
 
-import com.YaNan.frame.logging.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.YaNan.frame.plugin.FieldDesc;
 import com.YaNan.frame.plugin.PluginRuntimeException;
-import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.plugin.RegisterDescription;
 import com.YaNan.frame.plugin.annotations.Register;
 import com.YaNan.frame.plugin.annotations.Support;
@@ -19,7 +20,7 @@ import com.YaNan.frame.reflect.ClassLoader;
 @Support(Property.class)
 @Register(attribute = "*", description = "Property文件的属性的注入")
 public class PropertyWiredHandler implements InvokeHandler, InstanceHandler, FieldHandler {
-	private Log log = PlugsFactory.getPlugsInstance(Log.class,
+	private Logger log = LoggerFactory.getLogger(
 			PropertyWiredHandler.class);
 
 	@Override

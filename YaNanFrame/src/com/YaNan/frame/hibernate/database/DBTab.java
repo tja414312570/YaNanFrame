@@ -11,15 +11,16 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.YaNan.frame.hibernate.database.DBInterface.mySqlInterface;
 import com.YaNan.frame.hibernate.database.annotation.Column;
 import com.YaNan.frame.hibernate.database.annotation.Tab;
 import com.YaNan.frame.hibernate.database.cache.Class2TabMappingCache;
 import com.YaNan.frame.hibernate.database.cache.QueryCache;
-import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.reflect.ClassLoader;
-import com.YaNan.frame.util.StringUtil;
+import com.YaNan.frame.utils.StringUtil;
 import com.mysql.jdbc.Connection;
 import com.mysql.jdbc.PreparedStatement;
 
@@ -43,7 +44,7 @@ public class DBTab implements mySqlInterface {
 	private Map<String, ResultSet> session = new HashMap<String, ResultSet>();
 	private String value;
 	private boolean exist;
-	private final Log log = PlugsFactory.getPlugsInstance(Log.class, DBTab.class);
+	private final Logger log = LoggerFactory.getLogger( DBTab.class);
 	private String[] columnsArray;
 
 	public Object getDataTablesObject() {
@@ -219,7 +220,7 @@ public class DBTab implements mySqlInterface {
 		} catch (SQLException | SecurityException e) {
 			log.error("error to execute sql:" + delete.create());
 			log.error("parameter:" + delete.getParameters());
-			log.error(e);
+			log.error(e.getMessage(),e);
 		}finally {
 			if(ps!=null)
 				try {
@@ -227,7 +228,7 @@ public class DBTab implements mySqlInterface {
 				} catch (SQLException e) {
 					log.error("error to close preparesStatement at sql:" + delete.create());
 					log.error("parameter:" + delete.getParameters());
-					log.error(e);
+					log.error(e.getMessage(),e);
 				}
 		}
 		return 0;
@@ -349,7 +350,7 @@ public class DBTab implements mySqlInterface {
 		} catch (SQLException | SecurityException e) {
 			log.error("error to execute sql:" + insert.create());
 			log.error("parameter:" + insert.getParameters());
-			log.error(e);
+			log.error(e.getMessage(),e);
 		}
 		return gk;
 	}
@@ -373,7 +374,7 @@ public class DBTab implements mySqlInterface {
 		} catch (SQLException | SecurityException e) {
 			log.error("error to execute sql:" + insert.create());
 			log.error("parameter:" + insert.getParameters());
-			log.error(e);
+			log.error(e.getMessage(),e);
 		}
 		return executeResult;
 	}
@@ -451,7 +452,7 @@ public class DBTab implements mySqlInterface {
 			if (this.AIField != null && rs.next())
 				loader.set(AIField, rs.getInt(1));
 		} catch (InvocationTargetException | NoSuchMethodException e) {
-			log.error(e);
+			log.error(e.getMessage(),e);
 		}
 		rs.close();
 		ps.close();
@@ -563,7 +564,7 @@ public class DBTab implements mySqlInterface {
 					} catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException
 							| IllegalArgumentException | SecurityException | SQLException e) {
 						log.error("sql:" + query.create());
-						log.error(e);
+						log.error(e.getMessage(),e);
 						continue;
 					}
 				}
@@ -574,7 +575,7 @@ public class DBTab implements mySqlInterface {
 			QueryCache.getCache().addQuery(this.getName(), sql, dataTablesObjects);
 		} catch (SQLException e) {
 			log.error("sql:" + query.create());
-			log.error(e);
+			log.error(e.getMessage(),e);
 		}
 		return dataTablesObjects;
 	}
@@ -606,7 +607,7 @@ public class DBTab implements mySqlInterface {
 					} catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException
 							| IllegalArgumentException | SecurityException | SQLException e) {
 						log.error("sql:" + sql);
-						log.error(e);
+						log.error(e.getMessage(),e);
 						continue;
 					}
 				}
@@ -616,7 +617,7 @@ public class DBTab implements mySqlInterface {
 			ps.close();
 		} catch (SQLException e) {
 			log.error("sql:" + sql);
-			log.error(e);
+			log.error(e.getMessage(),e);
 		}
 		QueryCache.getCache().addQuery(this.getName(), sql, dataTablesObjects);
 		return dataTablesObjects;
@@ -732,7 +733,7 @@ public class DBTab implements mySqlInterface {
 		} catch (SQLException | SecurityException e) {
 			log.error("error to execute sql:" + update.create());
 			log.error("parameter:" + update.getParameters());
-			log.error(e);
+			log.error(e.getMessage(),e);
 		}finally {
 			if(ps!=null)
 				try {
@@ -740,7 +741,7 @@ public class DBTab implements mySqlInterface {
 				} catch (SQLException e) {
 					log.error("error to close preparesStatement at sql:" + update.create());
 					log.error("parameter:" + update.getParameters());
-					log.error(e);
+					log.error(e.getMessage(),e);
 				}
 		}
 		return 0;

@@ -3,11 +3,12 @@ package com.YaNan.frame.RPC.ServletSupport;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.YaNan.frame.RPC.Implements.RequestType;
 import com.YaNan.frame.RPC.TokenSupport.RPCToken;
 import com.YaNan.frame.RPC.customer.RPCService;
-import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.reflect.ClassLoader;
 import com.YaNan.frame.servlets.session.annotation.TokenObject;
 import com.YaNan.frame.servlets.session.servletSupport.TokenServlet;
@@ -21,7 +22,7 @@ import com.YaNan.frame.servlets.session.servletSupport.TokenServlet;
  *
  */
 public abstract class DistributedTokenServlet extends TokenServlet{
-	private final Log log = PlugsFactory.getPlugsInstance(Log.class, DistributedTokenServlet.class);
+	private final Logger log = LoggerFactory.getLogger( DistributedTokenServlet.class);
 	public void doOther(ClassLoader loader){
 		Field[] fields = loader.getDeclaredFields();
 		for(Field field :fields){
@@ -45,7 +46,7 @@ public abstract class DistributedTokenServlet extends TokenServlet{
 						}
 					} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
 							| NoSuchMethodException | SecurityException e) {
-						log.error(e);
+						log.error(e.getMessage(),e);
 					}
 				}
 			}

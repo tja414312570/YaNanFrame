@@ -25,7 +25,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import com.YaNan.frame.logging.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.YaNan.frame.plugin.Plug;
 import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.plugin.annotations.Register;
@@ -43,7 +45,7 @@ import com.YaNan.frame.servlets.parameter.annotations.RequestHeader;
 import com.YaNan.frame.servlets.parameter.annotations.RequestParam;
 import com.YaNan.frame.servlets.parameter.annotations.SessionAttributes;
 import com.YaNan.frame.servlets.parameter.annotations.UUID;
-import com.YaNan.frame.util.PathMatcher;
+import com.YaNan.frame.utils.PathMatcher;
 
 /**
  * 2018-7-15 重新修改parseBaseType代码，将包装类型和原始类型分开 2018-7-9 重新修改获取参数逻辑 默认的参数调配器，优先级最低
@@ -69,7 +71,7 @@ public class DefaultParameterHandler implements ParameterHandler {
 	private HttpServletResponse servletResponse;
 	private ServletBean servletBean;
 	private ParameterHandlerCache parameterHandlerCache;
-	private Log log = PlugsFactory.getPlugsInstance(Log.class, this.getClass());
+	private Logger log = LoggerFactory.getLogger( this.getClass());
 
 	@Override
 	public void initHandler(HttpServletRequest request, HttpServletResponse response, ServletBean servletBean,

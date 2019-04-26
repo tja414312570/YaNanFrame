@@ -12,9 +12,10 @@ import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.Node;
 import org.dom4j.io.SAXReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.YaNan.frame.hibernate.WebPath;
-import com.YaNan.frame.logging.Log;
 import com.YaNan.frame.path.PackageScanner;
 import com.YaNan.frame.path.PackageScanner.ClassInter;
 import com.YaNan.frame.path.ResourceManager;
@@ -30,7 +31,7 @@ public class ServletBuilder{
 	private static ServletBuilder servletInstance;
 	private ServletMapping servletMannager;
 	private List<Document> servletPaths = new ArrayList<Document>();
-	private final Log log = PlugsFactory.getPlugsInstance(Log.class, ServletBuilder.class);
+	private final Logger log = LoggerFactory.getLogger( ServletBuilder.class);
 	private File classPath;
 
 	private ServletBuilder() {

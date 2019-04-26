@@ -4,8 +4,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugin.PlugsFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 
 /**
@@ -17,7 +18,7 @@ import com.YaNan.frame.plugin.PlugsFactory;
  */
 public class WebPath {
 	private static WebPath webpath;
-	private final Log log = PlugsFactory.getPlugsInstance(Log.class, WebPath.class);
+	private final Logger log = LoggerFactory.getLogger( WebPath.class);
 	private Map<String, Path> map = new HashMap<String, Path>();
 
 	private WebPath() {
@@ -38,7 +39,7 @@ public class WebPath {
 	}
 
 	public Path get(String name) {
-		if(!this.map.containsKey(name))log.error(new Exception("path id ["+name+"] is not exists,please check init configure file at <init.xml>!"));
+		if(!this.map.containsKey(name))log.error("",new Exception("path id ["+name+"] is not exists,please check init configure file at <init.xml>!"));
 		return this.map.get(name);
 	}
 

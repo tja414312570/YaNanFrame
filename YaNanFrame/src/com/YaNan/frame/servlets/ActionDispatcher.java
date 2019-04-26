@@ -18,12 +18,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugin.PlugsFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.YaNan.frame.reflect.ClassLoader;
 import com.YaNan.frame.servlets.annotations.RESPONSE_METHOD;
 import com.YaNan.frame.servlets.validator.annotations.Validate;
-import com.YaNan.frame.util.StringUtil;
+import com.YaNan.frame.utils.StringUtil;
 
 /**
  * 	action组件2.0.0，新增注解配置，新增验证器，Action注解@Action,配合可重复注解@Result，验证器注解@Valiate
@@ -42,7 +43,7 @@ public class ActionDispatcher extends HttpServlet implements ServletDispatcher,S
 	 * 
 	 */
 	// 日志类，用于输出日志
-	private final Log log = PlugsFactory.getPlugsInstance(Log.class, ActionDispatcher.class);
+	private final Logger log = LoggerFactory.getLogger( ActionDispatcher.class);
 	protected boolean showServerInfo = true;
 	private static final Class<?>[] annotations = {com.YaNan.frame.servlets.annotations.Action.class};
 	private static final ServletMappingBuilder servletMappingBuilder=new ServletBeanBuilder();
@@ -99,8 +100,7 @@ public class ActionDispatcher extends HttpServlet implements ServletDispatcher,S
 						String filedStr = splInx>0?fieldstr.substring(0, splInx):fieldstr;
 						Field field=getField(loader, filedStr);
 						if(field==null){
-							log.error(new ServletException("Action [ "+urlMapping+" ] error,The parameter [ "+filedStr+" ] that needs to be validated does not exist! at class : "+bean.getServletClass().getName()));
-							throw new ServletException("Action [ "+urlMapping+" ] error,The parameter [ "+filedStr+" ] that needs to be validated does not exist! at class : "+bean.getServletClass().getName());
+							log.error("",new ServletException("Action [ "+urlMapping+" ] error,The parameter [ "+filedStr+" ] that needs to be validated does not exist! at class : "+bean.getServletClass().getName()));
 						}
 						if(splInx>0){
 							String defaultValue = fieldstr.substring(splInx);
@@ -109,7 +109,7 @@ public class ActionDispatcher extends HttpServlet implements ServletDispatcher,S
 						}
 						Validate validate = field.getAnnotation(Validate.class);
 						if(validate == null){
-							log.error(new ServletException("Action [ "+urlMapping+" ] error,The parameter [ "+filedStr+"] that needs to be validated but the validate annotations does not exist! at class : "+bean.getServletClass().getName()));
+							log.error("",new ServletException("Action [ "+urlMapping+" ] error,The parameter [ "+filedStr+"] that needs to be validated but the validate annotations does not exist! at class : "+bean.getServletClass().getName()));
 							//response.sendError(sc, msg);
 							
 							throw new ServletException("Action [ "+urlMapping+" ] error,The parameter [ "+filedStr+"] that needs to be validated but the validate annotations does not exist! at class : "+bean.getServletClass().getName());
@@ -141,7 +141,7 @@ public class ActionDispatcher extends HttpServlet implements ServletDispatcher,S
 			}
 		} else {
 			Exception exception = new ServletException("Could not find action \"" + urlMapping+"\"");
-			log.error(exception);
+			log.error(exception.getMessage(),exception);
 			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,"Could not find action \"" + urlMapping+"\"");
 			exception.printStackTrace();
 			return ;

@@ -19,7 +19,7 @@ import com.YaNan.frame.RPC.utils.RPCRequest;
 import com.YaNan.frame.hibernate.WebPath;
 import com.YaNan.frame.reflect.ClassLoader;
 import com.YaNan.frame.servlets.session.Token;
-import com.YaNan.frame.util.beans.XMLBean;
+import com.YaNan.frame.utils.beans.XMLBean;
 
 public class RPCService {
 	private static RPCService manager;

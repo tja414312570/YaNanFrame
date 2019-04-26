@@ -6,9 +6,6 @@ import com.YaNan.frame.RTDT.context.NotifyManager;
 import com.YaNan.frame.RTDT.context.SocketConfigurator;
 import com.YaNan.frame.RTDT.entity.ActionEntity;
 import com.YaNan.frame.RTDT.entity.NotifyEntity;
-import com.YaNan.frame.logging.DefaultLog;
-import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.plugin.annotations.Register;
 
 import java.util.ArrayList;
@@ -23,12 +20,15 @@ import javax.websocket.server.ServerContainer;
 import javax.websocket.server.ServerEndpointConfig;
 import javax.websocket.server.ServerEndpointConfig.Configurator;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Register
 public class RTDTContextInit implements javax.servlet.ServletContextListener {
 	final String path = "/";
 	ActionManager manager = ActionManager.getActionManager();
 	Thread thread = null;
-	private Log log = PlugsFactory.getPlugsInstanceWithDefault(Log.class,DefaultLog.class, RTDTContextInit.class);
+	private Logger log = LoggerFactory.getLogger(RTDTContextInit.class);
 
 	public void contextDestroyed(ServletContextEvent arg0) {
 		log.debug("Destory the RTDT services");

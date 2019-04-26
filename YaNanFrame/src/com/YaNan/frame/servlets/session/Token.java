@@ -15,7 +15,9 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.YaNan.frame.logging.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.plugin.RegisterDescription;
 import com.YaNan.frame.servlets.session.entity.TokenCell;
@@ -34,7 +36,7 @@ public class Token {
 	private volatile Set<String> roles = new HashSet<String>();
 	private boolean valid;
 	private long lastuse;
-	private Log log = PlugsFactory.getPlugsInstance(Log.class, Token.class);
+	private Logger log = LoggerFactory.getLogger( Token.class);
 	/************************超时，有效***************/
 	public int getTimeOut() {
 		return timeOut;
@@ -111,7 +113,7 @@ public class Token {
 				try {
 					listenerList.add(reg.getRegisterInstance(TokenListener.class));
 				} catch (Exception e) {
-					log.error(e);
+					log.error(e.getMessage(),e);
 				}
 			}
 		}

@@ -9,9 +9,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.YaNan.frame.hibernate.database.DBInterface.OperateImplement;
-import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugin.PlugsFactory;
 
 /**
  * 该类用于提供给DATab的query一个查询的SQL语句的生成方法 提过一个构造器，传入一个DBTab型的表对象，应为他需要使用DBTab context
@@ -22,7 +23,7 @@ import com.YaNan.frame.plugin.PlugsFactory;
 public class Insert extends OperateImplement{
 	private Object obj;
 	protected List<String> fieldList = new LinkedList<String>();
-	private Log log = PlugsFactory.getPlugsInstance(Log.class,Insert.class);
+	private Logger log = LoggerFactory.getLogger(Insert.class);
 	private int generatedKey;
 	public List<String> getFieldList() {
 		return fieldList;
@@ -84,7 +85,7 @@ public class Insert extends OperateImplement{
 					}
 				}
 			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
-				log.error(e);
+				log.error(e.getMessage(),e);
 			}
 		}
 	}
@@ -157,7 +158,7 @@ public class Insert extends OperateImplement{
 				}
 			} catch (NoSuchFieldException | SecurityException
 					| IllegalArgumentException | IllegalAccessException e) {
-				log.error(e);
+				log.error(e.getMessage(),e);
 				return false;
 			}
 		} else {

@@ -5,10 +5,12 @@ import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.YaNan.frame.hibernate.database.cache.QueryCache;
 import com.YaNan.frame.hibernate.database.fragment.SqlFragment;
 import com.YaNan.frame.hibernate.orm.OrmBuilder;
-import com.YaNan.frame.logging.Log;
 import com.YaNan.frame.plugin.PlugsFactory;
 import com.mysql.jdbc.Connection;
 import com.mysql.jdbc.PreparedStatement;
@@ -23,7 +25,7 @@ public class PreparedSql {
 	private String sql;
 	private List<Object> parameter;
 	private SqlFragment sqlFragment;
-	private Log log = PlugsFactory.getPlugsInstance(Log.class, PreparedSql.class);
+	private Logger log = LoggerFactory.getLogger( PreparedSql.class);
 
 	@Override
 	public String toString() {

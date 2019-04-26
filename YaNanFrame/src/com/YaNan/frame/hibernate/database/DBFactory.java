@@ -10,6 +10,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.YaNan.frame.hibernate.database.Create;
 import com.YaNan.frame.hibernate.database.DBTab;
 import com.YaNan.frame.hibernate.database.DataBase;
@@ -27,15 +30,14 @@ import com.YaNan.frame.hibernate.database.exception.DataBaseException;
 import com.YaNan.frame.hibernate.database.exception.HibernateInitException;
 import com.YaNan.frame.hibernate.database.fragment.FragmentBuilder;
 import com.YaNan.frame.hibernate.database.fragment.SqlFragment;
-import com.YaNan.frame.logging.Log;
 import com.YaNan.frame.path.PackageScanner;
 import com.YaNan.frame.path.ResourceManager;
 import com.YaNan.frame.path.PackageScanner.ClassInter;
 import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.plugin.handler.PlugsHandler;
-import com.YaNan.frame.util.beans.BeanFactory;
-import com.YaNan.frame.util.beans.XMLBean;
-import com.YaNan.frame.util.beans.xml.XMLHelper;
+import com.YaNan.frame.utils.beans.BeanFactory;
+import com.YaNan.frame.utils.beans.XMLBean;
+import com.YaNan.frame.utils.beans.xml.XMLHelper;
 import com.mysql.jdbc.Driver;
 import com.YaNan.frame.reflect.cache.ClassHelper;
 
@@ -52,7 +54,7 @@ public class DBFactory {
 	private DataBase defaultDB = null;
 	private File xmlFile;// new File("src/hibernate.xml");//
 	private String classPath;
-	private final Log log = PlugsFactory.getPlugsInstance(Log.class, DBFactory.class);
+	private final Logger log = LoggerFactory.getLogger( DBFactory.class);
 	private Map<String, BaseMapping> wrapMap = new HashMap<String, BaseMapping>();
 
 	public static DBFactory getDBFactory() {
@@ -271,11 +273,9 @@ public class DBFactory {
 				if (!dbtab.exists())
 					dbtab.create(new Create(dbtab));
 			} catch (ClassNotFoundException e) {
-				e.printStackTrace();
-				log.error(e);
+				log.error(e.getMessage(),e);
 			} catch (Exception e) {
-				e.printStackTrace();
-				log.error(e);
+				log.error(e.getMessage(),e);
 			}
 		}
 	}
@@ -308,8 +308,7 @@ public class DBFactory {
 				try {
 					DriverManager.deregisterDriver(driver);
 				} catch (SQLException e1) {
-					e1.printStackTrace();
-					log.error(e1);
+					log.error(e1.getMessage(),e1);
 				}
 			}
 		}

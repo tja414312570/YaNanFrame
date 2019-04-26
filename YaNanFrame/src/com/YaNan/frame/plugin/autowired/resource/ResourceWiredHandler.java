@@ -9,7 +9,7 @@ import com.YaNan.frame.plugin.annotations.Register;
 import com.YaNan.frame.plugin.annotations.Support;
 import com.YaNan.frame.plugin.handler.FieldHandler;
 import com.YaNan.frame.reflect.ClassLoader;
-import com.YaNan.frame.util.beans.xml.Resource;
+import com.YaNan.frame.utils.beans.xml.Resource;
 
 @Support(Resource.class)
 @Register

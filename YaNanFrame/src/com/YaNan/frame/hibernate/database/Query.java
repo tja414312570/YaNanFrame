@@ -8,11 +8,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.YaNan.frame.hibernate.database.DBInterface.OperateImplement;
 import com.YaNan.frame.hibernate.database.cache.SqlCache;
-import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugin.PlugsFactory;
-import com.YaNan.frame.util.StringUtil;
+import com.YaNan.frame.utils.StringUtil;
 
 /**
  * 该类用于提供给DATab的query一个查询的SQL语句的生成方法 提过一个构造器，传入一个DBTab型的表对象，应为他需要使用DBTab context
@@ -49,7 +50,7 @@ public class Query extends OperateImplement {
 	protected String group = null;
 	private Query subQuery = null;
 	private JoinObject joinObject;
-	private final Log log = PlugsFactory.getPlugsInstance(Log.class, Query.class);
+	private final Logger log = LoggerFactory.getLogger( Query.class);
 
 	public static interface Order {
 		public static final String Desc = "desc";
@@ -177,7 +178,7 @@ public class Query extends OperateImplement {
 						this.fieldMap.putAll(this.queryTab.getFieldMap());
 					}
 				} catch (NoSuchFieldException | SecurityException e) {
-					log.error(e);
+					log.error(e.getMessage(),e);
 				}
 			}
 		} else {
@@ -239,7 +240,7 @@ public class Query extends OperateImplement {
 							this.fieldMap.putAll(this.queryTab.getFieldMap());
 						}
 					} catch (NoSuchFieldException | SecurityException e) {
-						log.error(e);
+						log.error(e.getMessage(),e);
 					}
 				}
 				SqlCache.getCache().addAttribute(strHash, this.fieldMap);
@@ -312,7 +313,7 @@ public class Query extends OperateImplement {
 						this.fieldMap.putAll(this.queryTab.getFieldMap());
 					}
 				} catch (NoSuchFieldException | SecurityException e) {
-					log.error(e);
+					log.error(e.getMessage(),e);
 				}
 			}
 		} else {
@@ -341,7 +342,7 @@ public class Query extends OperateImplement {
 					Field field = this.queryTab.getDataTablesClass().getDeclaredField(fieldName);
 					this.fieldMap.put(field, null);
 				} catch (NoSuchFieldException | SecurityException e) {
-					log.error(e);
+					log.error(e.getMessage(),e);
 				}
 			}
 		}
@@ -446,7 +447,7 @@ public class Query extends OperateImplement {
 				map.put(dataTables.getName() + "." + dataTables.getDBColumn(str).getName(),
 						f.get(dataTablesObject).toString().replace("'", "\\'"));
 			} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-				log.error(e);
+				log.error(e.getMessage(),e);
 			}
 		}
 		return this;

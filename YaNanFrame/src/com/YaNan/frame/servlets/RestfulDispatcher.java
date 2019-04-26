@@ -1,8 +1,10 @@
 package com.YaNan.frame.servlets;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -19,7 +21,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.YaNan.frame.logging.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.servlets.annotations.restful.ParameterType;
 import com.YaNan.frame.servlets.exception.ServletExceptionHandler;
@@ -27,6 +31,7 @@ import com.YaNan.frame.servlets.exception.ServletRuntimeException;
 import com.YaNan.frame.servlets.parameter.ParameterHandler;
 import com.YaNan.frame.servlets.response.ResponseHandler;
 import com.YaNan.frame.servlets.response.annotations.ResponseType;
+import com.YaNan.test.dynamic.ClassUpdateListener;
 
 /**
  * Restful 核心调配器
@@ -37,7 +42,8 @@ import com.YaNan.frame.servlets.response.annotations.ResponseType;
  * @author YaNan
  *
  */
-public class RestfulDispatcher extends HttpServlet implements ServletDispatcher, ServletContextListener {
+public class RestfulDispatcher extends HttpServlet
+		implements ServletDispatcher, ServletContextListener, ClassUpdateListener {
 	/**
 	 * 
 	 */
@@ -46,7 +52,7 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 	private static final String ActionStyle = "RESTFUL_STYLE";
 	private String contextType = "text/html;charset=utf-8";
 	// 日志类，用于输出日志
-	private final Log log = PlugsFactory.getPlugsInstance(Log.class, RestfulDispatcher.class);
+	private final Logger log = LoggerFactory.getLogger( RestfulDispatcher.class);
 	protected boolean showServerInfo = true;
 	protected Servlet servlet;
 	// 支持的注解类型
@@ -69,7 +75,6 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 	protected void service(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		// 获得相对路径
-
 		/**
 		 * 这里应该组装Servlet 对servelt进行组装，判断请求方式 post情况下 包含 _method = delete put
 		 * 则为对应的方法，否则为post @ 符号与数字组合表示url的类型
@@ -84,38 +89,38 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 		}
 		try {
 			// 获取Servlet类代理对象的实例
-			Object proxyObject = PlugsFactory.getPlugsInstanceNew(servletBean.getServletClass());
+			Object proxyObject = PlugsFactory.getPlugsInstance(servletBean.getServletClass());
 			// 获取参数,参数验证通过拦截里面的方法完成
 			List<Object> parameters = null;
 			if (servletBean.getParameters() != null)
 				try {
 					parameters = this.urlencodedParameterBind(request, response, servletBean);
-				} catch ( ServletRuntimeException servletRuntimeException){
+				} catch (ServletRuntimeException servletRuntimeException) {
 					throw servletRuntimeException;
-				}catch (Throwable e) {
+				} catch (Throwable e) {
 					throw new ServletRuntimeException("failed to processing request paramter !\r\n at class : "
-							+servletBean.getServletClass().getName()
-							+"\r\n at method : "+servletBean.getMethod(),e);
+							+ servletBean.getServletClass().getName() + "\r\n at method : " + servletBean.getMethod(),
+							e);
 				}
 			// 执行完之后，判断是否已将response提交，如果为提交，则判断返回结果
 			if (!response.isCommitted()) {
 				Object handlerResult;
 				try {
 					handlerResult = invokeProxyMethhod(request, response, servletBean, proxyObject, parameters);
-				} catch ( ServletRuntimeException servletRuntimeException){
+				} catch (ServletRuntimeException servletRuntimeException) {
 					throw servletRuntimeException;
-				}catch (Throwable e) {
-					throw new ServletRuntimeException("failed to invoke servlet bean !\r\n at class : "
-							+servletBean.getServletClass().getName()
-							+"\r\n at method : "+servletBean.getMethod()
-							+"\r\n"+parameters,e);
+				} catch (Throwable e) {
+					throw new ServletRuntimeException(
+							"failed to invoke servlet bean !\r\n at class : " + servletBean.getServletClass().getName()
+									+ "\r\n at method : " + servletBean.getMethod() + "\r\n" + parameters,
+							e);
 				}
 				// 执行完之后，判断是否已将response提交，如果为提交，则判断返回结果
 				if (!response.isCommitted()) {
 					// 判断返回结果是否为null,不为null则进行处理
 					// 判断是否有ResponseType等注解
 					List<Annotation> resultAnnotations = servletBean.getMethodAnnotation(ResponseType.class);
-					if (resultAnnotations == null || resultAnnotations.isEmpty()) 
+					if (resultAnnotations == null || resultAnnotations.isEmpty())
 						resultAnnotations = servletBean.getClassAnnotation(ResponseType.class);
 					// 若果没有获得ResponseType的注解，则根据返回结果寻找response handler
 					if (resultAnnotations == null || resultAnnotations.isEmpty()) {
@@ -129,7 +134,7 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 									ResponseHandler.class, handlerResultType.getName());
 							// 如果handler不为空，则调用handler，否则直接输出
 							if (responseHandler != null) {
-								//通过responseHandler对结果进行渲染并输出
+								// 通过responseHandler对结果进行渲染并输出
 								responseHandler.render(request, response, handlerResult, null, servletBean);
 							} else {
 								response.setContentType(contextType);
@@ -153,28 +158,22 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 			}
 			proxyObject = null;
 			parameters = null;
-		}catch(ServletRuntimeException e){
+		} catch (ServletRuntimeException e) {
 			ServletExceptionHandler servletExceptionHandler = PlugsFactory
 					.getPlugsInstance(ServletExceptionHandler.class);
-			if(servletExceptionHandler!=null)
+			if (servletExceptionHandler != null)
 				servletExceptionHandler.exception(e, request, response);
-			if(log!=null)
-				log.error(e);
-			else
-				e.printStackTrace();
+				log.error(e.getMessage(),e);
 			if (!response.isCommitted())
-				response.sendError(e.getStatus(),e.getMessage());
-		}catch (Throwable e) {
+				response.sendError(e.getStatus(), e.getMessage());
+		} catch (Throwable e) {
 			ServletExceptionHandler servletExceptionHandler = PlugsFactory
 					.getPlugsInstance(ServletExceptionHandler.class);
-			if(servletExceptionHandler!=null)
+			if (servletExceptionHandler != null)
 				servletExceptionHandler.exception(e, request, response);
-			if(log!=null)
-				log.error(e);
-			else
-				e.printStackTrace();
+			log.error(e.getMessage(),e);
 			if (!response.isCommitted())
-				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,e.getMessage());
+				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
 		}
 	}
 
@@ -243,7 +242,7 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 				List<Annotation> annos = paramEntry.getValue().get(ParameterType.class);
 				if (annos != null && annos.size() != 0) {
 					Annotation parameterAnnotation = annos.get(0);
-					//通过参数注解获取对应的参数处理器
+					// 通过参数注解获取对应的参数处理器
 					ParameterHandler parameterHandler = parameterHandlerCache.getParameterHandler(parameterAnnotation);
 					parameters.add(parameterHandler == null ? null
 							: parameterHandler.getParameter(paramEntry.getKey(), parameterAnnotation));
@@ -262,14 +261,15 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 	 * 
 	 * @param model
 	 * @return
-	 * @throws ServletException 
-	 * @throws InvocationTargetException 
-	 * @throws IllegalArgumentException 
-	 * @throws IllegalAccessException 
+	 * @throws ServletException
+	 * @throws InvocationTargetException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
 	 * @throws Exception
 	 */
-	public Object invokeProxyMethhod(HttpServletRequest request, HttpServletResponse response,
-			ServletBean servletBean, Object proxyObject, List<Object> parameters) throws ServletException, IllegalAccessException, IllegalArgumentException, InvocationTargetException{
+	public Object invokeProxyMethhod(HttpServletRequest request, HttpServletResponse response, ServletBean servletBean,
+			Object proxyObject, List<Object> parameters)
+			throws ServletException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		Object[] parameter = null;
 		// 判断需要的参数是否与获得的参数匹配
 		if (servletBean.getParameters() != null) {
@@ -304,6 +304,7 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 	public void contextDestroyed(ServletContextEvent arg0) {
 
 	}
+
 	/**
 	 * 用于当服务器启动时初始化容器、数据解析等
 	 */
@@ -323,8 +324,8 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 			Entry<String, ServletBean> key = iterator.next();
 			ServletBean servletBean = key.getValue();
 			log.debug("---------------------------------------------------------");
-			log.debug("url mapping:" + REQUEST_METHOD.getRequest(key.getKey()) + ",servlet method:" + servletBean.getMethod() + ",servlet type:"
-					+ActionStyle);
+			log.debug("url mapping:" + REQUEST_METHOD.getRequest(key.getKey()) + ",servlet method:"
+					+ servletBean.getMethod() + ",servlet type:" + ActionStyle);
 			if (servletBean.getParameters() != null) {
 				Iterator<Entry<Parameter, Map<Class<Annotation>, List<Annotation>>>> iterator1 = servletBean
 						.getParameters().entrySet().iterator();
@@ -351,32 +352,32 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 		String urlMapping = URLSupport.getRelativePath(request);
 		String method = request.getMethod();
 		if (method.equals("GET")) {
-			urlMapping = this.buildUrl(urlMapping,REQUEST_METHOD.GET);
+			urlMapping = this.buildUrl(urlMapping, REQUEST_METHOD.GET);
 		} else if (method.equals("POST")) {
 			method = request.getParameter(DEFAULT_METHOD_PARAM);
 			if (method == null) {
-				urlMapping = this.buildUrl(urlMapping,REQUEST_METHOD.POST);
+				urlMapping = this.buildUrl(urlMapping, REQUEST_METHOD.POST);
 			} else if (method.toUpperCase().equals("DELETE")) {
-				urlMapping = this.buildUrl(urlMapping,REQUEST_METHOD.DELETE);
+				urlMapping = this.buildUrl(urlMapping, REQUEST_METHOD.DELETE);
 			} else if (method.toUpperCase().equals("PUT")) {
-				urlMapping = this.buildUrl(urlMapping,REQUEST_METHOD.PUT);
+				urlMapping = this.buildUrl(urlMapping, REQUEST_METHOD.PUT);
 			} else if (method.toUpperCase().equals("POST")) {
-				urlMapping = this.buildUrl(urlMapping,REQUEST_METHOD.POST);
+				urlMapping = this.buildUrl(urlMapping, REQUEST_METHOD.POST);
 			} else {
 				throw new ServletException("servlet handle not process this request method ! request url :" + urlMapping
 						+ ",method:" + method);
 			}
 			// 组装post delete put 请求
 		} else if (method.equals("DELETE")) {
-			urlMapping = this.buildUrl(urlMapping,REQUEST_METHOD.DELETE);
+			urlMapping = this.buildUrl(urlMapping, REQUEST_METHOD.DELETE);
 		} else if (method.equals("PUT")) {
-			urlMapping = this.buildUrl(urlMapping,REQUEST_METHOD.PUT);
+			urlMapping = this.buildUrl(urlMapping, REQUEST_METHOD.PUT);
 		} else if (method.equals("HEAD")) {
-			urlMapping = this.buildUrl(urlMapping,REQUEST_METHOD.HEAD);
+			urlMapping = this.buildUrl(urlMapping, REQUEST_METHOD.HEAD);
 		} else if (method.equals("OPTIONS")) {
-			urlMapping = this.buildUrl(urlMapping,REQUEST_METHOD.OPTIONS);
+			urlMapping = this.buildUrl(urlMapping, REQUEST_METHOD.OPTIONS);
 		} else if (method.equals("TRACE")) {
-			urlMapping = this.buildUrl(urlMapping,REQUEST_METHOD.TRACE);
+			urlMapping = this.buildUrl(urlMapping, REQUEST_METHOD.TRACE);
 		} else {
 			throw new ServletException("servlet handle not process this request method ! request url :" + urlMapping
 					+ ",method:" + method);
@@ -386,5 +387,69 @@ public class RestfulDispatcher extends HttpServlet implements ServletDispatcher,
 
 	private String buildUrl(String urlMapping, int type) {
 		return new StringBuilder(urlMapping).append("@").append(type).toString();
+	}
+
+	@Override
+	public void updateClass(Class<?> originClass, Class<?> updateClass, Class<?> updateOrigin, File updateFile) {
+		synchronized (this) {
+			if(originClass!=null){
+				if(updateClass!=null){//更新类
+//					log.debug("try update servlet bean class : " + originClass.getName()+ " as new servlet bean class : " + updateClass.getName());
+					addServletByScanBean(updateClass);
+					rebuildServlet(originClass,updateClass);
+				}else{//删除类时删除对应映射
+//					log.debug("try remove servlet bean class : " + originClass.getName());
+					rebuildServlet(originClass,null);
+				}
+			}else{//新添加类
+//				log.debug("try add servlet bean class : " + updateClass.getName());
+				addServletByScanBean(updateClass);
+				rebuildServlet(null,updateClass);
+			}
+			
+		}
+		
+	}
+	/**
+	 * 重构与类相关Servlet映射
+	 * @param originClass
+	 * @param updateClass
+	 */
+	public void rebuildServlet(Class<?> originClass, Class<?> updateClass) {
+		Map<String, ServletBean> mapping = ServletMapping.getInstance().getServletMapping();
+		Map<String, ServletBean> styleMapping = ServletMapping.getInstance().getServletMappingByStype(ActionStyle);
+		Iterator<Entry<String, ServletBean>> iterator = mapping.entrySet().iterator();
+		while (iterator.hasNext()) {
+			Entry<String, ServletBean> entry = iterator.next();
+			ServletBean bean = entry.getValue();
+			if (bean.getServletClass().equals(originClass)) {
+				log.debug("remove servlet mapping " + REQUEST_METHOD.getRequest(entry.getKey()) + ";info:"
+						+ entry.getValue());
+				styleMapping.remove(entry.getKey());
+				iterator.remove();
+			}else if(bean.getServletClass().equals(updateClass)){
+				log.debug("add servlet mapping " + REQUEST_METHOD.getRequest(entry.getKey()) + ";info:"
+						+ entry.getValue());
+			}
+		}
+	}
+	/**
+	 * 添加servletBean通过扫描Bean
+	 * @param updateClass
+	 */
+	public void addServletByScanBean(Class<?> updateClass) {
+		Method[] methods = updateClass.getMethods();
+		methodIterator: for (Method method : methods) {
+			List<ServletDispatcher> sds = PlugsFactory.getPlugsInstanceList(ServletDispatcher.class);
+			for (ServletDispatcher sd : sds) {
+				Class<? extends Annotation>[] annosType = sd.getDispatcherAnnotation();
+				for (Class<? extends Annotation> annoType : annosType) {
+					if (annosType != null && method.getAnnotation(annoType) != null)
+						if (sd.getBuilder().builder(annoType, method.getAnnotation(annoType), updateClass, method,
+								ServletMapping.getInstance()))
+							continue methodIterator;
+				}
+			}
+		}
 	}
 }

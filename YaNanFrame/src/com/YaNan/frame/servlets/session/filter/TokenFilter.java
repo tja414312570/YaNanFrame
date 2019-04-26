@@ -37,7 +37,7 @@ import com.YaNan.frame.servlets.session.entity.Result;
 import com.YaNan.frame.servlets.session.entity.TokenEntity;
 import com.YaNan.frame.servlets.session.interfaceSupport.TokenFilterInterface;
 import com.YaNan.frame.servlets.session.interfaceSupport.Token_Command_Type;
-import com.YaNan.frame.util.StringUtil;
+import com.YaNan.frame.utils.StringUtil;
 /**
  * 优先处理action，然后处理命名空间
  * @author Administrator

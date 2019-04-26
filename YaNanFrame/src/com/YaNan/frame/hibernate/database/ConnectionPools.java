@@ -7,8 +7,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
 
-import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugin.PlugsFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.mysql.jdbc.Connection;
 /**
  * 数据库连接池，用于管理数据库连接，提供数据库连接的初始化、获取、释放</br>
@@ -29,7 +30,7 @@ public class ConnectionPools{
 	 private DataBase dataBase;//数据库对象
 	 private Vector<Connection> all = null; // 存放连接池中数据库连接的向量 , 初始时为 null 
      private Vector<Connection> free = null; //空闲的连接
-     private Log log = PlugsFactory.getPlugsInstance(Log.class,ConnectionPools.class);
+     private Logger log = LoggerFactory.getLogger(ConnectionPools.class);
      private final ConnectionPoolRefreshService connectionPoolRefreshService = new ConnectionPoolRefreshService();
 	private ConnectionPools(DataBase db) {
     	 this.dataBase = db;
@@ -70,7 +71,7 @@ public class ConnectionPools{
 				this.all.add(connection);
 				this.free.add(connection);
 			} catch (ClassNotFoundException | SQLException e) {
-				log.error(e);
+				log.error(e.getMessage(),e);
 			}
 		}
 	}
@@ -108,7 +109,7 @@ public class ConnectionPools{
 								if(this.free.size()<=this.dataBase.getDataBaseConfigure().getMinNum())//当空闲链接为最低链接数时，不在关闭链接
 									break;
 							} catch (SQLException e) {
-								log.error(e);
+								log.error(e.getMessage(),e);
 						}
 					}
 				}

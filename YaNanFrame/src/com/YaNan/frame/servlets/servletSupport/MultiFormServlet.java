@@ -15,19 +15,19 @@ import javax.crypto.IllegalBlockSizeException;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.reflect.ClassLoader;
 import com.YaNan.frame.servlets.ActionDispatcher;
 import com.YaNan.frame.servlets.ServletBean;
 import com.YaNan.frame.servlets.servletSupport.exception.SecretKeyNotExists;
 import com.YaNan.frame.servlets.servletSupport.exception.UnsupportFileType;
-import com.YaNan.frame.util.StringUtil;
+import com.YaNan.frame.utils.StringUtil;
 
 public class MultiFormServlet extends DefaultServlet {
 	public transient static String uploadDir = "Tmp";
-	private final Log log = PlugsFactory.getPlugsInstance(Log.class, MultiFormServlet.class);
+	private final Logger log = LoggerFactory.getLogger( MultiFormServlet.class);
 
 	public void MultiFormSupport(ClassLoader loader, ServletBean bean) {
 		try {

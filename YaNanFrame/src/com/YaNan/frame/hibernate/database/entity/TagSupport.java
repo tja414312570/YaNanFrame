@@ -2,9 +2,9 @@ package com.YaNan.frame.hibernate.database.entity;
 
 import java.util.List;
 
-import com.YaNan.frame.util.beans.xml.AsXml;
-import com.YaNan.frame.util.beans.xml.Mapping;
-import com.YaNan.frame.util.beans.xml.Value;
+import com.YaNan.frame.utils.beans.xml.AsXml;
+import com.YaNan.frame.utils.beans.xml.Mapping;
+import com.YaNan.frame.utils.beans.xml.Value;
 
 public class TagSupport{
 	@AsXml

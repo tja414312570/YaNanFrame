@@ -3,7 +3,7 @@ package com.YaNan.frame.plugin;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.YaNan.frame.util.StringUtil;
+import com.YaNan.frame.utils.StringUtil;
 
 /**
  * 用于描述组件信息

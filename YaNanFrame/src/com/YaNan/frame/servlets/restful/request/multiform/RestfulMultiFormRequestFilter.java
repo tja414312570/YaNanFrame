@@ -13,13 +13,13 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.fileupload.FileUploadException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugin.PlugsFactory;
 
 @WebFilter(filterName = "restful_upload_filter", urlPatterns = "/*")
 public class RestfulMultiFormRequestFilter  extends HttpServlet implements Filter {
-	Log log = PlugsFactory.getPlugsInstanceAllowNull(Log.class, this.getClass());
+	Logger log =LoggerFactory.getLogger(this.getClass());
 	/**
 	 */
 	private static final long serialVersionUID = -3877282673186471728L;
@@ -31,7 +31,7 @@ public class RestfulMultiFormRequestFilter  extends HttpServlet implements Filte
 					response);
 		} catch (FileUploadException e) {
 			e.printStackTrace();
-			log.error(e);
+			log.error(e.getMessage(),e);
 		}
 	}
 	@Override

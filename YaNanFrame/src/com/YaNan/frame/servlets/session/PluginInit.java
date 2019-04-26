@@ -6,7 +6,9 @@ import java.util.Map.Entry;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
-import com.YaNan.frame.logging.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.plugin.annotations.Register;
 import com.YaNan.frame.plugin.interfacer.PlugsListener;
@@ -15,7 +17,7 @@ import com.YaNan.frame.servlets.session.interfaceSupport.TokenHibernateInterface
 
 @Register
 public class PluginInit  implements ServletContextListener,PlugsListener{
-	private final Log log = PlugsFactory.getPlugsInstance(Log.class, TokenManager.class);
+	private final Logger log = LoggerFactory.getLogger(TokenManager.class);
 	@Override
 	public void contextDestroyed(ServletContextEvent arg0) {
 		if(TokenManager.isInstance())

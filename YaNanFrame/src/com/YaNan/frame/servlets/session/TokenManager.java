@@ -7,15 +7,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.YaNan.frame.logging.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.YaNan.frame.plugin.ConfigContext;
 import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.servlets.session.entity.Result;
 import com.YaNan.frame.servlets.session.entity.TokenEntity;
 import com.YaNan.frame.servlets.session.interfaceSupport.TokenHibernateInterface;
-import com.YaNan.frame.util.PathMatcher;
-import com.YaNan.frame.util.beans.BeanFactory;
-import com.YaNan.frame.util.beans.XMLBean;
+import com.YaNan.frame.utils.PathMatcher;
+import com.YaNan.frame.utils.beans.BeanFactory;
+import com.YaNan.frame.utils.beans.XMLBean;
 import com.typesafe.config.Config;
 
 public class TokenManager{
@@ -28,7 +30,7 @@ public class TokenManager{
 	public static String path;//cookie有效域
 	public static boolean secure = false;//启用secure
 	public static boolean HttpOnly = true;//启用HttpOnly
-	private final Log log = PlugsFactory.getPlugsInstance(Log.class, TokenManager.class);
+	private final Logger log = LoggerFactory.getLogger( TokenManager.class);
 	/**
 	 * token 数据持久层接口
 	 */

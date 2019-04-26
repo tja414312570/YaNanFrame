@@ -11,7 +11,7 @@ import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.plugin.ProxyModel;
 import com.YaNan.frame.plugin.annotations.Register;
 import com.YaNan.frame.reflect.ClassLoader;
-import com.YaNan.frame.util.StringUtil;
+import com.YaNan.frame.utils.StringUtil;
 
 /**
  * 用于处理Trim标签产生的sql片段

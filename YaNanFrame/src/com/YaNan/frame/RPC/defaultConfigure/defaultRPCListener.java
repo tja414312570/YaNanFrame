@@ -1,14 +1,15 @@
 package com.YaNan.frame.RPC.defaultConfigure;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.YaNan.frame.RPC.Implements.RPCListener;
 import com.YaNan.frame.RPC.customer.RPCCustomerServiceRuntime;
 import com.YaNan.frame.RPC.customer.RPCService;
 import com.YaNan.frame.RPC.customer.Reconnection;
-import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugin.PlugsFactory;
 
 public class defaultRPCListener implements RPCListener{
-	private final Log log = PlugsFactory.getPlugsInstance(Log.class, defaultRPCListener.class);
+	private final Logger log = LoggerFactory.getLogger( defaultRPCListener.class);
 
 	@Override
 	public void InitCompleted(RPCService rpcService) {
@@ -22,8 +23,7 @@ public class defaultRPCListener implements RPCListener{
 
 	@Override
 	public void OnException(RPCService rpcService, Exception e) {
-		log.error(e);
-		e.printStackTrace();
+		log.error(e.getMessage(),e);
 	}
 
 	@Override

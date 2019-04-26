@@ -7,9 +7,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.YaNan.frame.hibernate.database.DBInterface.OperateImplement;
-import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.reflect.ClassLoader;
 
 /**
@@ -20,7 +21,7 @@ import com.YaNan.frame.reflect.ClassLoader;
  *
  */
 public class BatchInsert extends OperateImplement{
-	private Log log = PlugsFactory.getPlugsInstance(Log.class,BatchInsert.class);
+	private Logger log = LoggerFactory.getLogger(BatchInsert.class);
 	private Collection<DBColumn> columns = new ArrayList<DBColumn>();
 	/**
 	 * 默认构造方法

@@ -1,6 +1,6 @@
 package com.YaNan.frame.hibernate.database.entity;
 
-import com.YaNan.frame.util.beans.xml.Attribute;
+import com.YaNan.frame.utils.beans.xml.Attribute;
 
 public class IF extends TagSupport{
 	@Attribute

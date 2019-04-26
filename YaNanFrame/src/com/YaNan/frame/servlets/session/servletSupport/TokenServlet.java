@@ -6,8 +6,9 @@ import java.lang.reflect.InvocationTargetException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugin.PlugsFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.YaNan.frame.reflect.ClassLoader;
 import com.YaNan.frame.servlets.servletSupport.MultiFormServlet;
 import com.YaNan.frame.servlets.session.Token;
@@ -22,7 +23,7 @@ import com.YaNan.frame.servlets.session.annotation.TokenObject;
  *
  */
 public abstract class TokenServlet extends MultiFormServlet{
-	private final Log log = PlugsFactory.getPlugsInstance(Log.class, TokenServlet.class);
+	private final Logger log = LoggerFactory.getLogger( TokenServlet.class);
 	protected transient Token TokenContext;
 	public Token getTokenContext() {
 		return TokenContext;

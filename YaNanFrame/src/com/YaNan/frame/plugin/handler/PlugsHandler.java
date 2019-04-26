@@ -8,12 +8,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import com.YaNan.frame.logging.DefaultLog;
-import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugin.PlugsFactory;
-import com.YaNan.frame.plugin.RegisterDescription;
-import com.YaNan.frame.plugin.interfacer.PlugsListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.YaNan.frame.plugin.RegisterDescription;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
@@ -30,7 +28,7 @@ import net.sf.cglib.proxy.MethodProxy;
  * @author yanan
  *
  */
-public class PlugsHandler implements InvocationHandler, PlugsListener, MethodInterceptor {
+public class PlugsHandler implements InvocationHandler, MethodInterceptor {
 	public static enum ProxyType {
 		JDK, CGLIB
 	}
@@ -40,7 +38,8 @@ public class PlugsHandler implements InvocationHandler, PlugsListener, MethodInt
 	private Class<?> proxyClass;// 代理类
 	private Class<?> interfaceClass;// 接口类
 	private ProxyType proxyType = ProxyType.JDK;// 代理模式
-	private static Log log = PlugsFactory.getPlugsInstanceWithDefault(Log.class, DefaultLog.class, PlugsHandler.class);
+	
+	private static Logger log = LoggerFactory.getLogger( PlugsHandler.class);
 
 	/**
 	 * return the proxy object
@@ -85,10 +84,6 @@ public class PlugsHandler implements InvocationHandler, PlugsListener, MethodInt
 	 */
 	public Map<Method, InvokeHandlerSet> getHandlerMapping() {
 		return registerDescription == null ? null : registerDescription.getHandlerMapping();
-	}
-
-	public static void setLog(Log log) {
-		PlugsHandler.log = log;
 	}
 
 	/**
@@ -174,7 +169,7 @@ public class PlugsHandler implements InvocationHandler, PlugsListener, MethodInt
 						return mh.getInterruptResult();
 				}
 			}
-			log.error(e);
+			log.error(e.getMessage(),e);
 			if(com.YaNan.frame.reflect.ClassLoader.extendsOf(e.getClass(), InvocationTargetException.class)){
 				InvocationTargetException exc = (InvocationTargetException) e;
 				if(exc.getTargetException()!=null)
@@ -202,10 +197,6 @@ public class PlugsHandler implements InvocationHandler, PlugsListener, MethodInt
 		return new PlugsHandler(proxyClass, parameterType,parameters, registerDescription).getProxyObject();
 	}
 
-	@Override
-	public void excute(PlugsFactory plugsFactory) {
-		log = PlugsFactory.getPlugsInstanceWithDefault(Log.class, DefaultLog.class, PlugsHandler.class);
-	}
 
 	@Override
 	public Object intercept(Object object, Method method, Object[] parameters, MethodProxy methodProxy)
@@ -255,7 +246,6 @@ public class PlugsHandler implements InvocationHandler, PlugsListener, MethodInt
 						return mh.getInterruptResult();
 				}
 			}
-			log.error(e);
 			throw e;
 		}
 	}

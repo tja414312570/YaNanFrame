@@ -9,9 +9,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.YaNan.frame.hibernate.database.DBInterface.OperateImplement;
-import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugin.PlugsFactory;
 
 /**
  * 该类用于提供给DATab的query一个查询的SQL语句的生成方法 提过一个构造器，传入一个DBTab型的表对象，应为他需要使用DBTab context
@@ -24,7 +25,7 @@ public class Update extends OperateImplement {
 	private List<String> condition = new ArrayList<String>();
 	private Map<String, Object> updateList = new LinkedHashMap<String, Object>();
 	//参数存储规则==>列==》参数
-	private final Log log = PlugsFactory.getPlugsInstance(Log.class, Query.class);
+	private final Logger log = LoggerFactory.getLogger( Query.class);
 
 	public Update(DBTab dataTables, Object object) {
 		this.setDbTab(dataTables);
@@ -54,7 +55,7 @@ public class Update extends OperateImplement {
 				}
 			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException | SecurityException
 					| NoSuchMethodException e) {
-				log.error(e);
+				log.error(e.getMessage(),e);
 			}
 		}
 	}
@@ -93,7 +94,7 @@ public class Update extends OperateImplement {
 					this.updateList.put(this.getDbTab().getDBColumn(field).getName(),value);
 			}
 		} catch (Exception e) {
-			log.error(e);
+			log.error(e.getMessage(),e);
 		}
 	}
 
@@ -116,7 +117,7 @@ public class Update extends OperateImplement {
 					this.updateList.put(this.getDbTab().getDBColumn(field).getName(),value);
 			}
 		} catch (Exception e) {
-			log.error(e);
+			log.error(e.getMessage(),e);
 		}
 	}
 

@@ -19,9 +19,9 @@ import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.plugin.annotations.Register;
 import com.YaNan.frame.servlets.ParameterHandlerCache;
 import com.YaNan.frame.servlets.ServletBean;
@@ -38,7 +38,7 @@ public class MultiFormParameterHandler implements ParameterHandler {
 	private HttpServletRequest servletRequest;
 	private HttpServletResponse servletResponse;
 	private ServletBean servletBean;
-	private Log log = PlugsFactory.getPlugsInstance(Log.class, this.getClass());
+	private Logger log = LoggerFactory.getLogger( this.getClass());
 	private List<FileItem> fileItemList;
 
 	@Override
@@ -86,7 +86,7 @@ public class MultiFormParameterHandler implements ParameterHandler {
 					}
 				}
 			} catch (FileUploadException e) {
-				log.error(e);
+				log.error(e.getMessage(),e);
 			}
 		}
 	}

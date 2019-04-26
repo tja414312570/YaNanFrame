@@ -3,13 +3,14 @@
 import com.YaNan.frame.RTDT.entity.ActionEntity;
  import com.YaNan.frame.RTDT.entity.RequestAction;
 import com.YaNan.frame.RTDT.entity.ResponseAction;
-import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.reflect.ClassLoader;
 import com.YaNan.frame.servlets.session.Token;
 
 import java.lang.reflect.Field;
  import java.lang.reflect.InvocationTargetException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
  
  public class TokenAction implements RTDTActionInterface
  {
@@ -17,7 +18,7 @@ import java.lang.reflect.Field;
    protected transient ActionEntity ActionContext;
    protected transient RequestAction RequestContext;
    protected transient ResponseAction ResponseContext;
-   private final Log log = PlugsFactory.getPlugsInstance(Log.class, TokenAction.class);
+   private final Logger log = LoggerFactory.getLogger( TokenAction.class);
    
    public void doContext(RequestAction request, ResponseAction response,ClassLoader loader)
    {
@@ -35,7 +36,7 @@ import java.lang.reflect.Field;
              loader.set(field.getName(), new Object[] { this.TokenContext.get(cls) });
            }
            catch (IllegalAccessException|IllegalArgumentException|InvocationTargetException|NoSuchMethodException|SecurityException e) {
-            log.error(e);
+        	   log.error(e.getMessage(),e);
            }
          }
        }

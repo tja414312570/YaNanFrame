@@ -55,4 +55,10 @@ public class BeanContainer {
 		checkPluginAvailable();
 		return (T) this.beanClassContainer.get(beanClass);
 	}
+	public void clear() {
+		if(beanContainer!=null)
+			beanContainer.clear();
+		if(beanClassContainer!=null)
+			beanClassContainer.clear();
+	}
 }

@@ -3,9 +3,10 @@ package com.YaNan.frame.plugin.autowired.exception;
 
 import java.lang.reflect.Constructor;
 
-import com.YaNan.frame.logging.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.YaNan.frame.plugin.PluginRuntimeException;
-import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.plugin.RegisterDescription;
 import com.YaNan.frame.plugin.annotations.Register;
 import com.YaNan.frame.plugin.annotations.Support;
@@ -18,7 +19,7 @@ import com.YaNan.frame.reflect.cache.ClassHelper;
 @Support(Error.class)
 @Register(attribute="*",priority=Integer.MAX_VALUE)
 public class ErrorPlugsHandler implements InvokeHandler,InstanceHandler{
-	private Log log = PlugsFactory.getPlugsInstance(Log.class,ErrorPlugsHandler.class);
+	private Logger log = LoggerFactory.getLogger(ErrorPlugsHandler.class);
 	@Override
 	public void before(MethodHandler methodHandler) {
 	}

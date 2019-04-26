@@ -8,9 +8,10 @@ import java.util.List;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
-import javax.servlet.annotation.WebListener;
 
-import com.YaNan.frame.logging.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 /**
  * Web容器的Plug组件的初始化
@@ -19,7 +20,7 @@ import com.YaNan.frame.logging.Log;
  */
 public class PluginAppincationContext implements ServletContextListener {
 	private static boolean isWebContext;
-	private Log log;
+	private Logger log = LoggerFactory.getLogger(PluginAppincationContext.class);
 	private ServletContextEvent servletContextEvent;
 	private List<ServletContextListener> contextListernerList;
 	private ServletContext servletContext;
@@ -43,7 +44,6 @@ public class PluginAppincationContext implements ServletContextListener {
 			if(locations!=null)
 				locations = locations.replace("project:", servletContextEvent.getServletContext().getRealPath(""));
 			PlugsFactory.init(locations);
-			log = PlugsFactory.getPlugsInstance(Log.class,PluginAppincationContext.class);
 			this.servletContextEvent = servletContextEvent;
 			this.servletContext = servletContextEvent.getServletContext();
 			log.debug("");
@@ -65,10 +65,7 @@ public class PluginAppincationContext implements ServletContextListener {
 			log.debug("Plugin conetxt init has completed in "+(System.currentTimeMillis()-t)+"ms");
 			System.gc();//通过gc清除启动时创建的对象
 		}catch (Throwable e){
-			if(log!=null)
-				log.error(e);
-			else 
-				e.printStackTrace();
+			log.error(e.getMessage(),e);
 			System.exit(1);
 		}
 		

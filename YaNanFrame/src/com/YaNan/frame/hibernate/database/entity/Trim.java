@@ -1,7 +1,7 @@
 package com.YaNan.frame.hibernate.database.entity;
 
 
-import com.YaNan.frame.util.beans.xml.Attribute;
+import com.YaNan.frame.utils.beans.xml.Attribute;
 
 /**
  * mapper文件中的trim标签的映射

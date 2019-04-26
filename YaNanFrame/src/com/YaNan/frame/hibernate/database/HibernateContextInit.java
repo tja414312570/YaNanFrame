@@ -9,12 +9,13 @@ import java.util.Enumeration;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
-import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugin.PlugsFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.mysql.jdbc.AbandonedConnectionCleanupThread;
 
 public class HibernateContextInit implements ServletContextListener {
-	private Log log  = PlugsFactory.getPlugsInstance(Log.class, HibernateContextInit.class);
+	private Logger log  = LoggerFactory.getLogger(HibernateContextInit.class);
 	private File location;
 	@Override
 	public void contextDestroyed(ServletContextEvent arg0) {
@@ -26,13 +27,13 @@ public class HibernateContextInit implements ServletContextListener {
 	                d = drivers.nextElement();
 	                DriverManager.deregisterDriver(d);
 	            } catch (SQLException ex) {
-	            	log.error(ex);
+	            	log.error(ex.getMessage(),ex);
 	            }
 	        }
 	        try {
 	            AbandonedConnectionCleanupThread.shutdown();
 	        } catch (InterruptedException e) {
-	           log.error(e);;
+	        	log.error(e.getMessage(),e);
 	        }
 	       //销毁数据库服务
 	       DBFactory.getDBFactory().destory();

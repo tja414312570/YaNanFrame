@@ -9,14 +9,15 @@ import javax.websocket.OnError;
 import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.YaNan.frame.RTDT.context.ActionDispatcher;
 import com.YaNan.frame.RTDT.context.NotifyManager;
 import com.YaNan.frame.RTDT.entity.RequestAction;
 import com.YaNan.frame.RTDT.entity.ResponseAction;
 import com.YaNan.frame.RTDT.entity.interfacer.RESPONSE_STATUS;
-import com.YaNan.frame.logging.DefaultLog;
-import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugin.PlugsFactory;
 import com.YaNan.frame.servlets.session.Token;
 import com.google.gson.Gson;
 
@@ -25,7 +26,7 @@ public class WebSocketListener{
 	protected Session session;
 	protected Token token;
 	protected String TUID;
-	private Log log = PlugsFactory.getPlugsInstanceWithDefault(Log.class, DefaultLog.class);
+	private Logger log = LoggerFactory.getLogger(WebSocketListener.class);
 	/**
 	 * @param session
 	 */

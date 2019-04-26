@@ -9,18 +9,19 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.YaNan.frame.hibernate.database.cache.Class2TabMappingCache;
 import com.YaNan.frame.hibernate.database.entity.Package;
 import com.YaNan.frame.hibernate.database.entity.Tab;
 import com.YaNan.frame.hibernate.database.entity.Tabs;
 import com.YaNan.frame.hibernate.database.exception.DATABASES_EXCEPTION;
 import com.YaNan.frame.hibernate.database.exception.DataBaseException;
-import com.YaNan.frame.logging.Log;
 import com.YaNan.frame.path.PackageScanner;
 import com.YaNan.frame.path.PackageScanner.ClassInter;
-import com.YaNan.frame.plugin.PlugsFactory;
-import com.YaNan.frame.util.beans.BeanFactory;
-import com.YaNan.frame.util.beans.XMLBean;
+import com.YaNan.frame.utils.beans.BeanFactory;
+import com.YaNan.frame.utils.beans.XMLBean;
 import com.mysql.jdbc.Driver;
 /**
  * v2.0 增加连接池对连接进行管理，重构DBTab和DataBase功能</br>
@@ -35,7 +36,7 @@ public class DBManager {
 	private DataBase defaultDB = null;
 	private File xmlFile;//new File("src/hibernate.xml");//
 	private String classPath;
-	private final Log log = PlugsFactory.getPlugsInstance(Log.class,DBManager.class);
+	private final Logger log = LoggerFactory.getLogger(DBManager.class);
 	public static DBManager getDBFactory(){
 		if (dbFactory ==null)
 				dbFactory=new DBManager();
@@ -146,11 +147,9 @@ public class DBManager {
 				if (!dbtab.exists())
 					dbtab.create(new Create(dbtab));
 			} catch (ClassNotFoundException e) {
-				e.printStackTrace();
-				log.error(e);
+				log.error(e.getMessage(),e);
 			} catch (Exception e) {
-				e.printStackTrace();
-				log.error(e);
+				log.error(e.getMessage(),e);
 			}
 		}
 	}
@@ -178,8 +177,7 @@ public class DBManager {
 		     try {
 				DriverManager.deregisterDriver(driver);
 			} catch (SQLException e1) {
-				e1.printStackTrace();
-				log.error(e1);
+				log.error(e1.getMessage(),e1);
 			}
 		    }
 		}

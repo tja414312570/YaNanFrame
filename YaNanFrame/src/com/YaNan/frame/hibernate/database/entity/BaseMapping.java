@@ -2,12 +2,12 @@ package com.YaNan.frame.hibernate.database.entity;
 
 import java.util.List;
 
-import com.YaNan.frame.util.beans.xml.AsXml;
-import com.YaNan.frame.util.beans.xml.Attribute;
-import com.YaNan.frame.util.beans.xml.Mapping;
-import com.YaNan.frame.util.beans.xml.NodeName;
-import com.YaNan.frame.util.beans.xml.Value;
-import com.YaNan.frame.util.beans.xml.XmlFile;
+import com.YaNan.frame.utils.beans.xml.AsXml;
+import com.YaNan.frame.utils.beans.xml.Attribute;
+import com.YaNan.frame.utils.beans.xml.Mapping;
+import com.YaNan.frame.utils.beans.xml.NodeName;
+import com.YaNan.frame.utils.beans.xml.Value;
+import com.YaNan.frame.utils.beans.xml.XmlFile;
 
 public abstract class BaseMapping {
 	@XmlFile

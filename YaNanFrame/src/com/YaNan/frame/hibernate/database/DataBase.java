@@ -8,9 +8,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugin.PlugsFactory;
-import com.YaNan.frame.util.beans.DecodeBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.YaNan.frame.utils.beans.DecodeBean;
 import com.mysql.jdbc.Connection;
 import com.mysql.jdbc.PreparedStatement;
 
@@ -28,7 +29,7 @@ public class DataBase {
 	private boolean available=false;
 	private final String SUFFIX = "autoReconnect=true&failOverReadOnly=false&rewriteBatchedStatements=true";
 	private ConnectionPools connectionPools;
-	private final Log log = PlugsFactory.getPlugsInstance(Log.class,DataBase.class);
+	private final Logger log = LoggerFactory.getLogger(DataBase.class);
 	private String connetionURL;
 	private String connectionTestURL;
 
@@ -110,8 +111,7 @@ public class DataBase {
 						ps.close();
 					connect.close();
 				} catch (SQLException e) {
-					e.printStackTrace();
-					log.error(e);
+					log.error(e.getMessage(),e);
 				}
 			}
 		}
@@ -134,8 +134,7 @@ public class DataBase {
 			this.releaseConnection(connect);
 			return ps.execute();
 		} catch (SQLException e) {
-			log.error(e);
-			e.printStackTrace();
+			log.error(e.getMessage(),e);
 			return false;
 		}
 	}
@@ -151,7 +150,7 @@ public class DataBase {
 					connectionTestURL,dbConfigure.getUsername(), dbConfigure.getPassword());
 			return connection != null;
 		} catch (ClassNotFoundException | SQLException e) {
-			log.error(e);
+			log.error(e.getMessage(),e);
 		}
 		return false;
 	}
@@ -200,7 +199,7 @@ public class DataBase {
 			return ps;
 		} catch (SQLException e) {
 			log.error("error sql:"+sql);
-			log.error(e);
+			log.error(e.getMessage(),e);
 		}
 		return null;
 	}
@@ -225,7 +224,7 @@ public class DataBase {
 				return ps;
 			} catch (SQLException e) {
 				log.error("error sql:"+sql);
-				log.error(e);
+				log.error(e.getMessage(),e);
 			}
 			return null;
 	}

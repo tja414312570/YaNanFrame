@@ -22,7 +22,7 @@ import javax.validation.constraints.Size;
 import javax.validation.metadata.ConstraintDescriptor;
 
 import com.YaNan.frame.servlets.validator.annotations.Length;
-import com.YaNan.frame.util.StringUtil;
+import com.YaNan.frame.utils.StringUtil;
 
 public class ParameterValition<T> implements ConstraintViolation<T>{
 	private String message;

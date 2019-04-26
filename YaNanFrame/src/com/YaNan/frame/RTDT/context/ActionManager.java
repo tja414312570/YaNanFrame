@@ -17,8 +17,8 @@ import com.YaNan.frame.RTDT.entity.annotations.RNotify;
 import com.YaNan.frame.path.PackageScanner;
 import com.YaNan.frame.path.PackageScanner.ClassInter;
 import com.YaNan.frame.reflect.ClassLoader;
-import com.YaNan.frame.util.beans.BeanFactory;
-import com.YaNan.frame.util.beans.XMLBean;
+import com.YaNan.frame.utils.beans.BeanFactory;
+import com.YaNan.frame.utils.beans.XMLBean;
 
 /**
  * RTDT框架 通过websocket进行服务器与客户端数据交互

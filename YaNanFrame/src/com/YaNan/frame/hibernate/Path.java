@@ -3,8 +3,9 @@ package com.YaNan.frame.hibernate;
 import java.io.File;
 import java.io.IOException;
 
-import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugin.PlugsFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 
 /**
@@ -19,7 +20,7 @@ public class Path {
 	public String realPath;
 	public String originPath;
 	public File file;
-	private final Log log = PlugsFactory.getPlugsInstance(Log.class, Path.class);
+	private final Logger log = LoggerFactory.getLogger( Path.class);
 	private Path rootPath = WebPath.getWebPath().getRoot();
 
 	public void Colone(Path path) {

@@ -6,18 +6,19 @@ import java.io.IOException;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.YaNan.frame.RPC.customer.RPCService;
 import com.YaNan.frame.RPC.exception.ServiceInitException;
 import com.YaNan.frame.RPC.exception.ServiceIsRunning;
 import com.YaNan.frame.RPC.exception.customer.ServiceNotInit;
 import com.YaNan.frame.RPC.exception.customer.ServiceNotRunningException;
-import com.YaNan.frame.logging.Log;
-import com.YaNan.frame.plugin.PlugsFactory;
 
 public class InitRPCClient implements ServletContextListener {
 	RPCService manager = RPCService.getManager();
 	Thread thread = null;
-	private final Log log = PlugsFactory.getPlugsInstance(Log.class, InitRPCClient.class);
+	private final Logger log = LoggerFactory.getLogger( InitRPCClient.class);
 	@Override
 	public void contextDestroyed(ServletContextEvent arg0) {
 		log.debug("application context destory ,destory the rpc service");
@@ -43,7 +44,7 @@ public class InitRPCClient implements ServletContextListener {
 					| ServiceInitException | ServiceNotInit | ServiceNotRunningException | ServiceIsRunning
 					| IOException e) {
 				e.printStackTrace();
-				log.error(e);
+				log.error(e.getMessage(),e);
 			}
 		
 	}
