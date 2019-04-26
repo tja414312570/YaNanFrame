@@ -15,7 +15,9 @@ import java.util.Map;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
-import com.YaNan.frame.logging.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.YaNan.frame.path.FileUtils;
 import com.YaNan.frame.path.Path;
 import com.YaNan.frame.path.Path.PathInter;
@@ -40,7 +42,7 @@ import jdk.internal.org.objectweb.asm.commons.SimpleRemapper;
  *
  */
 public class ClassHotUpdater implements Runnable, ServletContextListener {
-	public Log log = PlugsFactory.getPlugsInstance(Log.class, ClassHotUpdater.class);
+	public Logger log = LoggerFactory.getLogger( ClassHotUpdater.class);
 	private boolean cache;// 是否已经扫描
 	private List<String> scanner = new ArrayList<String>(100);// 用于存储已经扫描到的文件
 	static Map<String, FileToken> fileToken = new HashMap<String, FileToken>(100);// 用于存文件hash
@@ -78,69 +80,70 @@ public class ClassHotUpdater implements Runnable, ServletContextListener {
 
 	@Override
 	public void run() {
+		PathInter filePathInter = new PathInter() {
+			@Override
+			public void find(File file) {
+				long lastModif = file.lastModified();
+				String fileMark = file.getAbsolutePath();
+				if (!cache) {// 如果是第一次扫描
+					scanner.add(fileMark);
+					fileToken.put(fileMark,new FileToken(hash(file, FileUtils.getBytes(file)),lastModif));
+				} else {// 其它扫描
+					//将扫描的文件推送到已扫描队列
+					scanner.add(fileMark);
+					//获取类名
+					String clzzName = ResourceManager.getClassPath(file.getAbsolutePath());
+					clzzName = clzzName.substring(0, clzzName.length() - 6);
+					try {
+						Class<?> clzz = Class.forName(clzzName);
+						java.lang.ClassLoader loader = clzz == null ? this.getClass().getClassLoader()
+								: clzz.getClassLoader();
+						FileToken token = fileToken.get(fileMark);
+						if (token!=null) {// 如果文件已经存在
+							//判断文件是否修改  先判断最后修改日期  再判断hash  
+							//也就是即使修改了文件  但内容完全相同  此时调用之前的类
+							if(token.getLastModif()!=lastModif){
+								byte[] content = FileUtils.getBytes(file);
+								long hash = hash(file, content);
+								String className = clzzName + "$Y" + hash;
+								//无轮是否加载成功都应该记录
+								fileToken.put(fileMark,new FileToken(hash,lastModif));
+								Class<?> nc = loadClass(loader, className, clzzName, content);
+								if (!checkClass(nc))
+									return;
+								RegisterDescription registerDescription = PlugsFactory.getRegisterDescrption(clzz);
+								if (registerDescription != null) {
+									if (registerDescription.getLinkRegister() != null)
+										clzz = registerDescription.getLinkRegister().getRegisterClass();
+									registerDescription.updateRegister(nc);
+								} else
+									tryAddPlugs(nc);
+								proxy.put(clzz, nc);
+								notifyListener(clzz, nc, new ClassLoader().loadClass(clzzName, content), file);// 通知修改
+								log.debug(clzzName + "  update success!");
+							}
+							
+						} else {// 如果之前没有加载该类
+							Class<?> nc = clzz;
+							if (nc == null)
+								nc = loadClass(loader, clzzName, FileUtils.getBytes(file));
+							fileToken.put(fileMark,new FileToken(hash(file, FileUtils.getBytes(file)),lastModif));
+							if (!checkClass(nc))
+								return;
+							tryAddPlugs(nc);
+							notifyListener(null, nc, null, file);// 通知添加
+							log.debug(clzzName + "  add success!");
+						}
+					} catch (Exception e) {
+						log.error("failed to update class \"" + clzzName + "\"", e);
+					}
+				}
+			}
+		};
 		while (true) {
 			Path path = new Path(ResourceManager.classPath());
 			path.filter("**.class");
-			path.scanner(new PathInter() {
-				@Override
-				public void find(File file) {
-					long lastModif = file.lastModified();
-					String fileMark = file.getAbsolutePath();
-					if (!cache) {// 如果是第一次扫描
-						scanner.add(fileMark);
-						fileToken.put(fileMark,new FileToken(hash(file, FileUtils.getBytes(file)),lastModif));
-					} else {// 其它扫描
-						//将扫描的文件推送到已扫描队列
-						scanner.add(fileMark);
-						//获取类名
-						String clzzName = ResourceManager.getClassPath(file.getAbsolutePath());
-						clzzName = clzzName.substring(0, clzzName.length() - 6);
-						try {
-							Class<?> clzz = Class.forName(clzzName);
-							java.lang.ClassLoader loader = clzz == null ? this.getClass().getClassLoader()
-									: clzz.getClassLoader();
-							FileToken token = fileToken.get(fileMark);
-							if (token!=null) {// 如果文件已经存在
-								//判断文件是否修改  先判断最后修改日期  再判断hash  
-								//也就是即使修改了文件  但内容完全相同  此时调用之前的类
-								if(token.getLastModif()!=lastModif){
-									byte[] content = FileUtils.getBytes(file);
-									long hash = hash(file, content);
-									String className = clzzName + "$Y" + hash;
-									//无轮是否加载成功都应该记录
-									fileToken.put(fileMark,new FileToken(hash,lastModif));
-									Class<?> nc = loadClass(loader, className, clzzName, content);
-									if (!checkClass(nc))
-										return;
-									RegisterDescription registerDescription = PlugsFactory.getRegisterDescrption(clzz);
-									if (registerDescription != null) {
-										if (registerDescription.getLinkRegister() != null)
-											clzz = registerDescription.getLinkRegister().getRegisterClass();
-										registerDescription.updateRegister(nc);
-									} else
-										tryAddPlugs(nc);
-									proxy.put(clzz, nc);
-									notifyListener(clzz, nc, new ClassLoader().loadClass(clzzName, content), file);// 通知修改
-									log.debug(clzzName + "  update success!");
-								}
-								
-							} else {// 如果之前没有加载该类
-								Class<?> nc = clzz;
-								if (nc == null)
-									nc = loadClass(loader, clzzName, FileUtils.getBytes(file));
-								fileToken.put(fileMark,new FileToken(hash(file, FileUtils.getBytes(file)),lastModif));
-								if (!checkClass(nc))
-									return;
-								tryAddPlugs(nc);
-								notifyListener(null, nc, null, file);// 通知添加
-								log.debug(clzzName + "  add success!");
-							}
-						} catch (Exception e) {
-							log.error("failed to update class \"" + clzzName + "\"", e);
-						}
-					}
-				}
-			});
+			path.scanner(filePathInter);
 			//如果是第一次之后的扫描  需要将已删除的文件找出来
 			if (cache) {
 				Iterator<String> iterator =fileToken.keySet().iterator();
@@ -223,8 +226,14 @@ public class ClassHotUpdater implements Runnable, ServletContextListener {
 	 */
 	protected void notifyListener(Class<?> clzz, Class<?> nc, Class<?> oc, File file) {
 		List<ClassUpdateListener> updaterList = PlugsFactory.getPlugsInstanceList(ClassUpdateListener.class);
-		for (ClassUpdateListener listener : updaterList)
+		for (ClassUpdateListener listener : updaterList){
+			if((clzz!=null&&ClassLoader.implementOf(clzz, ClassUpdateListener.class))
+					||(nc!=null&&ClassLoader.implementOf(nc, ClassUpdateListener.class))
+					||(oc!=null&&ClassLoader.implementOf(oc, ClassUpdateListener.class)))
+				continue;
+			System.out.println(listener+"   "+listener.getClass().getClassLoader());
 			listener.updateClass(clzz, nc, oc, file);
+		}
 	}
 
 	/**

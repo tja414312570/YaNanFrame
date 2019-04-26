@@ -15,6 +15,7 @@ import java.util.Map;
 
 import javax.validation.Constraint;
 
+
 import com.YaNan.frame.path.PackageScanner;
 import com.YaNan.frame.path.Path;
 import com.YaNan.frame.path.PackageScanner.ClassInter;
@@ -42,19 +43,19 @@ import com.YaNan.frame.reflect.ClassLoader;
  */
 public class PlugsFactory {
 	private static volatile PlugsFactory instance;
+	//组件是否可用
 	private boolean available = false;
+	//配置文件列表
 	private List<File> configureLocation;
+	//包扫描的目录
 	private String[] packageDirs;
-	/**
-	 * 组件的容器
-	 */
+	// 组件的容器
 	private Map<Class<?>, Plug> plugsList = new HashMap<Class<?>, Plug>();
 	// register >> registerInfo
 	private Map<Class<?>, RegisterDescription> RegisterContatiner = new HashMap<Class<?>, RegisterDescription>();
 	private volatile List<RegisterDescription> registerList = new LinkedList<RegisterDescription>();
 	private Map<Object, RegisterDescription> objectRegister = new HashMap<Object, RegisterDescription>();
 	private Map<String, RegisterDescription> objectIdRegister = new HashMap<String, RegisterDescription>();
-
 	public String[] getScanPath() {
 		return Arrays.copyOf(packageDirs, packageDirs.length);
 	}
@@ -74,12 +75,14 @@ public class PlugsFactory {
 
 	public void addRegisterHandlerQueue(RegisterDescription registerDescription) {
 		synchronized (registerList) {
-			this.registerList.add(registerDescription);
+			if(!registerList.contains(registerDescription))
+				this.registerList.add(registerDescription);
 		}
 		this.initRegisterDescriptionHandler();
 	}
 
 	private void initRegisterDescriptionHandler() {
+		BeanContainer.getContext().clear();
 		if (this.available && !this.registerList.isEmpty()) {
 			synchronized (registerList) {
 				Iterator<RegisterDescription> registerDesIterator = registerList.iterator();
@@ -100,7 +103,18 @@ public class PlugsFactory {
 	 * @param resources
 	 */
 	public static void init(String... resources) {
-		PlugsFactory instance = getInstance();
+		if(instance==null){
+			synchronized (PlugsFactory.class) {
+				if(instance==null){
+					PlugsFactory instance = getInstance();
+					if(resources==null||resources.length==0){
+						List<File> file = ResourceManager.getResource(ResourceManager.classPath()+File.separatorChar+"plugin.conf");
+						if(file!=null&&file.size()>0)
+						instance.configureLocation.add(file.get(0));
+					}
+				}
+			}
+		}
 		for (String res : resources) {
 			List<File> resourceFiles = ResourceManager.getResource(res);
 			for (File file : resourceFiles)
@@ -144,6 +158,8 @@ public class PlugsFactory {
 	 * 初始化组件，当所有的组件扫描完成之后，需要使用{@link #associate()}完成组件的关联
 	 */
 	public void init0() {
+		PlugsInitLock.checkLock();
+		PlugsInitLock.tryLock();
 		this.addPlugsByDefault(PlugsListener.class);// 添加两个Plugin自身支持需要的组件接口
 													// PlugsListener
 													// 用于组件初始化完成时的监听
@@ -251,11 +267,11 @@ public class PlugsFactory {
 				}
 			});
 		}
-
 		this.associate();
 		available = true;
 		this.initRegisterDescriptionHandler();
 		this.inited();
+		PlugsInitLock.unLock();
 	}
 
 	private void inited() {
@@ -462,14 +478,14 @@ public class PlugsFactory {
 	 * @return
 	 * @throws Exception
 	 */
-	public static boolean checkAvaliable() throws Exception {
+	public static boolean checkAvaliable(){
 		if (instance == null) {
 			PlugsFactory.init();
 			if (instance == null)
-				throw new Exception("YaNan.plugs service not initd");
+				throw new PluginRuntimeException("YaNan.plugs service not initd");
 		}
 		if (!instance.isAvailable())
-			throw new Exception(
+			throw new PluginRuntimeException(
 					"plugs unavailable ! this error may arise because a static field uses the PlugsFactory's proxy");
 		return instance != null && instance.isAvailable();
 	}
@@ -503,7 +519,8 @@ public class PlugsFactory {
 	 */
 	public static RegisterDescription getRegisterDescrption(Class<?> impl) throws Exception {
 		RegisterDescription registerDescription = null;
-		if (impl.isInterface() && checkAvaliable()) {
+		checkAvaliable();
+		if (impl.isInterface()) {
 			Plug plug = getPlug(impl);
 			if (plug == null)
 				throw new Exception("service interface " + impl.getName() + " could not found or not be regist");

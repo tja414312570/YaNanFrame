@@ -11,6 +11,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -162,7 +163,85 @@ public class RegisterDescription {
 	public String getBeanId() {
 		return id;
 	}
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + Arrays.hashCode(attribute);
+		result = prime * result + ((clzz == null) ? 0 : clzz.hashCode());
+		result = prime * result + ((description == null) ? 0 : description.hashCode());
+		result = prime * result + ((file == null) ? 0 : file.hashCode());
+		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		result = prime * result + Arrays.hashCode(initMethod);
+		result = prime * result + priority;
+		result = prime * result + ((proxyModel == null) ? 0 : proxyModel.hashCode());
+		result = prime * result + (signlton ? 1231 : 1237);
+		return result;
+	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		RegisterDescription other = (RegisterDescription) obj;
+		if (!Arrays.equals(attribute, other.attribute))
+			return false;
+		if (attributes == null) {
+			if (other.attributes != null)
+				return false;
+		} else if (!attributes.equals(other.attributes))
+			return false;
+		if (clzz == null) {
+			if (other.clzz != null)
+				return false;
+		} else if (!clzz.equals(other.clzz))
+			return false;
+		if (config == null) {
+			if (other.config != null)
+				return false;
+		} else if (!config.equals(other.config))
+			return false;
+		if (description == null) {
+			if (other.description != null)
+				return false;
+		} else if (!description.equals(other.description))
+			return false;
+		if (file == null) {
+			if (other.file != null)
+				return false;
+		} else if (!file.equals(other.file))
+			return false;
+		if (id == null) {
+			if (other.id != null)
+				return false;
+		} else if (!id.equals(other.id))
+			return false;
+		if (!Arrays.equals(initMethod, other.initMethod))
+			return false;
+		if (!Arrays.equals(plugs, other.plugs))
+			return false;
+		if (priority != other.priority)
+			return false;
+		if (properties == null) {
+			if (other.properties != null)
+				return false;
+		} else if (!properties.equals(other.properties))
+			return false;
+		if (proxyModel != other.proxyModel)
+			return false;
+		if (register == null) {
+			if (other.register != null)
+				return false;
+		} else if (!register.equals(other.register))
+			return false;
+		if (signlton != other.signlton)
+			return false;
+		return true;
+	}
 	/**
 	 * 支持注解类型的构造器 register为注解 clzz为注册器的类名 impls 为注册器实现的接口
 	 * 
@@ -1500,6 +1579,8 @@ public class RegisterDescription {
 		if(this.proxyContainer != null)
 			this.proxyContainer.clear();//清理代理容器
 		this.linkRegister = new RegisterDescription(registerClass);//设置链接注册器
+		PlugsFactory.getInstance().addPlugs(registerClass);
+		PlugsFactory.getInstance().associate();
 		this.linkProxy = null;//此时应将代理重置，以更新具体对象
 	}
 }
