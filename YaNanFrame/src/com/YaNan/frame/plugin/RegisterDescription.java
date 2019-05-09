@@ -21,6 +21,8 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 
+import org.slf4j.Logger;
+
 import com.YaNan.frame.path.ResourceManager;
 import com.YaNan.frame.plugin.ParameterUtils.MethodDesc;
 import com.YaNan.frame.plugin.annotations.Register;
@@ -147,6 +149,7 @@ public class RegisterDescription {
 	 * 链接之后的原代理的代理对象
 	 */
 	private Object linkProxy;
+	private Method method;
 
 	public RegisterDescription getLinkRegister() {
 		return linkRegister;
@@ -373,10 +376,6 @@ public class RegisterDescription {
 			if (className == null && ref == null)
 				throw new RuntimeException("could not fond class property and no reference any at \""
 						+ config.origin().url() + "\" at line : " + config.origin().lineNumber());
-			if (config.hasPath("init")) {
-				
-			}
-
 			if (className != null) {
 				this.loader = new ClassLoader(className, false);
 				this.clzz = loader.getLoadedClass();
@@ -384,7 +383,6 @@ public class RegisterDescription {
 				this.signlton = config.getBoolean("signlton", true);
 				this.attribute = config.getString("attribute", "*").split(",");
 				this.description = config.getString("description", "");
-
 				String model = config.getString("model", "DEFAULT");
 				this.proxyModel = ProxyModel.getProxyModel(model);
 				// 获取实现类
@@ -839,7 +837,7 @@ public class RegisterDescription {
 					throw new RuntimeException("method \"" + methodStr + "\" is not exists");
 				return method.invoke(null);
 			} else {
-				return this.getRegisterNewInstance(null);
+				return this.getRegisterNewInstance(this.clzz);
 			}
 		}
 	}
@@ -1131,7 +1129,7 @@ public class RegisterDescription {
 			} else {
 				try {
 					Class<?> interfacer = Class.forName(str.trim());
-					if (ClassLoader.implementsOf(clzz, interfacer))// 判断类及父类是否实现某接口
+//					if (ClassLoader.implementsOf(clzz, interfacer))// 判断类及父类是否实现某接口
 						set.add(interfacer);
 				} catch (ClassNotFoundException e) {
 					e.printStackTrace();
@@ -1421,6 +1419,33 @@ public class RegisterDescription {
 	@SuppressWarnings("unchecked")
 	public <T> T getRegisterInstance(Class<T> plug, Object... args) throws Exception {
 		Object proxy = null;
+		if(config != null ){
+			String ref = config.getString("ref");
+			if(ref!=null){
+				proxy = BeanContainer.getContext().getBean(ref);
+			}else{
+				proxy  = getRegisterInstance0(plug,args);
+			}
+		}else{
+			proxy  = getRegisterInstance0(plug,args);
+		}
+		if(config!=null && config.hasPath("method")&&this.method==null){
+			if(config.hasPath("args")){
+				ParameterInfo info = ParameterUtils.getParameterInfo(config);
+				this.method = ClassHelper.getClassHelper(proxy.getClass()).getDeclaredMethod(config.getString("method"), info.getParameterTypes());
+			}else{
+				this.method = ClassHelper.getClassHelper(proxy.getClass()).getDeclaredMethod(config.getString("method"));
+			}
+		}
+		if(this.method!=null){
+			Object[] parameter = new Object[this.method.getParameters().length];
+			proxy = method.invoke(proxy,parameter);
+		}
+		return (T) proxy;
+	}
+
+	private Object getRegisterInstance0(Class<?> plug, Object[] args) throws Exception {
+		Object proxy;
 		// 判断是否单例
 		if (this.signlton) {
 			int hashKey = hash(plug, args);
@@ -1431,7 +1456,7 @@ public class RegisterDescription {
 		} else {
 			proxy = this.getRegisterNewInstance(plug, args);
 		}
-		return (T) proxy;
+		return proxy;
 	}
 
 	@SuppressWarnings("unchecked")

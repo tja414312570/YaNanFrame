@@ -82,7 +82,6 @@ public class PlugsFactory {
 	}
 
 	private void initRegisterDescriptionHandler() {
-		BeanContainer.getContext().clear();
 		if (this.available && !this.registerList.isEmpty()) {
 			synchronized (registerList) {
 				Iterator<RegisterDescription> registerDesIterator = registerList.iterator();
@@ -597,7 +596,7 @@ public class PlugsFactory {
 				throw new Exception("service interface " + impl.getName() + " could not found any registrar");
 			return registerDescription.getRegisterInstance(impl, args);
 		} catch (Exception e) {
-			throw new RuntimeException("failed to get plugin instance at plugin class " + impl, e);
+			throw new PluginRuntimeException("failed to get plugin instance at plugin class " + impl, e);
 		}
 	}
 

@@ -43,7 +43,6 @@ public class PluginAppincationContext implements ServletContextListener {
 			String locations = servletContextEvent.getServletContext().getInitParameter("contextConfigure");
 			if(locations!=null)
 				locations = locations.replace("project:", servletContextEvent.getServletContext().getRealPath(""));
-			PlugsFactory.init(locations);
 			this.servletContextEvent = servletContextEvent;
 			this.servletContext = servletContextEvent.getServletContext();
 			log.debug("");
@@ -56,6 +55,7 @@ public class PluginAppincationContext implements ServletContextListener {
 			log.debug(" PLUG             PLUI         PLUV       PLUE     PLUU       PLUP      PLUG       PLUG     PLUGINPL");
 			log.debug("PLUY             PLUGINPLUGO   PLUGINPLUGINU        PLUGINPLUGIG    PLUGINPLUGIE  PLUG         PLUG");
 			log.debug("");
+			PlugsFactory.init(locations);
 			contextListernerList = PlugsFactory.getPlugsInstanceList(ServletContextListener.class);
 			log.debug("Context Init Plug size:"+contextListernerList.size());
 			for(ServletContextListener contenxtInitListener :contextListernerList){
