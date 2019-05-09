@@ -63,7 +63,7 @@
 * [实验性功能](https://github.com/tja414312570/YaNanFrame/wiki/future)
     * [热更新](https://github.com/tja414312570/YaNanFrame/wiki/hotUpdate)
 ## 工具类
-* [config](https://github.com/tja414312570/YaNanFrame/wiki/config)
+* [config](https://github.com/tja414312570/config)
 * [XMLHelper](https://github.com/tja414312570/YaNanFrame/wiki/xmlHelper)
     * [更多使用](https://github.com/tja414312570/YaNanFrame/wiki/xmlHelperMore)
     * [默认支持的注解](https://github.com/tja414312570/YaNanFrame/wiki/xmlHelperDefault)
