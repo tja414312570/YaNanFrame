@@ -10,8 +10,8 @@ import com.YaNan.frame.RPC.Implements.MessagePrototypeInterface;
 import com.YaNan.frame.RPC.customer.RPCService;
 import com.YaNan.frame.RPC.exception.InvoketionException;
 import com.YaNan.frame.RPC.exception.ServiceClosed;
-import com.YaNan.frame.RPC.exception.ServiceNoFound;
-import com.YaNan.frame.RPC.exception.ServiceNoResponse;
+import com.YaNan.frame.RPC.exception.ServiceNotFound;
+import com.YaNan.frame.RPC.exception.ServiceNotResponse;
 import com.YaNan.frame.RPC.exception.UnKnowException;
 import com.YaNan.frame.RPC.exception.customer.ServiceNotInit;
 import com.YaNan.frame.RPC.exception.customer.ServiceNotRegistException;
@@ -88,18 +88,18 @@ public class RPCRequest implements Serializable,MessagePrototypeInterface{
 	public void setSUID(String sUID) {
 		SUID = sUID;
 	}
-	public Object request() throws TimeoutException, ServiceClosed, ServiceNoFound, ServiceNoResponse, UnKnowException, InterruptedException, ExecutionException, InvoketionException, ClassNotFoundException, InstantiationException, IllegalAccessException, ServiceNotRunningException, ServiceNotRegistException, ServiceNotInit{
+	public Object request() throws TimeoutException, ServiceClosed, ServiceNotFound, ServiceNotResponse, UnKnowException, InterruptedException, ExecutionException, InvoketionException, ClassNotFoundException, InstantiationException, IllegalAccessException, ServiceNotRunningException, ServiceNotRegistException, ServiceNotInit{
 		return RPCService.getManager().getRPCServiceRuntime().request(this);
 	}
 	public Object request(String serviceName, Class<?> requestClass, String requestMethod,
-			Object...requestParmeters) throws TimeoutException, ServiceClosed, ServiceNoFound, ServiceNoResponse, UnKnowException, InterruptedException, ExecutionException, InvoketionException, ClassNotFoundException, InstantiationException, IllegalAccessException, ServiceNotRunningException, ServiceNotRegistException, ServiceNotInit {
+			Object...requestParmeters) throws TimeoutException, ServiceClosed, ServiceNotFound, ServiceNotResponse, UnKnowException, InterruptedException, ExecutionException, InvoketionException, ClassNotFoundException, InstantiationException, IllegalAccessException, ServiceNotRunningException, ServiceNotRegistException, ServiceNotInit {
 		this.serviceName = serviceName;
 		this.requestClass = requestClass.getName();
 		this.requestMethod = requestMethod;
 		this.requestParmeters = requestParmeters;
 		return this.request();
 	}
-	public Object request(String serviceName, String requestClass, String requestMethod, Object...requestParmeters) throws TimeoutException, ServiceClosed, ServiceNoFound, ServiceNoResponse, UnKnowException, InterruptedException, ExecutionException, InvoketionException,  ClassNotFoundException, InstantiationException, IllegalAccessException, ServiceNotRunningException, ServiceNotRegistException, ServiceNotInit {
+	public Object request(String serviceName, String requestClass, String requestMethod, Object...requestParmeters) throws TimeoutException, ServiceClosed, ServiceNotFound, ServiceNotResponse, UnKnowException, InterruptedException, ExecutionException, InvoketionException,  ClassNotFoundException, InstantiationException, IllegalAccessException, ServiceNotRunningException, ServiceNotRegistException, ServiceNotInit {
 		this.serviceName = serviceName;
 		this.requestClass = requestClass;
 		this.requestMethod = requestMethod;

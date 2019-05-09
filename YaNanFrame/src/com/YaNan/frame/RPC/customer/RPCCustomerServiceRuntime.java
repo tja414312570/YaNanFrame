@@ -22,8 +22,8 @@ import com.YaNan.frame.RPC.Implements.RPCExceptionType;
 import com.YaNan.frame.RPC.exception.InvoketionException;
 import com.YaNan.frame.RPC.exception.RPCException;
 import com.YaNan.frame.RPC.exception.ServiceClosed;
-import com.YaNan.frame.RPC.exception.ServiceNoFound;
-import com.YaNan.frame.RPC.exception.ServiceNoResponse;
+import com.YaNan.frame.RPC.exception.ServiceNotFound;
+import com.YaNan.frame.RPC.exception.ServiceNotResponse;
 import com.YaNan.frame.RPC.exception.UnKnowException;
 import com.YaNan.frame.RPC.exception.customer.ServiceNotRegistException;
 import com.YaNan.frame.RPC.exception.customer.ServiceNotRunningException;
@@ -225,8 +225,8 @@ public class RPCCustomerServiceRuntime implements Runnable{
 	 * @return
 	 * @throws TimeoutException
 	 * @throws ServiceClosed
-	 * @throws ServiceNoFound
-	 * @throws ServiceNoResponse
+	 * @throws ServiceNotFound
+	 * @throws ServiceNotResponse
 	 * @throws UnKnowException
 	 * @throws InterruptedException
 	 * @throws ExecutionException
@@ -234,7 +234,7 @@ public class RPCCustomerServiceRuntime implements Runnable{
 	 * @throws ServiceNotRunningException 
 	 * @throws ServiceNotRegistException 
 	 */
-	public Object request(RPCRequest request) throws TimeoutException, ServiceClosed, ServiceNoFound, ServiceNoResponse, UnKnowException, InterruptedException, ExecutionException, InvoketionException, ServiceNotRunningException, ServiceNotRegistException {
+	public Object request(RPCRequest request) throws TimeoutException, ServiceClosed, ServiceNotFound, ServiceNotResponse, UnKnowException, InterruptedException, ExecutionException, InvoketionException, ServiceNotRunningException, ServiceNotRegistException {
 		if(this.socket==null||this.socket.isClosed())
 			throw new ServiceNotRunningException();
 		if(!this.isRegist)
@@ -277,17 +277,17 @@ public class RPCCustomerServiceRuntime implements Runnable{
             this.exceptionBuffer.remove(RUID);
 		}
 	}
-	public void throwException(RPCException rpcException) throws ServiceClosed, ServiceNoFound, ServiceNoResponse, UnKnowException, InvoketionException{
+	public void throwException(RPCException rpcException) throws ServiceClosed, ServiceNotFound, ServiceNotResponse, UnKnowException, InvoketionException{
 		switch(rpcException.getCode()){
 		case RPCExceptionType.SERVICE_CLOSED:
 			ServiceClosed exception=(ServiceClosed) rpcException;
 			throw new ServiceClosed(exception.getServiceName(),exception.getSUID(),exception.getRUID());
 		case RPCExceptionType.SERVICE_NO_FOUND:
-			ServiceNoFound snfException=(ServiceNoFound) rpcException;
-			throw new ServiceNoFound(snfException.getServiceName(),snfException.getRUID());
+			ServiceNotFound snfException=(ServiceNotFound) rpcException;
+			throw new ServiceNotFound(snfException.getServiceName(),snfException.getRUID());
 		case RPCExceptionType.SERVICE_NOT_RESPONSE:
-			ServiceNoResponse snrException=(ServiceNoResponse) rpcException;
-			throw new ServiceNoResponse(snrException.getServiceName(),snrException.getSUID(),snrException.getRUID());
+			ServiceNotResponse snrException=(ServiceNotResponse) rpcException;
+			throw new ServiceNotResponse(snrException.getServiceName(),snrException.getSUID(),snrException.getRUID());
 		case RPCExceptionType.INVOKETION_EXCEPTION:
 			InvoketionException ivException=(InvoketionException) rpcException;
 			throw new InvoketionException(ivException.getServiceName(),ivException.getException(),ivException.getSUID(),ivException.getRUID());

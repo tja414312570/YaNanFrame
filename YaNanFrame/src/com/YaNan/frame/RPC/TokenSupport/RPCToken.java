@@ -7,8 +7,8 @@ import com.YaNan.frame.RPC.Implements.RequestType;
 import com.YaNan.frame.RPC.customer.RPCService;
 import com.YaNan.frame.RPC.exception.InvoketionException;
 import com.YaNan.frame.RPC.exception.ServiceClosed;
-import com.YaNan.frame.RPC.exception.ServiceNoFound;
-import com.YaNan.frame.RPC.exception.ServiceNoResponse;
+import com.YaNan.frame.RPC.exception.ServiceNotFound;
+import com.YaNan.frame.RPC.exception.ServiceNotResponse;
 import com.YaNan.frame.RPC.exception.UnKnowException;
 import com.YaNan.frame.RPC.exception.customer.ServiceNotInit;
 import com.YaNan.frame.RPC.exception.customer.ServiceNotRegistException;
@@ -86,7 +86,7 @@ public class RPCToken {
 		if(!this.ready)return null;
 		try {
 			return this.rpcRequest.request(serviceName,RPCTokenDispatcher.class.getName(),this.requestMethod,this.tokenId,this.beanClass);
-		} catch (ServiceClosed | ServiceNoFound | ServiceNoResponse | UnKnowException | InvoketionException
+		} catch (ServiceClosed | ServiceNotFound | ServiceNotResponse | UnKnowException | InvoketionException
 				| ClassNotFoundException | InstantiationException | IllegalAccessException | ServiceNotRunningException
 				| ServiceNotRegistException | ServiceNotInit | TimeoutException | InterruptedException
 				| ExecutionException e) {

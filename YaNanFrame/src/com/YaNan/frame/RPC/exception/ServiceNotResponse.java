@@ -2,7 +2,7 @@ package com.YaNan.frame.RPC.exception;
 
 import com.YaNan.frame.RPC.Implements.RPCExceptionType;
 
-public class ServiceNoResponse extends RPCException {
+public class ServiceNotResponse extends RPCException {
 	private String serviceName;
 	private String SUID;
 	public String getServiceName() {
@@ -17,7 +17,7 @@ public class ServiceNoResponse extends RPCException {
 	public void setSUID(String sUID) {
 		SUID = sUID;
 	}
-	public ServiceNoResponse(String serviceName,String SUID,String RUID) {
+	public ServiceNotResponse(String serviceName,String SUID,String RUID) {
 		super("RPC service not responding,service name:"+serviceName+",service node id:"+SUID,RPCExceptionType.SERVICE_NOT_RESPONSE,RUID);
 		this.serviceName = serviceName;
 		this.SUID = SUID;
