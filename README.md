@@ -9,7 +9,7 @@
      PLUG             PLUG         PLUG       PLUG     PLUG       PLUG      PLUG       PLUG     PLUGINPL
     PLUG             PLUGINPLUGI   PLUGINPLUGINP        PLUGINPLUGIN    PLUGINPLUGIN  PLUG         PLUG
 ## 介绍    
-基于AOP的编程模式，自带mvc组件，持久层组件，基于AOP的设计模式，用接口规范您的代码，实现团队解耦。用JAVA Bean来做数据库对象，让您无需知道sql就可以实现数据库的CURD，支持子查询，联表查询。将项目的各种模块声明为Service，通过PluginFactory来管理Service的创建，装配，注入。
+基于AOP的编程模式，自带mvc组件，持久层组件，用接口规范代码，实现团队解耦。用JAVA Bean来做数据库对象，无需知道sql就可以实现数据库的CURD，支持子查询，联表查询。将项目的各种模块声明为Service，通过PluginFactory来管理Service的创建，装配，注入。Bean管理。
 
 更新日志：
 	20181218：
