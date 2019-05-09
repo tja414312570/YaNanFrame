@@ -269,15 +269,71 @@ public class ParameterUtils {
 			try {
 				List<File> files = ResourceManager.getResource(value.toString());
 				file = files.get(0);
+
 			} catch (Throwable t) {
 				file = new File(ResourceManager.getPathExress(value.toString()));
 			}
-			return file;
-		} else if (type.equals(Service.class)) {
+			value = file;
+		} else if (type.equals(Service.class)) {// bean类型
 			String beanId = value.toString();
-			return BeanContainer.getContext().getBean(beanId);
+			value = BeanContainer.getContext().getBean(beanId);
 		} else {
-			return ClassLoader.castType(value, type);
+			value = ClassLoader.castType(value,
+					type);
 		}
+		return value;
+	}
+
+	public static ParameterInfo getParameterInfo(Config config) {
+		ParameterInfo info = null;
+		Class<?> type;
+		Object value;
+		if (config.isList("args")) {
+			// 判断是否是conf集合
+			if (config.isConfigList("args")) {
+				List<? extends Config> values = config.getConfigList("args");
+				info = new ParameterInfo(values.size());
+				for (int i = 0; i < values.size(); i++) {
+					Config conf = values.get(i);
+					Iterator<Entry<String, Object>> iterator = conf.simpleObjectEntrySet()
+							.iterator();
+					if (iterator.hasNext()) {
+						Entry<String, Object> entry = iterator.next();
+						String key = entry.getKey();
+						type = ParameterUtils.getParameterType(key);
+						value = getParameter(type,entry.getValue());
+					}
+					info.addParameter( values.get(i).getClass(),values.get(i));
+				}
+			} else {// 普通数据列表
+				List<? extends Object> values = config.getSimpleObjectList("args");
+				info = new ParameterInfo(values.size());
+				for (int i = 0; i < values.size(); i++) 
+					info.addParameter( values.get(i).getClass(),values.get(i));
+			}
+		}else {// 单参数
+			ConfigValueType valueType = config.getType("args");
+			// 如果是config类型
+			if (valueType == ConfigValueType.OBJECT) {
+				// 获取到config
+				// 获取参数的数量
+				Set<Entry<String, ConfigValue>> entrySet = config.getConfig("args").entrySet();
+				int argSize = entrySet.size();
+				info = new ParameterInfo(argSize);
+				// 排除数量不同的构造器
+				Iterator<Entry<String, ConfigValue>> argIterator = entrySet.iterator();
+				while (argIterator.hasNext()) {
+					Entry<String, ConfigValue> entry = argIterator.next();
+					type = ParameterUtils.getParameterType(entry.getKey());
+					value = getParameter(type,entry.getValue().unwrapped());
+					info.addParameter(type, value);
+				}
+			} else {
+				info = new ParameterInfo(1);
+				value = config.getSimpleObject("args");
+				info.addParameter(value.getClass(),value);
+			}
+		}
+		return info;
 	}
 }
