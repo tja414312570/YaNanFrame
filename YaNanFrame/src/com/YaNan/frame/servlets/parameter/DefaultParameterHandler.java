@@ -501,10 +501,11 @@ public class DefaultParameterHandler implements ParameterHandler {
 	protected Object pojoParameterBind(Class<?> pojoClass, String path, HttpServletRequest request,
 			HttpServletResponse response, ServletBean servletBean, Map<String, String> pathParameter) throws Exception {
 		if (pojoClass.isInterface()){
-			Plug plug = PlugsFactory.getPlug(pojoClass);
-			if(plug!=null){
-				pojoClass=plug.getDefaultRegisterDescription().getRegisterClass();
-			}
+			return null;
+//			Plug plug = PlugsFactory.getPlug(pojoClass);
+//			if(plug!=null){
+//				pojoClass=plug.getDefaultRegisterDescription().getRegisterClass();
+//			}
 		}
 		// 对pojo类进行ClassLoader的包装，ClassLoader会在内部产生一个pojo类的实例
 		ClassLoader loader = new ClassLoader(pojoClass);

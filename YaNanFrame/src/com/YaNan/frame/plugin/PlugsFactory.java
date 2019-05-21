@@ -13,8 +13,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import javax.validation.Constraint;
-
 
 import com.YaNan.frame.path.PackageScanner;
 import com.YaNan.frame.path.Path;
@@ -936,17 +934,17 @@ public class PlugsFactory {
 		return annoGroup;
 	}
 
-	public static List<Annotation> getAnnotationGroup(Object parameter, Class<? extends Annotation> annotationType) {
-		if (parameter.getClass().equals(Field.class))
-			return PlugsFactory.getAnnotationGroup((Field) parameter, Constraint.class);
-		if (parameter.getClass().equals(Parameter.class))
-			return PlugsFactory.getAnnotationGroup((Parameter) parameter, Constraint.class);
-		if (parameter.getClass().equals(Method.class))
-			return PlugsFactory.getAnnotationGroup((Method) parameter, Constraint.class);
-		if (parameter.getClass().equals(Class.class))
-			return PlugsFactory.getAnnotationGroup((Class<?>) parameter, Constraint.class);
-		return null;
-	}
+//	public static List<Annotation> getAnnotationGroup(Object parameter, Class<? extends Annotation> annotationType) {
+//		if (parameter.getClass().equals(Field.class))
+//			return PlugsFactory.getAnnotationGroup((Field) parameter, Constraint.class);
+//		if (parameter.getClass().equals(Parameter.class))
+//			return PlugsFactory.getAnnotationGroup((Parameter) parameter, Constraint.class);
+//		if (parameter.getClass().equals(Method.class))
+//			return PlugsFactory.getAnnotationGroup((Method) parameter, Constraint.class);
+//		if (parameter.getClass().equals(Class.class))
+//			return PlugsFactory.getAnnotationGroup((Class<?>) parameter, Constraint.class);
+//		return null;
+//	}
 
 	/**
 	 * 获取代理对象的PlugsHandler对象
